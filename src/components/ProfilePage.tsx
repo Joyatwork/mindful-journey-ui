@@ -1,9 +1,9 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
+import { useTheme } from '@/contexts/ThemeContext';
 import { 
   User, 
   Edit, 
@@ -33,8 +33,8 @@ interface ProfilePageProps {
 }
 
 const ProfilePage: React.FC<ProfilePageProps> = ({ onBack }) => {
+  const { isDarkMode, toggleDarkMode } = useTheme();
   const [notifications, setNotifications] = useState(true);
-  const [darkMode, setDarkMode] = useState(false);
   const [dataSharing, setDataSharing] = useState(false);
 
   const userStats = {
@@ -223,8 +223,8 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onBack }) => {
               <span className="text-sm">Mode sombre</span>
             </div>
             <Switch 
-              checked={darkMode}
-              onCheckedChange={setDarkMode}
+              checked={isDarkMode}
+              onCheckedChange={toggleDarkMode}
             />
           </div>
           
