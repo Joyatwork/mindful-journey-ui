@@ -8,6 +8,7 @@ import ProgressChart from '@/components/ProgressChart';
 import ProgressPage from '@/components/ProgressPage';
 import ChallengeFilter from '@/components/ChallengeFilter';
 import DiagnosticStep from '@/components/DiagnosticStep';
+import ProfilePage from '@/components/ProfilePage';
 import { 
   Heart, 
   Brain, 
@@ -347,11 +348,7 @@ const Index = () => {
           {currentView === 'challenges' && renderChallenges()}
           {currentView === 'progress' && renderProgress()}
           {currentView === 'profile' && (
-            <div className="text-center py-20">
-              <User className="h-16 w-16 mx-auto text-gray-400 mb-4" />
-              <h2 className="text-xl font-semibold mb-2">Mon Profil</h2>
-              <p className="text-gray-600">Gérez vos préférences et paramètres</p>
-            </div>
+            <ProfilePage onBack={() => setCurrentView('dashboard')} />
           )}
         </div>
         
