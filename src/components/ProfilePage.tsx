@@ -1,9 +1,11 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { useTheme } from '@/contexts/ThemeContext';
+import EditProfileForm from './EditProfileForm';
 import { 
   User, 
   Edit, 
@@ -32,10 +34,30 @@ interface ProfilePageProps {
   onBack: () => void;
 }
 
+interface UserProfileData {
+  name: string;
+  email: string;
+  phone: string;
+  location: string;
+  bio: string;
+  birthDate: string;
+  goals: string;
+}
+
 const ProfilePage: React.FC<ProfilePageProps> = ({ onBack }) => {
   const { isDarkMode, toggleDarkMode } = useTheme();
   const [notifications, setNotifications] = useState(true);
   const [dataSharing, setDataSharing] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [userProfile, setUserProfile] = useState<UserProfileData>({
+    name: 'Sarah Martin',
+    email: 'sarah.martin@email.com',
+    phone: '+33 6 12 34 56 78',
+    location: 'Paris, France',
+    bio: 'Passionnée de bien-être et de développement personnel. J\'aime méditer, faire du yoga et explorer de nouvelles techniques de relaxation.',
+    birthDate: '1990-05-15',
+    goals: 'Améliorer ma gestion du stress, développer une routine de méditation quotidienne et optimiser mon sommeil.'
+  });
 
   const userStats = {
     totalPoints: 1247,
@@ -61,6 +83,25 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onBack }) => {
     { id: 'meditation', label: 'Méditation guidée', enabled: true },
   ];
 
+  const handleSaveProfile = (data: UserProfileData) => {
+    setUserProfile(data);
+    setIsEditing(false);
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+  };
+
+  if (isEditing) {
+    return (
+      <EditProfileForm
+        initialData={userProfile}
+        onSave={handleSaveProfile}
+        onCancel={handleCancelEdit}
+      />
+    );
+  }
+
   return (
     <div className="space-y-6 animate-fadeIn">
       {/* Header */}
@@ -75,7 +116,12 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onBack }) => {
             >
               ← Retour
             </Button>
-            <Button variant="ghost" size="icon" className="text-white hover:bg-white/20">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="text-white hover:bg-white/20"
+              onClick={() => setIsEditing(true)}
+            >
               <Edit className="h-4 w-4" />
             </Button>
           </div>
@@ -94,7 +140,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onBack }) => {
             </div>
             
             <div className="flex-1">
-              <h1 className="text-xl font-bold">Sarah Martin</h1>
+              <h1 className="text-xl font-bold">{userProfile.name}</h1>
               <p className="text-white/90 text-sm">Membre depuis mars 2024</p>
               <div className="flex items-center space-x-2 mt-1">
                 <Badge className="bg-white/20 text-white border-white/20 text-xs">
@@ -116,24 +162,46 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onBack }) => {
 
       {/* Contact Info */}
       <Card className="p-4">
-        <h2 className="text-lg font-semibold mb-3">Informations personnelles</h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-lg font-semibold">Informations personnelles</h2>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => setIsEditing(true)}
+            className="text-wellness-lavender hover:bg-wellness-lavender/10"
+          >
+            <Edit className="h-4 w-4 mr-1" />
+            Modifier
+          </Button>
+        </div>
         <div className="space-y-3">
           <div className="flex items-center space-x-3">
             <Mail className="h-4 w-4 text-gray-500" />
-            <span className="text-sm">sarah.martin@email.com</span>
+            <span className="text-sm">{userProfile.email}</span>
           </div>
           <div className="flex items-center space-x-3">
             <Phone className="h-4 w-4 text-gray-500" />
-            <span className="text-sm">+33 6 12 34 56 78</span>
+            <span className="text-sm">{userProfile.phone}</span>
           </div>
           <div className="flex items-center space-x-3">
             <MapPin className="h-4 w-4 text-gray-500" />
-            <span className="text-sm">Paris, France</span>
+            <span className="text-sm">{userProfile.location}</span>
           </div>
           <div className="flex items-center space-x-3">
             <Clock className="h-4 w-4 text-gray-500" />
             <span className="text-sm">Fuseau horaire: Europe/Paris</span>
           </div>
+          {userProfile.bio && (
+            <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+              <p className="text-sm text-gray-700">{userProfile.bio}</p>
+            </div>
+          )}
+          {userProfile.goals && (
+            <div className="mt-2 p-3 bg-wellness-lavender/10 rounded-lg">
+              <h4 className="text-sm font-medium text-wellness-lavender mb-1">Mes objectifs</h4>
+              <p className="text-sm text-gray-700">{userProfile.goals}</p>
+            </div>
+          )}
         </div>
       </Card>
 
