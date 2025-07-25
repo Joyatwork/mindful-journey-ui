@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -28,7 +29,7 @@ import EditProfileForm from './EditProfileForm';
 import { useState } from 'react';
 
 const ProfilePage = () => {
-  const { isDark, toggleTheme } = useTheme();
+  const { isDarkMode, toggleDarkMode } = useTheme();
   const { isInstallable, installPWA } = usePWAInstall();
 
   const [isEditing, setIsEditing] = useState(false);
@@ -37,9 +38,10 @@ const ProfilePage = () => {
     name: 'John Smith',
     email: 'john.smith@example.com',
     phone: '123-456-7890',
-    address: '123 Main St, Anytown',
-    birthday: '1990-01-01',
+    location: '123 Main St, Anytown',
+    birthDate: '1990-01-01',
     bio: 'A short bio about the user. This could include their interests, hobbies, or anything else they want to share.',
+    goals: 'Improve wellness and reduce stress through meditation and mindfulness.'
   });
 
   const handleSave = (newInfo: any) => {
@@ -114,7 +116,7 @@ const ProfilePage = () => {
         {/* Edit Profile Form */}
         {isEditing && (
           <EditProfileForm
-            userInfo={userInfo}
+            initialData={userInfo}
             onSave={handleSave}
             onCancel={() => setIsEditing(false)}
           />
@@ -142,13 +144,13 @@ const ProfilePage = () => {
             </div>
             <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
               <MapPin className="w-5 h-5" />
-              <a href={`https://www.google.com/maps/place/${userInfo.address}`} target="_blank" rel="noopener noreferrer" className="hover:text-purple-500 dark:hover:text-purple-300">
-                {userInfo.address}
+              <a href={`https://www.google.com/maps/place/${userInfo.location}`} target="_blank" rel="noopener noreferrer" className="hover:text-purple-500 dark:hover:text-purple-300">
+                {userInfo.location}
               </a>
             </div>
             <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
               <Calendar className="w-5 h-5" />
-              Date de naissance: {new Date(userInfo.birthday).toLocaleDateString()}
+              Date de naissance: {new Date(userInfo.birthDate).toLocaleDateString()}
             </div>
           </CardContent>
         </Card>
@@ -163,7 +165,7 @@ const ProfilePage = () => {
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-gray-700 dark:text-gray-300">Mode sombre</span>
-              <Switch checked={isDark} onCheckedChange={toggleTheme} id="dark-mode" />
+              <Switch checked={isDarkMode} onCheckedChange={toggleDarkMode} id="dark-mode" />
             </div>
             <Separator className="bg-gray-200 dark:bg-gray-700" />
             <div className="flex items-center justify-between">

@@ -347,9 +347,7 @@ const Index = () => {
           {currentView === 'diagnostic' && renderDiagnostic()}
           {currentView === 'challenges' && renderChallenges()}
           {currentView === 'progress' && renderProgress()}
-          {currentView === 'profile' && (
-            <ProfilePage onBack={() => setCurrentView('dashboard')} />
-          )}
+          {currentView === 'profile' && <ProfilePage />}
         </div>
         
         {currentView !== 'diagnostic' && renderBottomNav()}
