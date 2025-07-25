@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -6,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import MoodSelector from '@/components/MoodSelector';
 import WellnessCard from '@/components/WellnessCard';
 import ProgressChart from '@/components/ProgressChart';
+import ProgressPage from '@/components/ProgressPage';
 import ChallengeFilter from '@/components/ChallengeFilter';
 import DiagnosticStep from '@/components/DiagnosticStep';
 import { 
@@ -288,6 +288,10 @@ const Index = () => {
     </div>
   );
 
+  const renderProgress = () => (
+    <ProgressPage onBack={() => setCurrentView('dashboard')} />
+  );
+
   const renderBottomNav = () => (
     <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2">
       <div className="flex justify-around max-w-md mx-auto">
@@ -341,13 +345,7 @@ const Index = () => {
           {currentView === 'dashboard' && renderDashboard()}
           {currentView === 'diagnostic' && renderDiagnostic()}
           {currentView === 'challenges' && renderChallenges()}
-          {currentView === 'progress' && (
-            <div className="text-center py-20">
-              <TrendingUp className="h-16 w-16 mx-auto text-gray-400 mb-4" />
-              <h2 className="text-xl font-semibold mb-2">Progrès détaillés</h2>
-              <p className="text-gray-600">Consultez vos statistiques complètes</p>
-            </div>
-          )}
+          {currentView === 'progress' && renderProgress()}
           {currentView === 'profile' && (
             <div className="text-center py-20">
               <User className="h-16 w-16 mx-auto text-gray-400 mb-4" />
