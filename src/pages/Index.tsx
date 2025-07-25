@@ -1,342 +1,361 @@
-
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import MoodSelector from '@/components/MoodSelector';
 import WellnessCard from '@/components/WellnessCard';
+import ProgressChart from '@/components/ProgressChart';
 import ProgressPage from '@/components/ProgressPage';
-import ProfilePage from '@/components/ProfilePage';
+import ChallengeFilter from '@/components/ChallengeFilter';
 import DiagnosticStep from '@/components/DiagnosticStep';
-import {
-  Heart,
-  Brain,
-  Moon,
-  Activity,
-  Target,
-  Award,
+import { 
+  Heart, 
+  Brain, 
+  Moon, 
+  Zap, 
+  Target, 
+  TrendingUp, 
   Calendar,
-  TrendingUp,
-  Sparkles,
-  User,
-  Settings,
-  ArrowRight,
-  Plus,
-  CheckCircle,
-  Clock,
   Star,
-  Zap,
-  Shield,
+  Award,
   Bell,
-  Play
+  User,
+  Settings
 } from 'lucide-react';
 
 const Index = () => {
-  const [currentView, setCurrentView] = useState<'home' | 'progress' | 'profile' | 'diagnostic'>('home');
-  const [selectedMood, setSelectedMood] = useState<number | null>(null);
-  const [currentStep, setCurrentStep] = useState(0);
-  const [diagnosticAnswers, setDiagnosticAnswers] = useState<any[]>([]);
+  const [currentView, setCurrentView] = useState('dashboard');
+  const [selectedMood, setSelectedMood] = useState<number>();
+  const [challengeFilters, setChallengeFilters] = useState<string[]>([]);
+  const [diagnosticStep, setDiagnosticStep] = useState(1);
+  const [diagnosticAnswers, setDiagnosticAnswers] = useState<Record<string, any>>({});
 
-  const diagnosticSteps = [
-    {
-      id: 'mood',
-      question: "Comment vous sentez-vous aujourd'hui ?",
-      type: "emoji" as const,
-      options: [
-        "Très stressé",
-        "Stressé", 
-        "Neutre",
-        "Calme",
-        "Très calme"
-      ]
-    },
-    {
-      id: 'stress',
-      question: "Quel est votre niveau de stress ?",
-      type: "slider" as const,
-      min: 1,
-      max: 5,
-      labels: { min: "Très faible", max: "Très élevé" }
-    },
-    {
-      id: 'sleep',
-      question: "Comment avez-vous dormi cette nuit ?",
-      type: "slider" as const,
-      min: 1,
-      max: 5,
-      labels: { min: "Très mal", max: "Très bien" }
-    },
-    {
-      id: 'energy',
-      question: "Quel est votre niveau d'énergie ?",
-      type: "slider" as const,
-      min: 1,
-      max: 5,
-      labels: { min: "Très faible", max: "Très élevé" }
-    },
-    {
-      id: 'priorities',
-      question: "Quelles sont vos priorités aujourd'hui ?",
-      type: "choice" as const,
-      options: [
-        "Réduire le stress",
-        "Améliorer le sommeil",
-        "Booster l'énergie",
-        "Gérer les émotions",
-        "Améliorer la concentration"
-      ]
-    }
+  // Sample data
+  const progressData = [
+    { date: 'Lun', mood: 3, stress: 4, energy: 3, sleep: 4 },
+    { date: 'Mar', mood: 4, stress: 3, energy: 4, sleep: 3 },
+    { date: 'Mer', mood: 3, stress: 5, energy: 2, sleep: 4 },
+    { date: 'Jeu', mood: 4, stress: 2, energy: 4, sleep: 5 },
+    { date: 'Ven', mood: 5, stress: 2, energy: 5, sleep: 4 },
+    { date: 'Sam', mood: 4, stress: 3, energy: 4, sleep: 5 },
+    { date: 'Dim', mood: 4, stress: 2, energy: 4, sleep: 4 },
   ];
 
   const wellnessCards = [
     {
-      id: 1,
-      title: "Respiration profonde",
-      description: "Exercice de 5 minutes pour se détendre",
-      duration: "5 min",
-      difficulty: "Facile" as const,
-      category: "Relaxation",
-      icon: <Heart className="h-5 w-5" />,
-      color: "text-red-500",
-      bgColor: "bg-red-50",
-      gradient: "from-red-500 to-pink-500",
-      onAction: () => console.log("Starting breathing exercise")
-    },
-    {
-      id: 2,
       title: "Méditation guidée",
-      description: "Session de pleine conscience",
+      description: "Séance de relaxation pour réduire le stress et améliorer la concentration",
       duration: "10 min",
       difficulty: "Facile" as const,
-      category: "Mental",
-      icon: <Brain className="h-5 w-5" />,
-      color: "text-purple-500",
-      bgColor: "bg-purple-50",
-      gradient: "from-purple-500 to-indigo-500",
-      onAction: () => console.log("Starting meditation")
+      category: "Mindfulness",
+      icon: <Brain className="h-5 w-5 text-wellness-lavender" />,
+      gradient: "bg-gradient-to-r from-purple-400 to-pink-400"
     },
     {
-      id: 3,
+      title: "Exercices de respiration",
+      description: "Techniques de respiration pour gérer l'anxiété au quotidien",
+      duration: "5 min",
+      difficulty: "Facile" as const,
+      category: "Gestion du stress",
+      icon: <Heart className="h-5 w-5 text-red-400" />,
+      gradient: "bg-wellness-gradient"
+    },
+    {
       title: "Routine sommeil",
-      description: "Préparez-vous pour une nuit réparatrice",
+      description: "Améliorez la qualité de votre sommeil avec ces conseils personnalisés",
       duration: "15 min",
-      difficulty: "Facile" as const,
+      difficulty: "Moyen" as const,
       category: "Sommeil",
-      icon: <Moon className="h-5 w-5" />,
-      color: "text-blue-500",
-      bgColor: "bg-blue-50",
-      gradient: "from-blue-500 to-cyan-500",
-      onAction: () => console.log("Starting sleep routine")
-    },
-    {
-      id: 4,
-      title: "Étirements énergisants",
-      description: "Réveillez votre corps en douceur",
-      duration: "8 min",
-      difficulty: "Facile" as const,
-      category: "Physique",
-      icon: <Activity className="h-5 w-5" />,
-      color: "text-green-500",
-      bgColor: "bg-green-50",
-      gradient: "from-green-500 to-emerald-500",
-      onAction: () => console.log("Starting stretching")
+      icon: <Moon className="h-5 w-5 text-purple-400" />,
+      gradient: "bg-gradient-to-r from-purple-500 to-blue-500"
     }
   ];
 
-  const handleDiagnosticComplete = () => {
-    setCurrentStep(0);
-    setDiagnosticAnswers([]);
-    setCurrentView('home');
-  };
+  const diagnosticQuestions = [
+    {
+      id: 'stress_level',
+      question: 'Sur une échelle de 1 à 10, comment évaluez-vous votre niveau de stress actuel ?',
+      type: 'slider' as const,
+      min: 1,
+      max: 10,
+      labels: { min: 'Très détendu', max: 'Très stressé' }
+    },
+    {
+      id: 'mood_emoji',
+      question: 'Comment décririez-vous votre humeur générale cette semaine ?',
+      type: 'emoji' as const
+    },
+    {
+      id: 'sleep_quality',
+      question: 'Comment qualifiez-vous votre sommeil ces derniers temps ?',
+      type: 'choice' as const,
+      options: [
+        'Excellent, je me réveille reposé(e)',
+        'Bon, quelques réveils nocturnes',
+        'Moyen, j\'ai du mal à m\'endormir',
+        'Difficile, je me réveille fatigué(e)',
+        'Très mauvais, insomnies fréquentes'
+      ]
+    },
+    {
+      id: 'energy_level',
+      question: 'Quel est votre niveau d\'énergie habituel pendant la journée ?',
+      type: 'slider' as const,
+      min: 1,
+      max: 10,
+      labels: { min: 'Très fatigué', max: 'Très énergique' }
+    },
+    {
+      id: 'work_pressure',
+      question: 'Ressentez-vous une pression importante dans votre travail ?',
+      type: 'choice' as const,
+      options: [
+        'Jamais, mon travail est équilibré',
+        'Rarement, seulement en période chargée',
+        'Parfois, certaines semaines sont difficiles',
+        'Souvent, je ressens une pression constante',
+        'Toujours, je suis débordé(e) en permanence'
+      ]
+    }
+  ];
 
-  const handleDiagnosticValueChange = (value: any) => {
-    const newAnswers = [...diagnosticAnswers];
-    newAnswers[currentStep] = value;
-    setDiagnosticAnswers(newAnswers);
-  };
-
-  const canGoNext = diagnosticAnswers[currentStep] !== undefined && diagnosticAnswers[currentStep] !== null;
-
-  const renderHome = () => (
-    <div className="space-y-6">
-      {/* Header avec profil */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <Avatar className="h-12 w-12">
-            <AvatarImage src="/placeholder.svg" alt="User" />
-            <AvatarFallback className="bg-wellness-gradient text-white">MD</AvatarFallback>
-          </Avatar>
-          <div>
-            <h1 className="text-2xl font-bold">Bonjour Marie ! 👋</h1>
-            <p className="text-muted-foreground">Comment vous sentez-vous aujourd'hui ?</p>
+  const renderDashboard = () => (
+    <div className="space-y-6 animate-fadeIn">
+      {/* Header */}
+      <div className="bg-wellness-gradient rounded-3xl p-6 text-white relative overflow-hidden">
+        <div className="relative z-10">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="text-2xl font-bold mb-1">Bonjour Sarah ! 👋</h1>
+              <p className="text-white/90">Comment vous sentez-vous aujourd'hui ?</p>
+            </div>
+            <div className="flex space-x-2">
+              <Button variant="ghost" size="icon" className="text-white hover:bg-white/20">
+                <Bell className="h-5 w-5" />
+              </Button>
+              <Button variant="ghost" size="icon" className="text-white hover:bg-white/20">
+                <Settings className="h-5 w-5" />
+              </Button>
+            </div>
+          </div>
+          
+          <div className="flex items-center space-x-4">
+            <Badge className="bg-white/20 text-white border-white/20">
+              Semaine 3
+            </Badge>
+            <Badge className="bg-white/20 text-white border-white/20">
+              <Star className="h-3 w-3 mr-1" />
+              420 points
+            </Badge>
           </div>
         </div>
-        <div className="flex items-center space-x-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setCurrentView('profile')}
-            className="rounded-full"
-          >
-            <User className="h-5 w-5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="rounded-full"
-          >
-            <Bell className="h-5 w-5" />
-          </Button>
-        </div>
+        
+        {/* Decorative elements */}
+        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-6 translate-x-6" />
+        <div className="absolute bottom-0 right-8 w-20 h-20 bg-white/5 rounded-full" />
       </div>
 
-      {/* Sélecteur d'humeur */}
-      <Card className="glass-card border-0 shadow-lg">
-        <CardHeader>
-          <CardTitle className="text-lg">Mon humeur aujourd'hui</CardTitle>
-          <CardDescription>Choisissez comment vous vous sentez</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <MoodSelector selectedMood={selectedMood} onMoodSelect={setSelectedMood} />
-        </CardContent>
-      </Card>
+      {/* Mood Selector */}
+      <MoodSelector 
+        selectedMood={selectedMood}
+        onMoodSelect={setSelectedMood}
+      />
 
-      {/* Stats rapides */}
-      <div className="grid grid-cols-2 gap-4">
-        <Card className="glass-card border-0 shadow-lg">
-          <CardContent className="p-4 text-center">
-            <div className="flex items-center justify-center mb-2">
-              <Target className="h-8 w-8 text-wellness-primary" />
-            </div>
-            <div className="text-xl font-bold">7</div>
-            <div className="text-sm text-muted-foreground">Jours de suite</div>
-          </CardContent>
-        </Card>
-        <Card className="glass-card border-0 shadow-lg">
-          <CardContent className="p-4 text-center">
-            <div className="flex items-center justify-center mb-2">
-              <Star className="h-8 w-8 text-yellow-500" />
-            </div>
-            <div className="text-xl font-bold">420</div>
-            <div className="text-sm text-muted-foreground">Points</div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Actions rapides */}
+      {/* Quick Actions */}
       <div className="grid grid-cols-2 gap-4">
         <Button 
           onClick={() => setCurrentView('diagnostic')}
-          className="h-16 bg-wellness-gradient hover:bg-wellness-gradient/90 text-white rounded-xl"
+          className="h-16 bg-wellness-gradient hover:opacity-90 text-white rounded-2xl"
         >
-          <div className="flex flex-col items-center space-y-1">
-            <Heart className="h-5 w-5" />
-            <span className="text-sm">Check-up</span>
+          <div className="text-center">
+            <Brain className="h-6 w-6 mx-auto mb-1" />
+            <div className="text-sm font-medium">Auto-diagnostic</div>
           </div>
         </Button>
+        
         <Button 
-          onClick={() => setCurrentView('progress')}
-          variant="outline"
-          className="h-16 border-wellness-primary/20 rounded-xl"
+          onClick={() => setCurrentView('challenges')}
+          className="h-16 bg-gradient-to-br from-orange-400 to-pink-400 hover:opacity-90 text-white rounded-2xl"
         >
-          <div className="flex flex-col items-center space-y-1">
-            <TrendingUp className="h-5 w-5" />
-            <span className="text-sm">Mes progrès</span>
+          <div className="text-center">
+            <Target className="h-6 w-6 mx-auto mb-1" />
+            <div className="text-sm font-medium">Mes Défis</div>
           </div>
         </Button>
       </div>
 
-      {/* Suggestions personnalisées */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold">Suggestions pour vous</h2>
-          <Badge className="bg-wellness-gradient text-white">
-            <Sparkles className="h-3 w-3 mr-1" />
-            IA
-          </Badge>
+      {/* Progress Charts */}
+      <div className="grid grid-cols-2 gap-4">
+        <ProgressChart 
+          data={progressData}
+          title="Humeur"
+          metric="mood"
+        />
+        <ProgressChart 
+          data={progressData}
+          title="Énergie"
+          metric="energy"
+        />
+      </div>
+
+      {/* Wellness Suggestions */}
+      <div>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-semibold">Suggestions personnalisées</h2>
+          <Button variant="ghost" size="sm">Voir tout</Button>
         </div>
         
-        <div className="space-y-3">
-          {wellnessCards.map((card) => (
-            <WellnessCard key={card.id} {...card} />
+        <div className="space-y-4">
+          {wellnessCards.map((card, index) => (
+            <WellnessCard
+              key={index}
+              {...card}
+              onAction={() => console.log(`Starting ${card.title}`)}
+            />
           ))}
         </div>
       </div>
-
-      {/* Défi du jour */}
-      <Card className="glass-card border-0 shadow-lg bg-gradient-to-r from-wellness-primary/5 to-wellness-secondary/5">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-lg">Défi du jour</CardTitle>
-              <CardDescription>Prenez 2 minutes pour vous</CardDescription>
-            </div>
-            <Award className="h-8 w-8 text-wellness-primary" />
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-semibold mb-1">Respiration consciente</h3>
-              <p className="text-sm text-muted-foreground">
-                Prenez 5 respirations profondes et concentrez-vous sur le moment présent
-              </p>
-            </div>
-            <Button className="bg-wellness-gradient hover:bg-wellness-gradient/90 text-white">
-              <Play className="h-4 w-4 mr-2" />
-              Commencer
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 
-  const renderDiagnostic = () => (
-    <div className="space-y-6">
-      <DiagnosticStep
-        question={diagnosticSteps[currentStep]}
-        currentStep={currentStep + 1}
-        totalSteps={diagnosticSteps.length}
-        value={diagnosticAnswers[currentStep]}
-        onValueChange={handleDiagnosticValueChange}
-        onNext={() => {
-          if (currentStep < diagnosticSteps.length - 1) {
-            setCurrentStep(currentStep + 1);
-          } else {
-            handleDiagnosticComplete();
-          }
-        }}
-        onPrevious={() => {
-          if (currentStep > 0) {
-            setCurrentStep(currentStep - 1);
-          } else {
-            setCurrentView('home');
-          }
-        }}
-        canGoNext={canGoNext}
+  const renderDiagnostic = () => {
+    const currentQuestion = diagnosticQuestions[diagnosticStep - 1];
+    const currentAnswer = diagnosticAnswers[currentQuestion?.id];
+
+    const handleNext = () => {
+      if (diagnosticStep < diagnosticQuestions.length) {
+        setDiagnosticStep(diagnosticStep + 1);
+      } else {
+        // Complete diagnostic
+        console.log('Diagnostic completed:', diagnosticAnswers);
+        setCurrentView('dashboard');
+      }
+    };
+
+    const handlePrevious = () => {
+      if (diagnosticStep > 1) {
+        setDiagnosticStep(diagnosticStep - 1);
+      }
+    };
+
+    const handleAnswerChange = (value: any) => {
+      setDiagnosticAnswers(prev => ({
+        ...prev,
+        [currentQuestion.id]: value
+      }));
+    };
+
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 py-8 px-4">
+        <DiagnosticStep
+          question={currentQuestion}
+          currentStep={diagnosticStep}
+          totalSteps={diagnosticQuestions.length}
+          value={currentAnswer}
+          onValueChange={handleAnswerChange}
+          onNext={handleNext}
+          onPrevious={handlePrevious}
+          canGoNext={currentAnswer !== undefined}
+        />
+      </div>
+    );
+  };
+
+  const renderChallenges = () => (
+    <div className="space-y-6 animate-fadeIn">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Mes Défis</h1>
+        <Button variant="outline" size="sm" onClick={() => setCurrentView('dashboard')}>
+          Retour
+        </Button>
+      </div>
+
+      <ChallengeFilter 
+        activeFilters={challengeFilters}
+        onFilterChange={setChallengeFilters}
       />
+
+      <div className="grid gap-4">
+        {wellnessCards.map((card, index) => (
+          <WellnessCard
+            key={index}
+            {...card}
+            onAction={() => console.log(`Starting challenge: ${card.title}`)}
+            actionLabel="Je le fais !"
+          />
+        ))}
+      </div>
     </div>
   );
 
-  // Render based on current view
-  if (currentView === 'progress') {
-    return <ProgressPage onBack={() => setCurrentView('home')} />;
-  }
+  const renderProgress = () => (
+    <ProgressPage onBack={() => setCurrentView('dashboard')} />
+  );
 
-  if (currentView === 'profile') {
-    return <ProfilePage onBack={() => setCurrentView('home')} />;
-  }
-
-  if (currentView === 'diagnostic') {
-    return renderDiagnostic();
-  }
+  const renderBottomNav = () => (
+    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2">
+      <div className="flex justify-around max-w-md mx-auto">
+        <Button 
+          variant={currentView === 'dashboard' ? 'default' : 'ghost'}
+          size="sm"
+          onClick={() => setCurrentView('dashboard')}
+          className="flex flex-col items-center space-y-1 h-12 px-3"
+        >
+          <Heart className="h-4 w-4" />
+          <span className="text-xs">Accueil</span>
+        </Button>
+        
+        <Button 
+          variant={currentView === 'challenges' ? 'default' : 'ghost'}
+          size="sm"
+          onClick={() => setCurrentView('challenges')}
+          className="flex flex-col items-center space-y-1 h-12 px-3"
+        >
+          <Target className="h-4 w-4" />
+          <span className="text-xs">Défis</span>
+        </Button>
+        
+        <Button 
+          variant={currentView === 'progress' ? 'default' : 'ghost'}
+          size="sm"
+          onClick={() => setCurrentView('progress')}
+          className="flex flex-col items-center space-y-1 h-12 px-3"
+        >
+          <TrendingUp className="h-4 w-4" />
+          <span className="text-xs">Progrès</span>
+        </Button>
+        
+        <Button 
+          variant={currentView === 'profile' ? 'default' : 'ghost'}
+          size="sm"
+          onClick={() => setCurrentView('profile')}
+          className="flex flex-col items-center space-y-1 h-12 px-3"
+        >
+          <User className="h-4 w-4" />
+          <span className="text-xs">Profil</span>
+        </Button>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-wellness-bg via-white to-wellness-bg/50">
-      <div className="container mx-auto px-4 py-6 max-w-md">
-        {renderHome()}
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      <div className="max-w-md mx-auto min-h-screen bg-white/50 backdrop-blur-sm">
+        <div className="px-4 py-6 pb-20">
+          {currentView === 'dashboard' && renderDashboard()}
+          {currentView === 'diagnostic' && renderDiagnostic()}
+          {currentView === 'challenges' && renderChallenges()}
+          {currentView === 'progress' && renderProgress()}
+          {currentView === 'profile' && (
+            <div className="text-center py-20">
+              <User className="h-16 w-16 mx-auto text-gray-400 mb-4" />
+              <h2 className="text-xl font-semibold mb-2">Mon Profil</h2>
+              <p className="text-gray-600">Gérez vos préférences et paramètres</p>
+            </div>
+          )}
+        </div>
+        
+        {currentView !== 'diagnostic' && renderBottomNav()}
       </div>
     </div>
   );
