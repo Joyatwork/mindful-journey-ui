@@ -28,7 +28,8 @@ import {
   Star,
   Zap,
   Shield,
-  Bell
+  Bell,
+  Play
 } from 'lucide-react';
 
 const Index = () => {
@@ -91,7 +92,9 @@ const Index = () => {
       category: "Relaxation",
       icon: <Heart className="h-5 w-5" />,
       color: "text-red-500",
-      bgColor: "bg-red-50"
+      bgColor: "bg-red-50",
+      gradient: "from-red-500 to-pink-500",
+      onAction: () => console.log("Starting breathing exercise")
     },
     {
       id: 2,
@@ -102,7 +105,9 @@ const Index = () => {
       category: "Mental",
       icon: <Brain className="h-5 w-5" />,
       color: "text-purple-500",
-      bgColor: "bg-purple-50"
+      bgColor: "bg-purple-50",
+      gradient: "from-purple-500 to-indigo-500",
+      onAction: () => console.log("Starting meditation")
     },
     {
       id: 3,
@@ -113,7 +118,9 @@ const Index = () => {
       category: "Sommeil",
       icon: <Moon className="h-5 w-5" />,
       color: "text-blue-500",
-      bgColor: "bg-blue-50"
+      bgColor: "bg-blue-50",
+      gradient: "from-blue-500 to-cyan-500",
+      onAction: () => console.log("Starting sleep routine")
     },
     {
       id: 4,
@@ -124,7 +131,9 @@ const Index = () => {
       category: "Physique",
       icon: <Activity className="h-5 w-5" />,
       color: "text-green-500",
-      bgColor: "bg-green-50"
+      bgColor: "bg-green-50",
+      gradient: "from-green-500 to-emerald-500",
+      onAction: () => console.log("Starting stretching")
     }
   ];
 
@@ -271,7 +280,12 @@ const Index = () => {
   const renderDiagnostic = () => (
     <div className="space-y-6">
       <DiagnosticStep
-        step={diagnosticSteps[currentStep]}
+        title={diagnosticSteps[currentStep].title}
+        type={diagnosticSteps[currentStep].type}
+        options={diagnosticSteps[currentStep].options}
+        min={diagnosticSteps[currentStep].min}
+        max={diagnosticSteps[currentStep].max}
+        label={diagnosticSteps[currentStep].label}
         currentStep={currentStep}
         totalSteps={diagnosticSteps.length}
         onNext={() => {
