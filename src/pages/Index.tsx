@@ -36,48 +36,55 @@ const Index = () => {
   const [currentView, setCurrentView] = useState<'home' | 'progress' | 'profile' | 'diagnostic'>('home');
   const [selectedMood, setSelectedMood] = useState<number | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
+  const [diagnosticAnswers, setDiagnosticAnswers] = useState<any[]>([]);
 
   const diagnosticSteps = [
     {
-      title: "Comment vous sentez-vous aujourd'hui ?",
-      type: "mood" as const,
+      id: 'mood',
+      question: "Comment vous sentez-vous aujourd'hui ?",
+      type: "emoji" as const,
       options: [
-        { emoji: "😟", label: "Difficile", value: 1 },
-        { emoji: "😐", label: "Moyen", value: 2 },
-        { emoji: "🙂", label: "Bien", value: 3 },
-        { emoji: "😊", label: "Très bien", value: 4 },
-        { emoji: "😄", label: "Excellent", value: 5 }
+        "Très stressé",
+        "Stressé", 
+        "Neutre",
+        "Calme",
+        "Très calme"
       ]
     },
     {
-      title: "Quel est votre niveau de stress ?",
+      id: 'stress',
+      question: "Quel est votre niveau de stress ?",
       type: "slider" as const,
       min: 1,
       max: 5,
-      label: "Niveau de stress"
+      labels: { min: "Très faible", max: "Très élevé" }
     },
     {
-      title: "Comment avez-vous dormi cette nuit ?",
-      type: "rating" as const,
-      max: 5,
-      label: "Qualité du sommeil"
-    },
-    {
-      title: "Quel est votre niveau d'énergie ?",
+      id: 'sleep',
+      question: "Comment avez-vous dormi cette nuit ?",
       type: "slider" as const,
       min: 1,
       max: 5,
-      label: "Niveau d'énergie"
+      labels: { min: "Très mal", max: "Très bien" }
     },
     {
-      title: "Quelles sont vos priorités aujourd'hui ?",
-      type: "multiple" as const,
+      id: 'energy',
+      question: "Quel est votre niveau d'énergie ?",
+      type: "slider" as const,
+      min: 1,
+      max: 5,
+      labels: { min: "Très faible", max: "Très élevé" }
+    },
+    {
+      id: 'priorities',
+      question: "Quelles sont vos priorités aujourd'hui ?",
+      type: "choice" as const,
       options: [
-        { label: "Réduire le stress", value: "stress" },
-        { label: "Améliorer le sommeil", value: "sleep" },
-        { label: "Booster l'énergie", value: "energy" },
-        { label: "Gérer les émotions", value: "emotions" },
-        { label: "Améliorer la concentration", value: "focus" }
+        "Réduire le stress",
+        "Améliorer le sommeil",
+        "Booster l'énergie",
+        "Gérer les émotions",
+        "Améliorer la concentration"
       ]
     }
   ];
@@ -88,7 +95,7 @@ const Index = () => {
       title: "Respiration profonde",
       description: "Exercice de 5 minutes pour se détendre",
       duration: "5 min",
-      difficulty: "Facile",
+      difficulty: "Facile" as const,
       category: "Relaxation",
       icon: <Heart className="h-5 w-5" />,
       color: "text-red-500",
@@ -101,7 +108,7 @@ const Index = () => {
       title: "Méditation guidée",
       description: "Session de pleine conscience",
       duration: "10 min",
-      difficulty: "Débutant",
+      difficulty: "Facile" as const,
       category: "Mental",
       icon: <Brain className="h-5 w-5" />,
       color: "text-purple-500",
@@ -114,7 +121,7 @@ const Index = () => {
       title: "Routine sommeil",
       description: "Préparez-vous pour une nuit réparatrice",
       duration: "15 min",
-      difficulty: "Facile",
+      difficulty: "Facile" as const,
       category: "Sommeil",
       icon: <Moon className="h-5 w-5" />,
       color: "text-blue-500",
@@ -127,7 +134,7 @@ const Index = () => {
       title: "Étirements énergisants",
       description: "Réveillez votre corps en douceur",
       duration: "8 min",
-      difficulty: "Facile",
+      difficulty: "Facile" as const,
       category: "Physique",
       icon: <Activity className="h-5 w-5" />,
       color: "text-green-500",
@@ -139,8 +146,17 @@ const Index = () => {
 
   const handleDiagnosticComplete = () => {
     setCurrentStep(0);
+    setDiagnosticAnswers([]);
     setCurrentView('home');
   };
+
+  const handleDiagnosticValueChange = (value: any) => {
+    const newAnswers = [...diagnosticAnswers];
+    newAnswers[currentStep] = value;
+    setDiagnosticAnswers(newAnswers);
+  };
+
+  const canGoNext = diagnosticAnswers[currentStep] !== undefined && diagnosticAnswers[currentStep] !== null;
 
   const renderHome = () => (
     <div className="space-y-6">
@@ -280,14 +296,11 @@ const Index = () => {
   const renderDiagnostic = () => (
     <div className="space-y-6">
       <DiagnosticStep
-        title={diagnosticSteps[currentStep].title}
-        type={diagnosticSteps[currentStep].type}
-        options={diagnosticSteps[currentStep].options}
-        min={diagnosticSteps[currentStep].min}
-        max={diagnosticSteps[currentStep].max}
-        label={diagnosticSteps[currentStep].label}
-        currentStep={currentStep}
+        question={diagnosticSteps[currentStep]}
+        currentStep={currentStep + 1}
         totalSteps={diagnosticSteps.length}
+        value={diagnosticAnswers[currentStep]}
+        onValueChange={handleDiagnosticValueChange}
         onNext={() => {
           if (currentStep < diagnosticSteps.length - 1) {
             setCurrentStep(currentStep + 1);
@@ -295,13 +308,14 @@ const Index = () => {
             handleDiagnosticComplete();
           }
         }}
-        onBack={() => {
+        onPrevious={() => {
           if (currentStep > 0) {
             setCurrentStep(currentStep - 1);
           } else {
             setCurrentView('home');
           }
         }}
+        canGoNext={canGoNext}
       />
     </div>
   );
