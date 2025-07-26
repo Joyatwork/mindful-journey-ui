@@ -35,6 +35,10 @@ const HealthProfessionalsList: React.FC<HealthProfessionalsListProps> = ({
 
   const specialties = Array.from(new Set(professionals.map(p => p.specialty)));
 
+  const handleSortChange = (value: string) => {
+    setSortBy(value as 'rating' | 'price' | 'experience');
+  };
+
   const filteredProfessionals = professionals
     .filter(prof => {
       const matchesSearch = prof.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -112,7 +116,7 @@ const HealthProfessionalsList: React.FC<HealthProfessionalsListProps> = ({
             </SelectContent>
           </Select>
 
-          <Select value={sortBy} onValueChange={setSortBy}>
+          <Select value={sortBy} onValueChange={handleSortChange}>
             <SelectTrigger className="w-[180px]">
               <SortAsc className="w-4 h-4 mr-2" />
               <SelectValue />

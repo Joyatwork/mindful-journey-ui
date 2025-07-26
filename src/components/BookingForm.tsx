@@ -82,6 +82,10 @@ const BookingForm: React.FC<BookingFormProps> = ({
     }
   };
 
+  const handleConsultationTypeChange = (value: string) => {
+    setConsultationType(value as 'video' | 'inPerson' | 'phone');
+  };
+
   const canSubmit = selectedDate && selectedTime && reason.trim() && 
                    contactInfo.name && contactInfo.email;
 
@@ -145,7 +149,7 @@ const BookingForm: React.FC<BookingFormProps> = ({
             {/* Consultation Type */}
             <div className="space-y-2">
               <Label>Type de consultation</Label>
-              <Select value={consultationType} onValueChange={setConsultationType}>
+              <Select value={consultationType} onValueChange={handleConsultationTypeChange}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
