@@ -12,7 +12,7 @@ import DiagnosticStep from '@/components/DiagnosticStep';
 import ProfilePage from '@/components/ProfilePage';
 import HealthSpecialistSuggestions from '@/components/HealthSpecialistSuggestions';
 import SpecialistProfile from '@/components/SpecialistProfile';
-import BookingModal from '@/components/BookingModal';
+import BookingPage from '@/components/BookingPage';
 import HealthProfessionalsList from '@/components/HealthProfessionalsList';
 import { 
   Heart, 
@@ -36,7 +36,6 @@ const Index = () => {
   const [challengeFilters, setChallengeFilters] = useState<string[]>([]);
   const [diagnosticStep, setDiagnosticStep] = useState(1);
   const [diagnosticAnswers, setDiagnosticAnswers] = useState<Record<string, any>>({});
-  const [bookingModalOpen, setBookingModalOpen] = useState(false);
   const [selectedSpecialist, setSelectedSpecialist] = useState<any>(null);
 
   const progressData = [
@@ -129,7 +128,7 @@ const Index = () => {
 
   const handleBookAppointment = (specialist: any) => {
     setSelectedSpecialist(specialist);
-    setBookingModalOpen(true);
+    setCurrentView('booking');
   };
 
   const handleViewProfile = (specialist: any) => {
@@ -338,6 +337,13 @@ const Index = () => {
     />
   );
 
+  const renderBooking = () => (
+    <BookingPage
+      specialist={selectedSpecialist}
+      onBack={() => setCurrentView('dashboard')}
+    />
+  );
+
   const renderBottomNav = () => (
     <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2 z-50">
       <div className="flex justify-around max-w-md mx-auto">
@@ -395,17 +401,11 @@ const Index = () => {
           {currentView === 'profile' && <ProfilePage />}
           {currentView === 'professionals' && renderProfessionals()}
           {currentView === 'specialist-profile' && renderSpecialistProfile()}
+          {currentView === 'booking' && renderBooking()}
         </div>
         
-        {/* La navbar est maintenant affichée sur toutes les pages */}
         {renderBottomNav()}
       </div>
-
-      <BookingModal
-        isOpen={bookingModalOpen}
-        onClose={() => setBookingModalOpen(false)}
-        specialist={selectedSpecialist}
-      />
     </div>
   );
 };
