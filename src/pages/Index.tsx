@@ -10,6 +10,7 @@ import ChallengeFilter from '@/components/ChallengeFilter';
 import DiagnosticStep from '@/components/DiagnosticStep';
 import ProfilePage from '@/components/ProfilePage';
 import HealthSpecialistSuggestions from '@/components/HealthSpecialistSuggestions';
+import SpecialistProfile from '@/components/SpecialistProfile';
 import BookingModal from '@/components/BookingModal';
 import { 
   Heart, 
@@ -35,7 +36,6 @@ const Index = () => {
   const [bookingModalOpen, setBookingModalOpen] = useState(false);
   const [selectedSpecialist, setSelectedSpecialist] = useState<any>(null);
 
-  // Sample data
   const progressData = [
     { date: 'Lun', mood: 3, stress: 4, energy: 3, sleep: 4 },
     { date: 'Mar', mood: 4, stress: 3, energy: 4, sleep: 3 },
@@ -129,9 +129,13 @@ const Index = () => {
     setBookingModalOpen(true);
   };
 
+  const handleViewProfile = (specialist: any) => {
+    setSelectedSpecialist(specialist);
+    setCurrentView('specialist-profile');
+  };
+
   const renderDashboard = () => (
     <div className="space-y-6 animate-fadeIn">
-      {/* Header */}
       <div className="bg-wellness-gradient rounded-3xl p-6 text-white relative overflow-hidden">
         <div className="relative z-10">
           <div className="flex items-center justify-between mb-4">
@@ -221,11 +225,11 @@ const Index = () => {
         </div>
       </div>
 
-      {/* Health Specialist Suggestions */}
       <HealthSpecialistSuggestions
         selectedMood={selectedMood}
         diagnosticAnswers={diagnosticAnswers}
         onBookAppointment={handleBookAppointment}
+        onViewProfile={handleViewProfile}
       />
     </div>
   );
@@ -300,7 +304,15 @@ const Index = () => {
   );
 
   const renderProgress = () => (
-    <ProgressPage />
+    <ProgressPage onBack={() => setCurrentView('dashboard')} />
+  );
+
+  const renderSpecialistProfile = () => (
+    <SpecialistProfile
+      specialist={selectedSpecialist}
+      onBack={() => setCurrentView('dashboard')}
+      onBookAppointment={handleBookAppointment}
+    />
   );
 
   const renderBottomNav = () => (
@@ -358,9 +370,10 @@ const Index = () => {
           {currentView === 'challenges' && renderChallenges()}
           {currentView === 'progress' && renderProgress()}
           {currentView === 'profile' && <ProfilePage />}
+          {currentView === 'specialist-profile' && renderSpecialistProfile()}
         </div>
         
-        {currentView !== 'diagnostic' && renderBottomNav()}
+        {currentView !== 'diagnostic' && currentView !== 'specialist-profile' && renderBottomNav()}
       </div>
 
       <BookingModal

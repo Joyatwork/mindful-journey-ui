@@ -30,12 +30,14 @@ interface HealthSpecialistSuggestionsProps {
   selectedMood?: number;
   diagnosticAnswers?: Record<string, any>;
   onBookAppointment: (specialist: HealthSpecialist) => void;
+  onViewProfile: (specialist: HealthSpecialist) => void;
 }
 
 const HealthSpecialistSuggestions = ({ 
   selectedMood, 
   diagnosticAnswers,
-  onBookAppointment 
+  onBookAppointment,
+  onViewProfile
 }: HealthSpecialistSuggestionsProps) => {
   // Logique pour suggérer des spécialistes basée sur l'humeur et le diagnostic
   const getSuggestedSpecialists = (): HealthSpecialist[] => {
@@ -75,24 +77,21 @@ const HealthSpecialistSuggestions = ({
       }
     ];
 
-    // Filtrer selon l'humeur et les réponses du diagnostic
     let filtered = baseSpecialists;
     
     if (selectedMood && selectedMood <= 2) {
-      // Humeur difficile - privilégier psychologues et psychiatres
       filtered = baseSpecialists.filter(s => 
         s.specialty.includes('Psychologue') || s.specialty.includes('Psychiatre')
       );
     }
     
     if (diagnosticAnswers?.sleep_quality?.includes('Très mauvais')) {
-      // Problèmes de sommeil - privilégier médecins généralistes
       filtered = baseSpecialists.filter(s => 
         s.specialty.includes('généraliste') || s.reason.includes('sommeil')
       );
     }
 
-    return filtered.slice(0, 2); // Limiter à 2 suggestions
+    return filtered.slice(0, 2);
   };
 
   const suggestedSpecialists = getSuggestedSpecialists();
@@ -110,7 +109,11 @@ const HealthSpecialistSuggestions = ({
       
       <div className="space-y-4">
         {suggestedSpecialists.map((specialist) => (
-          <Card key={specialist.id} className="p-4 glass-card border-0 shadow-lg">
+          <Card 
+            key={specialist.id} 
+            className="p-4 glass-card border-0 shadow-lg cursor-pointer hover:shadow-xl transition-shadow"
+            onClick={() => onViewProfile(specialist)}
+          >
             <div className="flex items-start space-x-4">
               <Avatar className="w-12 h-12">
                 <AvatarImage src={specialist.image} alt={specialist.name} />
@@ -161,7 +164,10 @@ const HealthSpecialistSuggestions = ({
                   </Badge>
                   <Button
                     size="sm"
-                    onClick={() => onBookAppointment(specialist)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onBookAppointment(specialist);
+                    }}
                     className="bg-wellness-gradient hover:opacity-90 text-white h-8 px-3 text-xs"
                   >
                     <Calendar className="h-3 w-3 mr-1" />
