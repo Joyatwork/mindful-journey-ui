@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -119,10 +118,6 @@ const ProfilePage = () => {
                     Météo bien-être: {getWeatherLabel(userInfo.wellnessWeather)}
                   </span>
                 </div>
-
-                <p className="text-gray-600 dark:text-gray-300 mb-4 max-w-md">
-                  {userInfo.bio}
-                </p>
                 
                 <div className="flex flex-wrap gap-2 justify-center md:justify-start">
                   <Badge variant="secondary" className="bg-purple-100 dark:bg-purple-800 text-purple-800 dark:text-purple-200">
