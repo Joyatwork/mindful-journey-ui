@@ -21,8 +21,12 @@ import {
   Award,
   Bell,
   User,
-  Settings
+  Settings,
+  Users
 } from 'lucide-react';
+import HealthProfessionalsList from '@/components/HealthProfessionalsList';
+import SuggestedProfessionals from '@/components/SuggestedProfessionals';
+import BookingManagement from '@/components/BookingManagement';
 
 const Index = () => {
   const [currentView, setCurrentView] = useState('dashboard');
@@ -30,6 +34,71 @@ const Index = () => {
   const [challengeFilters, setChallengeFilters] = useState<string[]>([]);
   const [diagnosticStep, setDiagnosticStep] = useState(1);
   const [diagnosticAnswers, setDiagnosticAnswers] = useState<Record<string, any>>({});
+  const [bookings, setBookings] = useState<any[]>([]);
+
+  // Sample health professionals data
+  const healthProfessionals = [
+    {
+      id: '1',
+      name: 'Dr. Marie Dubois',
+      specialty: 'Psychologue',
+      avatar: '/placeholder.svg',
+      rating: 4.9,
+      reviewCount: 127,
+      location: 'Paris 15e',
+      price: 80,
+      availableSlots: ['09:00', '10:30', '14:00', '15:30'],
+      consultationTypes: ['video', 'inPerson'] as ('video' | 'inPerson' | 'phone')[],
+      bio: 'Spécialisée dans la gestion du stress et l\'anxiété, j\'accompagne mes patients vers un mieux-être durable.',
+      languages: ['Français', 'Anglais'],
+      experience: 12
+    },
+    {
+      id: '2',
+      name: 'Dr. Pierre Martin',
+      specialty: 'Psychiatre',
+      avatar: '/placeholder.svg',
+      rating: 4.8,
+      reviewCount: 89,
+      location: 'Paris 8e',
+      price: 120,
+      availableSlots: ['08:30', '11:00', '16:00'],
+      consultationTypes: ['video', 'inPerson', 'phone'] as ('video' | 'inPerson' | 'phone')[],
+      bio: 'Psychiatre avec 15 ans d\'expérience, spécialisé dans les troubles de l\'humeur et du sommeil.',
+      languages: ['Français'],
+      experience: 15
+    },
+    {
+      id: '3',
+      name: 'Dr. Sophie Leroy',
+      specialty: 'Médecin du sommeil',
+      avatar: '/placeholder.svg',
+      rating: 4.7,
+      reviewCount: 64,
+      location: 'Paris 12e',
+      price: 90,
+      availableSlots: ['09:30', '13:00', '17:00'],
+      consultationTypes: ['video', 'inPerson'] as ('video' | 'inPerson' | 'phone')[],
+      bio: 'Spécialisée dans les troubles du sommeil et la médecine préventive pour un meilleur équilibre de vie.',
+      languages: ['Français', 'Espagnol'],
+      experience: 8
+    },
+    {
+      id: '4',
+      name: 'Dr. Thomas Moreau',
+      specialty: 'Coach bien-être',
+      avatar: '/placeholder.svg',
+      rating: 4.6,
+      reviewCount: 156,
+      location: 'En ligne',
+      price: 60,
+      availableSlots: ['10:00', '14:30', '18:00'],
+      consultationTypes: ['video', 'phone'] as ('video' | 'inPerson' | 'phone')[],
+      bio: 'Coach certifié en développement personnel et bien-être, j\'aide à retrouver l\'équilibre vie pro/perso.',
+      languages: ['Français', 'Anglais'],
+      experience: 6
+    }
+  ];
 
   // Sample data
   const progressData = [
@@ -119,6 +188,29 @@ const Index = () => {
       ]
     }
   ];
+
+  const handleBooking = (bookingData: any) => {
+    const professional = healthProfessionals.find(p => p.id === bookingData.professionalId);
+    if (professional) {
+      const newBooking = {
+        id: Math.random().toString(36).substr(2, 9),
+        ...bookingData,
+        professional,
+        status: 'upcoming' as const,
+        bookedAt: new Date()
+      };
+      setBookings(prev => [...prev, newBooking]);
+      setCurrentView('bookings');
+    }
+  };
+
+  const handleCancelBooking = (bookingId: string) => {
+    setBookings(prev => prev.map(booking => 
+      booking.id === bookingId 
+        ? { ...booking, status: 'cancelled' }
+        : booking
+    ));
+  };
 
   const renderDashboard = () => (
     <div className="space-y-6 animate-fadeIn">
@@ -216,6 +308,16 @@ const Index = () => {
           ))}
         </div>
       </div>
+
+      {/* Suggested Professionals */}
+      {Object.keys(diagnosticAnswers).length > 0 && (
+        <SuggestedProfessionals
+          diagnosticAnswers={diagnosticAnswers}
+          professionals={healthProfessionals}
+          onBook={handleBooking}
+          onViewAll={() => setCurrentView('professionals')}
+        />
+      )}
     </div>
   );
 
@@ -293,6 +395,62 @@ const Index = () => {
     <ProgressPage onBack={() => setCurrentView('dashboard')} />
   );
 
+  const renderHealthProfessionals = () => {
+    const suggestedIds = getSuggestedProfessionalIds();
+    return (
+      <HealthProfessionalsList
+        professionals={healthProfessionals}
+        suggestedProfessionalIds={suggestedIds}
+        onBook={handleBooking}
+        onBack={() => setCurrentView('dashboard')}
+      />
+    );
+  };
+
+  const renderSuggestions = () => (
+    <SuggestedProfessionals
+      diagnosticAnswers={diagnosticAnswers}
+      professionals={healthProfessionals}
+      onBook={(professional) => {
+        // Simulate booking form opening
+        console.log('Book with:', professional.name);
+      }}
+      onViewAll={() => setCurrentView('professionals')}
+    />
+  );
+
+  const renderBookings = () => (
+    <BookingManagement
+      bookings={bookings}
+      onCancelBooking={handleCancelBooking}
+      onBack={() => setCurrentView('dashboard')}
+    />
+  );
+
+  const getSuggestedProfessionalIds = (): string[] => {
+    if (!Object.keys(diagnosticAnswers).length) return [];
+    
+    const suggestions: string[] = [];
+    
+    if (diagnosticAnswers.stress_level >= 7) {
+      suggestions.push('1', '2'); // Psychologue et Psychiatre
+    }
+    
+    if (diagnosticAnswers.sleep_quality && 
+        (diagnosticAnswers.sleep_quality.includes('Très mauvais') || 
+         diagnosticAnswers.sleep_quality.includes('Difficile'))) {
+      suggestions.push('3'); // Médecin du sommeil
+    }
+    
+    if (diagnosticAnswers.work_pressure && 
+        (diagnosticAnswers.work_pressure.includes('Souvent') || 
+         diagnosticAnswers.work_pressure.includes('Toujours'))) {
+      suggestions.push('4'); // Coach bien-être
+    }
+    
+    return [...new Set(suggestions)];
+  };
+
   const renderBottomNav = () => (
     <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2">
       <div className="flex justify-around max-w-md mx-auto">
@@ -307,23 +465,23 @@ const Index = () => {
         </Button>
         
         <Button 
-          variant={currentView === 'challenges' ? 'default' : 'ghost'}
+          variant={currentView === 'professionals' ? 'default' : 'ghost'}
           size="sm"
-          onClick={() => setCurrentView('challenges')}
+          onClick={() => setCurrentView('professionals')}
           className="flex flex-col items-center space-y-1 h-12 px-3"
         >
-          <Target className="h-4 w-4" />
-          <span className="text-xs">Défis</span>
+          <Users className="h-4 w-4" />
+          <span className="text-xs">Spécialistes</span>
         </Button>
         
         <Button 
-          variant={currentView === 'progress' ? 'default' : 'ghost'}
+          variant={currentView === 'bookings' ? 'default' : 'ghost'}
           size="sm"
-          onClick={() => setCurrentView('progress')}
+          onClick={() => setCurrentView('bookings')}
           className="flex flex-col items-center space-y-1 h-12 px-3"
         >
-          <TrendingUp className="h-4 w-4" />
-          <span className="text-xs">Progrès</span>
+          <Calendar className="h-4 w-4" />
+          <span className="text-xs">RDV</span>
         </Button>
         
         <Button 
@@ -348,6 +506,9 @@ const Index = () => {
           {currentView === 'challenges' && renderChallenges()}
           {currentView === 'progress' && renderProgress()}
           {currentView === 'profile' && <ProfilePage />}
+          {currentView === 'professionals' && renderHealthProfessionals()}
+          {currentView === 'suggestions' && renderSuggestions()}
+          {currentView === 'bookings' && renderBookings()}
         </div>
         
         {currentView !== 'diagnostic' && renderBottomNav()}
