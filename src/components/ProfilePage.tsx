@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -142,6 +141,34 @@ const ProfilePage = () => {
         {showAppointments && (
           <AppointmentManagement onClose={() => setShowAppointments(false)} />
         )}
+
+        {/* Bio and Goals Section */}
+        <Card className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-purple-200 dark:border-purple-700">
+          <CardHeader>
+            <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white">
+              À propos
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">
+                Biographie
+              </h3>
+              <p className="text-gray-700 dark:text-gray-300">
+                {userInfo.bio}
+              </p>
+            </div>
+            <Separator className="bg-gray-200 dark:bg-gray-700" />
+            <div>
+              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">
+                Objectifs bien-être
+              </h3>
+              <p className="text-gray-700 dark:text-gray-300">
+                {userInfo.goals}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Contact Information Section */}
         <Card className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-purple-200 dark:border-purple-700">
