@@ -12,6 +12,7 @@ import ProfilePage from '@/components/ProfilePage';
 import HealthSpecialistSuggestions from '@/components/HealthSpecialistSuggestions';
 import SpecialistProfile from '@/components/SpecialistProfile';
 import BookingModal from '@/components/BookingModal';
+import HealthProfessionalsList from '@/components/HealthProfessionalsList';
 import { 
   Heart, 
   Brain, 
@@ -24,7 +25,8 @@ import {
   Award,
   Bell,
   User,
-  Settings
+  Settings,
+  UserCheck
 } from 'lucide-react';
 
 const Index = () => {
@@ -195,6 +197,18 @@ const Index = () => {
         </Button>
       </div>
 
+      <div className="w-full">
+        <Button 
+          onClick={() => setCurrentView('professionals')}
+          className="w-full h-16 bg-gradient-to-br from-teal-400 to-blue-500 hover:opacity-90 text-white rounded-2xl"
+        >
+          <div className="text-center">
+            <UserCheck className="h-6 w-6 mx-auto mb-1" />
+            <div className="text-sm font-medium">Tous les spécialistes</div>
+          </div>
+        </Button>
+      </div>
+
       <div className="grid grid-cols-2 gap-4">
         <ProgressChart 
           data={progressData}
@@ -307,6 +321,14 @@ const Index = () => {
     <ProgressPage onBack={() => setCurrentView('dashboard')} />
   );
 
+  const renderProfessionals = () => (
+    <HealthProfessionalsList
+      onBack={() => setCurrentView('dashboard')}
+      onBookAppointment={handleBookAppointment}
+      onViewProfile={handleViewProfile}
+    />
+  );
+
   const renderSpecialistProfile = () => (
     <SpecialistProfile
       specialist={selectedSpecialist}
@@ -370,10 +392,11 @@ const Index = () => {
           {currentView === 'challenges' && renderChallenges()}
           {currentView === 'progress' && renderProgress()}
           {currentView === 'profile' && <ProfilePage />}
+          {currentView === 'professionals' && renderProfessionals()}
           {currentView === 'specialist-profile' && renderSpecialistProfile()}
         </div>
         
-        {currentView !== 'diagnostic' && currentView !== 'specialist-profile' && renderBottomNav()}
+        {currentView !== 'diagnostic' && currentView !== 'specialist-profile' && currentView !== 'professionals' && renderBottomNav()}
       </div>
 
       <BookingModal
