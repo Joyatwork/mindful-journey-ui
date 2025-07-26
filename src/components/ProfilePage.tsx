@@ -50,7 +50,6 @@ const ProfilePage = () => {
     birthDate: '1990-01-01',
     jobPosition: 'Développeur Full-Stack',
     company: 'Tech Solutions Inc.',
-    bio: 'A short bio about the user. This could include their interests, hobbies, or anything else they want to share.',
     goals: 'Improve wellness and reduce stress through meditation and mindfulness.',
     wellnessWeather: 'sunny' // sunny, cloudy, rainy
   });
@@ -95,24 +94,24 @@ const ProfilePage = () => {
             <div className="flex flex-col space-y-4">
               {/* First Row: Avatar and Basic Info */}
               <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
-                <Avatar className="w-20 h-20 border-3 border-white shadow-lg flex-shrink-0">
+                <Avatar className="w-16 h-16 border-2 border-white shadow-lg flex-shrink-0">
                   <AvatarImage src="/placeholder.svg" alt="Photo de profil" />
-                  <AvatarFallback className="bg-wellness-gradient text-white text-lg font-semibold">
+                  <AvatarFallback className="bg-wellness-gradient text-white text-sm font-semibold">
                     JS
                   </AvatarFallback>
                 </Avatar>
                 
                 <div className="text-center sm:text-left flex-grow min-w-0">
-                  <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
+                  <h1 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
                     {userInfo.name}
                   </h1>
                   
-                  <div className="flex items-center justify-center sm:justify-start gap-2 text-gray-600 dark:text-gray-300 text-sm mb-2">
-                    <Briefcase className="w-4 h-4 flex-shrink-0" />
+                  <div className="flex items-center justify-center sm:justify-start gap-2 text-gray-600 dark:text-gray-300 text-sm mb-1">
+                    <Briefcase className="w-3 h-3 flex-shrink-0" />
                     <span className="truncate">{userInfo.jobPosition}</span>
                   </div>
 
-                  <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                  <div className="text-xs text-gray-500 dark:text-gray-400 truncate mb-2">
                     {userInfo.company}
                   </div>
                 </div>
@@ -126,7 +125,7 @@ const ProfilePage = () => {
                       size="sm"
                       className="text-xs"
                     >
-                      <Download className="w-4 h-4 mr-1" />
+                      <Download className="w-3 h-3 mr-1" />
                       Installer
                     </Button>
                   )}
@@ -136,31 +135,33 @@ const ProfilePage = () => {
                     size="sm"
                     className="text-xs"
                   >
-                    <Edit className="w-4 h-4 mr-1" />
+                    <Edit className="w-3 h-3 mr-1" />
                     {isEditing ? 'Annuler' : 'Modifier'}
                   </Button>
                 </div>
               </div>
 
-              {/* Second Row: Wellness Status and Badges */}
-              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
-                <div className="flex items-center gap-3">
+              {/* Second Row: Wellness Status and Badges aligned vertically */}
+              <div className="flex flex-col items-center sm:items-start gap-2">
+                {/* Wellness Weather Indicator */}
+                <div className="flex items-center gap-2">
                   {getWeatherIcon(userInfo.wellnessWeather)}
                   <span className="text-sm text-gray-600 dark:text-gray-300">
                     Forme: <span className="font-medium">{getWeatherLabel(userInfo.wellnessWeather)}</span>
                   </span>
                 </div>
                 
-                <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
-                  <Badge variant="secondary" className="bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 text-xs">
+                {/* Badges aligned under wellness indicator */}
+                <div className="flex flex-wrap gap-1.5 justify-center sm:justify-start">
+                  <Badge variant="secondary" className="bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 text-xs px-2 py-0.5">
                     <Heart className="w-3 h-3 mr-1" />
                     Bien-être
                   </Badge>
-                  <Badge variant="secondary" className="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-xs">
+                  <Badge variant="secondary" className="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-xs px-2 py-0.5">
                     <Brain className="w-3 h-3 mr-1" />
                     Méditation
                   </Badge>
-                  <Badge variant="secondary" className="bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-300 text-xs">
+                  <Badge variant="secondary" className="bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-300 text-xs px-2 py-0.5">
                     <Activity className="w-3 h-3 mr-1" />
                     Actif
                   </Badge>
@@ -205,15 +206,6 @@ const ProfilePage = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div>
-              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">
-                Biographie
-              </h3>
-              <p className="text-gray-700 dark:text-gray-300">
-                {userInfo.bio}
-              </p>
-            </div>
-            <Separator className="bg-gray-200 dark:bg-gray-700" />
             <div>
               <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">
                 Objectifs bien-être
