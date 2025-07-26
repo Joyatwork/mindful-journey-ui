@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -221,8 +220,8 @@ const SpecialistProfile = ({ specialist, onBack, onBookAppointment }: Specialist
         </div>
       </Card>
 
-      {/* Bouton de réservation fixe */}
-      <div className="fixed bottom-20 left-4 right-4 max-w-md mx-auto">
+      {/* Bouton de réservation fixe - ajusté pour éviter qu'il sorte de l'écran */}
+      <div className="fixed bottom-20 left-4 right-4 max-w-md mx-auto z-40">
         <Button
           onClick={() => onBookAppointment(specialist)}
           className="w-full h-14 bg-wellness-gradient hover:opacity-90 text-white text-lg font-semibold rounded-2xl shadow-lg"
@@ -232,8 +231,8 @@ const SpecialistProfile = ({ specialist, onBack, onBookAppointment }: Specialist
         </Button>
       </div>
 
-      {/* Espace pour éviter que le contenu soit caché par le bouton fixe */}
-      <div className="h-20" />
+      {/* Espace pour éviter que le contenu soit caché par le bouton fixe et la navbar */}
+      <div className="h-32" />
     </div>
   );
 };
