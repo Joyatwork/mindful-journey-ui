@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -142,8 +141,8 @@ const ProfilePage = () => {
                 </div>
               </div>
 
-              {/* Second Row: Wellness Status and Badges aligned vertically */}
-              <div className="flex flex-col items-center sm:items-start gap-2">
+              {/* Second Row: Wellness Status and Badges centered */}
+              <div className="flex flex-col items-center space-y-2">
                 {/* Wellness Weather Indicator */}
                 <div className="flex items-center gap-2">
                   {getWeatherIcon(userInfo.wellnessWeather)}
@@ -152,8 +151,8 @@ const ProfilePage = () => {
                   </span>
                 </div>
                 
-                {/* Badges aligned under wellness indicator */}
-                <div className="flex flex-wrap gap-1.5 justify-center sm:justify-start">
+                {/* Badges centered under wellness indicator */}
+                <div className="flex flex-wrap gap-1.5 justify-center">
                   <Badge variant="secondary" className="bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 text-xs px-2 py-0.5">
                     <Heart className="w-3 h-3 mr-1" />
                     Bien-être
