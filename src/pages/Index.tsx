@@ -222,6 +222,13 @@ const Index = () => {
         />
       </div>
 
+      <HealthSpecialistSuggestions
+        selectedMood={selectedMood}
+        diagnosticAnswers={diagnosticAnswers}
+        onBookAppointment={handleBookAppointment}
+        onViewProfile={handleViewProfile}
+      />
+
       <div>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold">Suggestions personnalisées</h2>
@@ -238,13 +245,6 @@ const Index = () => {
           ))}
         </div>
       </div>
-
-      <HealthSpecialistSuggestions
-        selectedMood={selectedMood}
-        diagnosticAnswers={diagnosticAnswers}
-        onBookAppointment={handleBookAppointment}
-        onViewProfile={handleViewProfile}
-      />
     </div>
   );
 
