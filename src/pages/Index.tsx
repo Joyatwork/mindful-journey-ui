@@ -442,7 +442,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <div className="max-w-md mx-auto min-h-screen bg-white/50 backdrop-blur-sm">
-        <div className="px-4 py-6 pb-24 safe-area-inset-top">
+        <div className="px-4 py-6 pb-32 safe-area-inset-top">
           {currentView === 'dashboard' && renderDashboard()}
           {currentView === 'diagnostic' && renderDiagnostic()}
           {currentView === 'challenges' && renderChallenges()}
