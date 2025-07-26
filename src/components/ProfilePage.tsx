@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -91,34 +92,58 @@ const ProfilePage = () => {
         {/* Simplified Header Section */}
         <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-0 shadow-lg">
           <CardContent className="p-6">
-            <div className="flex flex-col lg:flex-row items-center gap-6">
-              {/* Avatar and Basic Info */}
-              <div className="flex flex-col sm:flex-row items-center gap-4">
-                <Avatar className="w-20 h-20 border-3 border-white shadow-lg">
+            <div className="flex flex-col space-y-4">
+              {/* First Row: Avatar and Basic Info */}
+              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
+                <Avatar className="w-20 h-20 border-3 border-white shadow-lg flex-shrink-0">
                   <AvatarImage src="/placeholder.svg" alt="Photo de profil" />
                   <AvatarFallback className="bg-wellness-gradient text-white text-lg font-semibold">
                     JS
                   </AvatarFallback>
                 </Avatar>
                 
-                <div className="text-center sm:text-left">
+                <div className="text-center sm:text-left flex-grow min-w-0">
                   <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
                     {userInfo.name}
                   </h1>
                   
                   <div className="flex items-center justify-center sm:justify-start gap-2 text-gray-600 dark:text-gray-300 text-sm mb-2">
-                    <Briefcase className="w-4 h-4" />
-                    <span>{userInfo.jobPosition}</span>
+                    <Briefcase className="w-4 h-4 flex-shrink-0" />
+                    <span className="truncate">{userInfo.jobPosition}</span>
                   </div>
 
-                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                  <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
                     {userInfo.company}
                   </div>
                 </div>
+
+                {/* Action Buttons - Right aligned on desktop */}
+                <div className="flex gap-2 flex-shrink-0">
+                  {isInstallable && (
+                    <Button
+                      onClick={installPWA}
+                      variant="outline"
+                      size="sm"
+                      className="text-xs"
+                    >
+                      <Download className="w-4 h-4 mr-1" />
+                      Installer
+                    </Button>
+                  )}
+                  <Button
+                    onClick={() => setIsEditing(!isEditing)}
+                    variant="outline"
+                    size="sm"
+                    className="text-xs"
+                  >
+                    <Edit className="w-4 h-4 mr-1" />
+                    {isEditing ? 'Annuler' : 'Modifier'}
+                  </Button>
+                </div>
               </div>
 
-              {/* Wellness Status */}
-              <div className="flex-1 flex flex-col lg:flex-row items-center gap-4">
+              {/* Second Row: Wellness Status and Badges */}
+              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
                 <div className="flex items-center gap-3">
                   {getWeatherIcon(userInfo.wellnessWeather)}
                   <span className="text-sm text-gray-600 dark:text-gray-300">
@@ -126,7 +151,7 @@ const ProfilePage = () => {
                   </span>
                 </div>
                 
-                <div className="flex flex-wrap gap-2 justify-center">
+                <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
                   <Badge variant="secondary" className="bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 text-xs">
                     <Heart className="w-3 h-3 mr-1" />
                     Bien-être
@@ -140,30 +165,6 @@ const ProfilePage = () => {
                     Actif
                   </Badge>
                 </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex gap-2">
-                {isInstallable && (
-                  <Button
-                    onClick={installPWA}
-                    variant="outline"
-                    size="sm"
-                    className="text-xs"
-                  >
-                    <Download className="w-4 h-4 mr-1" />
-                    Installer
-                  </Button>
-                )}
-                <Button
-                  onClick={() => setIsEditing(!isEditing)}
-                  variant="outline"
-                  size="sm"
-                  className="text-xs"
-                >
-                  <Edit className="w-4 h-4 mr-1" />
-                  {isEditing ? 'Annuler' : 'Modifier'}
-                </Button>
               </div>
             </div>
           </CardContent>
@@ -257,7 +258,6 @@ const ProfilePage = () => {
           </CardContent>
         </Card>
 
-        {/* Preferences Section */}
         <Card className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-purple-200 dark:border-purple-700">
           <CardHeader>
             <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white">
