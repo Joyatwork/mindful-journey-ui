@@ -50,6 +50,7 @@ const ProfilePage = () => {
     birthDate: '1990-01-01',
     jobPosition: 'Développeur Full-Stack',
     company: 'Tech Solutions Inc.',
+    bio: 'Passionné par le développement web et le bien-être personnel.',
     goals: 'Improve wellness and reduce stress through meditation and mindfulness.',
     wellnessWeather: 'sunny' // sunny, cloudy, rainy
   });
