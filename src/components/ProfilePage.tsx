@@ -180,24 +180,6 @@ const ProfilePage = () => {
           />
         )}
 
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Button
-            onClick={() => setShowAppointments(!showAppointments)}
-            className="h-16 bg-wellness-gradient hover:opacity-90 text-white rounded-2xl"
-          >
-            <div className="text-center">
-              <CalendarCheck className="h-6 w-6 mx-auto mb-1" />
-              <div className="text-sm font-medium">Mes rendez-vous</div>
-            </div>
-          </Button>
-        </div>
-
-        {/* Appointment Management */}
-        {showAppointments && (
-          <AppointmentManagement onClose={() => setShowAppointments(false)} />
-        )}
-
         {/* Bio and Goals Section */}
         <Card className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-purple-200 dark:border-purple-700">
           <CardHeader>
@@ -249,6 +231,24 @@ const ProfilePage = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Quick Actions - Mes rendez-vous */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Button
+            onClick={() => setShowAppointments(!showAppointments)}
+            className="h-16 bg-wellness-gradient hover:opacity-90 text-white rounded-2xl"
+          >
+            <div className="text-center">
+              <CalendarCheck className="h-6 w-6 mx-auto mb-1" />
+              <div className="text-sm font-medium">Mes rendez-vous</div>
+            </div>
+          </Button>
+        </div>
+
+        {/* Appointment Management */}
+        {showAppointments && (
+          <AppointmentManagement onClose={() => setShowAppointments(false)} />
+        )}
 
         <Card className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-purple-200 dark:border-purple-700">
           <CardHeader>
