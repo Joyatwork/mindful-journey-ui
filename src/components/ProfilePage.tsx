@@ -25,7 +25,8 @@ import {
   Sun,
   Cloud,
   CloudRain,
-  Briefcase
+  Briefcase,
+  Edit
 } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
@@ -61,99 +62,106 @@ const ProfilePage = () => {
   const getWeatherIcon = (weather: string) => {
     switch (weather) {
       case 'sunny':
-        return <Sun className="w-5 h-5 text-yellow-500" />;
+        return <Sun className="w-4 h-4 text-yellow-500" />;
       case 'cloudy':
-        return <Cloud className="w-5 h-5 text-gray-500" />;
+        return <Cloud className="w-4 h-4 text-gray-500" />;
       case 'rainy':
-        return <CloudRain className="w-5 h-5 text-blue-500" />;
+        return <CloudRain className="w-4 h-4 text-blue-500" />;
       default:
-        return <Sun className="w-5 h-5 text-yellow-500" />;
+        return <Sun className="w-4 h-4 text-yellow-500" />;
     }
   };
 
   const getWeatherLabel = (weather: string) => {
     switch (weather) {
       case 'sunny':
-        return 'Excellente forme';
+        return 'Excellente';
       case 'cloudy':
-        return 'Forme moyenne';
+        return 'Moyenne';
       case 'rainy':
-        return 'Besoin de repos';
+        return 'Fatigue';
       default:
-        return 'Excellente forme';
+        return 'Excellente';
     }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900 dark:to-pink-900 p-4">
       <div className="max-w-6xl mx-auto space-y-6">
-        {/* Enhanced Header Section */}
-        <Card className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-purple-200 dark:border-purple-700">
+        {/* Simplified Header Section */}
+        <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-0 shadow-lg">
           <CardContent className="p-6">
-            <div className="flex flex-col md:flex-row items-center gap-6">
-              <Avatar className="w-24 h-24 border-4 border-purple-200 dark:border-purple-700">
-                <AvatarImage src="/placeholder.svg" alt="Photo de profil" />
-                <AvatarFallback className="bg-purple-100 dark:bg-purple-800 text-purple-800 dark:text-purple-200 text-xl">
-                  JS
-                </AvatarFallback>
-              </Avatar>
-              
-              <div className="flex-1 text-center md:text-left">
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
-                  {userInfo.name}
-                </h1>
+            <div className="flex flex-col lg:flex-row items-center gap-6">
+              {/* Avatar and Basic Info */}
+              <div className="flex flex-col sm:flex-row items-center gap-4">
+                <Avatar className="w-20 h-20 border-3 border-white shadow-lg">
+                  <AvatarImage src="/placeholder.svg" alt="Photo de profil" />
+                  <AvatarFallback className="bg-wellness-gradient text-white text-lg font-semibold">
+                    JS
+                  </AvatarFallback>
+                </Avatar>
                 
-                {/* Job Position */}
-                <div className="flex items-center justify-center md:justify-start gap-2 mb-2">
-                  <Briefcase className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-                  <span className="text-gray-600 dark:text-gray-300 text-sm">
-                    {userInfo.jobPosition} chez {userInfo.company}
-                  </span>
-                </div>
+                <div className="text-center sm:text-left">
+                  <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
+                    {userInfo.name}
+                  </h1>
+                  
+                  <div className="flex items-center justify-center sm:justify-start gap-2 text-gray-600 dark:text-gray-300 text-sm mb-2">
+                    <Briefcase className="w-4 h-4" />
+                    <span>{userInfo.jobPosition}</span>
+                  </div>
 
-                {/* Wellness Weather */}
-                <div className="flex items-center justify-center md:justify-start gap-2 mb-4">
+                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                    {userInfo.company}
+                  </div>
+                </div>
+              </div>
+
+              {/* Wellness Status */}
+              <div className="flex-1 flex flex-col lg:flex-row items-center gap-4">
+                <div className="flex items-center gap-3">
                   {getWeatherIcon(userInfo.wellnessWeather)}
                   <span className="text-sm text-gray-600 dark:text-gray-300">
-                    Météo bien-être: {getWeatherLabel(userInfo.wellnessWeather)}
+                    Forme: <span className="font-medium">{getWeatherLabel(userInfo.wellnessWeather)}</span>
                   </span>
                 </div>
                 
-                <div className="flex flex-wrap gap-2 justify-center md:justify-start">
-                  <Badge variant="secondary" className="bg-purple-100 dark:bg-purple-800 text-purple-800 dark:text-purple-200">
+                <div className="flex flex-wrap gap-2 justify-center">
+                  <Badge variant="secondary" className="bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 text-xs">
                     <Heart className="w-3 h-3 mr-1" />
                     Bien-être
                   </Badge>
-                  <Badge variant="secondary" className="bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200">
+                  <Badge variant="secondary" className="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-xs">
                     <Brain className="w-3 h-3 mr-1" />
                     Méditation
                   </Badge>
-                  <Badge variant="secondary" className="bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200">
+                  <Badge variant="secondary" className="bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-300 text-xs">
                     <Activity className="w-3 h-3 mr-1" />
                     Actif
                   </Badge>
                 </div>
               </div>
 
+              {/* Action Buttons */}
               <div className="flex gap-2">
                 {isInstallable && (
                   <Button
                     onClick={installPWA}
                     variant="outline"
                     size="sm"
-                    className="border-purple-200 dark:border-purple-700 text-purple-700 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-800"
+                    className="text-xs"
                   >
-                    <Download className="w-4 h-4 mr-2" />
-                    Installer l'app
+                    <Download className="w-4 h-4 mr-1" />
+                    Installer
                   </Button>
                 )}
                 <Button
                   onClick={() => setIsEditing(!isEditing)}
                   variant="outline"
                   size="sm"
-                  className="border-purple-200 dark:border-purple-700 text-purple-700 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-800"
+                  className="text-xs"
                 >
-                  <Settings className="w-4 h-4 mr-2" />
+                  <Edit className="w-4 h-4 mr-1" />
                   {isEditing ? 'Annuler' : 'Modifier'}
                 </Button>
               </div>
