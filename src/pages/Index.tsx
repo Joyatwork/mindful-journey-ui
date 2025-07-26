@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -14,6 +13,9 @@ import HealthSpecialistSuggestions from '@/components/HealthSpecialistSuggestion
 import SpecialistProfile from '@/components/SpecialistProfile';
 import BookingPage from '@/components/BookingPage';
 import HealthProfessionalsList from '@/components/HealthProfessionalsList';
+import MeditationContent from '@/components/MeditationContent';
+import BreathingContent from '@/components/BreathingContent';
+import SleepRoutineContent from '@/components/SleepRoutineContent';
 import { 
   Heart, 
   Brain, 
@@ -56,7 +58,8 @@ const Index = () => {
       difficulty: "Facile" as const,
       category: "Mindfulness",
       icon: <Brain className="h-5 w-5 text-wellness-lavender" />,
-      gradient: "bg-gradient-to-r from-purple-400 to-pink-400"
+      gradient: "bg-gradient-to-r from-purple-400 to-pink-400",
+      contentType: "meditation"
     },
     {
       title: "Exercices de respiration",
@@ -65,7 +68,8 @@ const Index = () => {
       difficulty: "Facile" as const,
       category: "Gestion du stress",
       icon: <Heart className="h-5 w-5 text-red-400" />,
-      gradient: "bg-wellness-gradient"
+      gradient: "bg-wellness-gradient",
+      contentType: "breathing"
     },
     {
       title: "Routine sommeil",
@@ -74,7 +78,8 @@ const Index = () => {
       difficulty: "Moyen" as const,
       category: "Sommeil",
       icon: <Moon className="h-5 w-5 text-purple-400" />,
-      gradient: "bg-gradient-to-r from-purple-500 to-blue-500"
+      gradient: "bg-gradient-to-r from-purple-500 to-blue-500",
+      contentType: "sleep"
     }
   ];
 
@@ -134,6 +139,27 @@ const Index = () => {
   const handleViewProfile = (specialist: any) => {
     setSelectedSpecialist(specialist);
     setCurrentView('specialist-profile');
+  };
+
+  const handleWellnessCardAction = (contentType: string) => {
+    switch (contentType) {
+      case 'meditation':
+        setCurrentView('meditation');
+        break;
+      case 'breathing':
+        setCurrentView('breathing');
+        break;
+      case 'sleep':
+        setCurrentView('sleep-routine');
+        break;
+      default:
+        console.log(`Starting ${contentType}`);
+    }
+  };
+
+  const handleChallengeComplete = () => {
+    console.log('Challenge completed!');
+    // Ici on pourrait ajouter des points, sauvegarder le progrès, etc.
   };
 
   const renderDashboard = () => (
@@ -240,7 +266,7 @@ const Index = () => {
             <WellnessCard
               key={index}
               {...card}
-              onAction={() => console.log(`Starting ${card.title}`)}
+              onAction={() => handleWellnessCardAction(card.contentType)}
             />
           ))}
         </div>
@@ -309,7 +335,7 @@ const Index = () => {
           <WellnessCard
             key={index}
             {...card}
-            onAction={() => console.log(`Starting challenge: ${card.title}`)}
+            onAction={() => handleWellnessCardAction(card.contentType)}
             actionLabel="Je le fais !"
           />
         ))}
@@ -341,6 +367,27 @@ const Index = () => {
     <BookingPage
       specialist={selectedSpecialist}
       onBack={() => setCurrentView('dashboard')}
+    />
+  );
+
+  const renderMeditation = () => (
+    <MeditationContent
+      onBack={() => setCurrentView('dashboard')}
+      onComplete={handleChallengeComplete}
+    />
+  );
+
+  const renderBreathing = () => (
+    <BreathingContent
+      onBack={() => setCurrentView('dashboard')}
+      onComplete={handleChallengeComplete}
+    />
+  );
+
+  const renderSleepRoutine = () => (
+    <SleepRoutineContent
+      onBack={() => setCurrentView('dashboard')}
+      onComplete={handleChallengeComplete}
     />
   );
 
@@ -402,6 +449,9 @@ const Index = () => {
           {currentView === 'professionals' && renderProfessionals()}
           {currentView === 'specialist-profile' && renderSpecialistProfile()}
           {currentView === 'booking' && renderBooking()}
+          {currentView === 'meditation' && renderMeditation()}
+          {currentView === 'breathing' && renderBreathing()}
+          {currentView === 'sleep-routine' && renderSleepRoutine()}
         </div>
         
         {renderBottomNav()}
