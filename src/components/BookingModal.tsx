@@ -50,7 +50,7 @@ const BookingModal = ({ isOpen, onClose, specialist }: BookingModalProps) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md z-[60] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-lg font-semibold">
             Réserver avec {specialist.name}
@@ -79,7 +79,7 @@ const BookingModal = ({ isOpen, onClose, specialist }: BookingModalProps) => {
               <SelectTrigger>
                 <SelectValue placeholder="Choisir un créneau" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="z-[70]">
                 {availableTimes.map((time) => (
                   <SelectItem key={time} value={time}>
                     {time}
@@ -95,7 +95,7 @@ const BookingModal = ({ isOpen, onClose, specialist }: BookingModalProps) => {
               <SelectTrigger>
                 <SelectValue placeholder="Choisir le type" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="z-[70]">
                 {(specialist.consultationType === 'both' || specialist.consultationType === 'video') && (
                   <SelectItem value="video">
                     <div className="flex items-center space-x-2">
