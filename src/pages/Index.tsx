@@ -9,6 +9,8 @@ import ProgressPage from '@/components/ProgressPage';
 import ChallengeFilter from '@/components/ChallengeFilter';
 import DiagnosticStep from '@/components/DiagnosticStep';
 import ProfilePage from '@/components/ProfilePage';
+import HealthSpecialistSuggestions from '@/components/HealthSpecialistSuggestions';
+import BookingModal from '@/components/BookingModal';
 import { 
   Heart, 
   Brain, 
@@ -30,6 +32,8 @@ const Index = () => {
   const [challengeFilters, setChallengeFilters] = useState<string[]>([]);
   const [diagnosticStep, setDiagnosticStep] = useState(1);
   const [diagnosticAnswers, setDiagnosticAnswers] = useState<Record<string, any>>({});
+  const [bookingModalOpen, setBookingModalOpen] = useState(false);
+  const [selectedSpecialist, setSelectedSpecialist] = useState<any>(null);
 
   // Sample data
   const progressData = [
@@ -120,6 +124,11 @@ const Index = () => {
     }
   ];
 
+  const handleBookAppointment = (specialist: any) => {
+    setSelectedSpecialist(specialist);
+    setBookingModalOpen(true);
+  };
+
   const renderDashboard = () => (
     <div className="space-y-6 animate-fadeIn">
       {/* Header */}
@@ -151,18 +160,15 @@ const Index = () => {
           </div>
         </div>
         
-        {/* Decorative elements */}
         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-6 translate-x-6" />
         <div className="absolute bottom-0 right-8 w-20 h-20 bg-white/5 rounded-full" />
       </div>
 
-      {/* Mood Selector */}
       <MoodSelector 
         selectedMood={selectedMood}
         onMoodSelect={setSelectedMood}
       />
 
-      {/* Quick Actions */}
       <div className="grid grid-cols-2 gap-4">
         <Button 
           onClick={() => setCurrentView('diagnostic')}
@@ -185,7 +191,6 @@ const Index = () => {
         </Button>
       </div>
 
-      {/* Progress Charts */}
       <div className="grid grid-cols-2 gap-4">
         <ProgressChart 
           data={progressData}
@@ -199,7 +204,6 @@ const Index = () => {
         />
       </div>
 
-      {/* Wellness Suggestions */}
       <div>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold">Suggestions personnalisées</h2>
@@ -216,6 +220,13 @@ const Index = () => {
           ))}
         </div>
       </div>
+
+      {/* Health Specialist Suggestions */}
+      <HealthSpecialistSuggestions
+        selectedMood={selectedMood}
+        diagnosticAnswers={diagnosticAnswers}
+        onBookAppointment={handleBookAppointment}
+      />
     </div>
   );
 
@@ -227,7 +238,6 @@ const Index = () => {
       if (diagnosticStep < diagnosticQuestions.length) {
         setDiagnosticStep(diagnosticStep + 1);
       } else {
-        // Complete diagnostic
         console.log('Diagnostic completed:', diagnosticAnswers);
         setCurrentView('dashboard');
       }
@@ -290,7 +300,7 @@ const Index = () => {
   );
 
   const renderProgress = () => (
-    <ProgressPage onBack={() => setCurrentView('dashboard')} />
+    <ProgressPage />
   );
 
   const renderBottomNav = () => (
@@ -352,6 +362,12 @@ const Index = () => {
         
         {currentView !== 'diagnostic' && renderBottomNav()}
       </div>
+
+      <BookingModal
+        isOpen={bookingModalOpen}
+        onClose={() => setBookingModalOpen(false)}
+        specialist={selectedSpecialist}
+      />
     </div>
   );
 };

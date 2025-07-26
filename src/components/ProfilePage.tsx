@@ -21,11 +21,13 @@ import {
   Heart,
   Brain,
   Zap,
-  Download
+  Download,
+  CalendarCheck
 } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
 import EditProfileForm from './EditProfileForm';
+import AppointmentManagement from './AppointmentManagement';
 import { useState } from 'react';
 
 const ProfilePage = () => {
@@ -33,6 +35,7 @@ const ProfilePage = () => {
   const { isInstallable, installPWA } = usePWAInstall();
 
   const [isEditing, setIsEditing] = useState(false);
+  const [showAppointments, setShowAppointments] = useState(false);
 
   const [userInfo, setUserInfo] = useState({
     name: 'John Smith',
@@ -122,6 +125,24 @@ const ProfilePage = () => {
           />
         )}
 
+        {/* Quick Actions */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Button
+            onClick={() => setShowAppointments(!showAppointments)}
+            className="h-16 bg-wellness-gradient hover:opacity-90 text-white rounded-2xl"
+          >
+            <div className="text-center">
+              <CalendarCheck className="h-6 w-6 mx-auto mb-1" />
+              <div className="text-sm font-medium">Mes rendez-vous</div>
+            </div>
+          </Button>
+        </div>
+
+        {/* Appointment Management */}
+        {showAppointments && (
+          <AppointmentManagement onClose={() => setShowAppointments(false)} />
+        )}
+
         {/* Contact Information Section */}
         <Card className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-purple-200 dark:border-purple-700">
           <CardHeader>
@@ -175,7 +196,6 @@ const ProfilePage = () => {
           </CardContent>
         </Card>
 
-        {/* Achievements Section */}
         <Card className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-purple-200 dark:border-purple-700">
           <CardHeader>
             <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -204,7 +224,6 @@ const ProfilePage = () => {
           </CardContent>
         </Card>
 
-        {/* Security Section */}
         <Card className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-purple-200 dark:border-purple-700">
           <CardHeader>
             <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white">
