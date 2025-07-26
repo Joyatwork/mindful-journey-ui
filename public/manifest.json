@@ -7,21 +7,100 @@
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#8B5CF6",
-  "orientation": "portrait",
+  "orientation": "portrait-primary",
+  "scope": "/",
   "icons": [
+    {
+      "src": "/placeholder.svg",
+      "sizes": "72x72",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/placeholder.svg",
+      "sizes": "96x96",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/placeholder.svg",
+      "sizes": "128x128",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/placeholder.svg",
+      "sizes": "144x144",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/placeholder.svg",
+      "sizes": "152x152",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
     {
       "src": "/placeholder.svg",
       "sizes": "192x192",
       "type": "image/svg+xml",
-      "purpose": "maskable"
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/placeholder.svg",
+      "sizes": "384x384",
+      "type": "image/svg+xml",
+      "purpose": "any"
     },
     {
       "src": "/placeholder.svg",
       "sizes": "512x512",
       "type": "image/svg+xml",
-      "purpose": "any"
+      "purpose": "any maskable"
     }
   ],
-  "categories": ["health", "lifestyle", "wellness"],
-  "lang": "fr"
+  "categories": ["health", "lifestyle", "wellness", "medical"],
+  "lang": "fr",
+  "screenshots": [
+    {
+      "src": "/placeholder.svg",
+      "sizes": "1280x720",
+      "type": "image/svg+xml",
+      "form_factor": "wide"
+    },
+    {
+      "src": "/placeholder.svg",
+      "sizes": "750x1334",
+      "type": "image/svg+xml",
+      "form_factor": "narrow"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Méditation",
+      "short_name": "Méditer",
+      "description": "Accès rapide aux séances de méditation",
+      "url": "/?shortcut=meditation",
+      "icons": [
+        {
+          "src": "/placeholder.svg",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Défis",
+      "short_name": "Défis",
+      "description": "Voir mes défis bien-être",
+      "url": "/?shortcut=challenges",
+      "icons": [
+        {
+          "src": "/placeholder.svg",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false
 }
