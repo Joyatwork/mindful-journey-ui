@@ -223,18 +223,6 @@ const Index = () => {
         </Button>
       </div>
 
-      <div className="w-full">
-        <Button 
-          onClick={() => setCurrentView('professionals')}
-          className="w-full h-16 bg-gradient-to-br from-teal-400 to-blue-500 hover:opacity-90 text-white rounded-2xl"
-        >
-          <div className="text-center">
-            <UserCheck className="h-6 w-6 mx-auto mb-1" />
-            <div className="text-sm font-medium">Tous les spécialistes</div>
-          </div>
-        </Button>
-      </div>
-
       <div className="grid grid-cols-2 gap-4">
         <ProgressChart 
           data={progressData}
@@ -254,6 +242,18 @@ const Index = () => {
         onBookAppointment={handleBookAppointment}
         onViewProfile={handleViewProfile}
       />
+
+      <div className="w-full">
+        <Button 
+          onClick={() => setCurrentView('professionals')}
+          className="w-full h-16 bg-gradient-to-br from-teal-400 to-blue-500 hover:opacity-90 text-white rounded-2xl"
+        >
+          <div className="text-center">
+            <UserCheck className="h-6 w-6 mx-auto mb-1" />
+            <div className="text-sm font-medium">Tous les spécialistes</div>
+          </div>
+        </Button>
+      </div>
 
       <div>
         <div className="flex items-center justify-between mb-4">
