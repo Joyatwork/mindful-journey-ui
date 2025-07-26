@@ -163,7 +163,7 @@ const Index = () => {
   };
 
   const renderDashboard = () => (
-    <div className="space-y-6 animate-fadeIn">
+    <div className="space-y-6 animate-fadeIn pt-4">
       <div className="bg-wellness-gradient rounded-3xl p-6 text-white relative overflow-hidden">
         <div className="relative z-10">
           <div className="flex items-center justify-between mb-4">
@@ -301,7 +301,7 @@ const Index = () => {
     };
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 py-8 px-4">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 py-8 px-4 pt-12">
         <DiagnosticStep
           question={currentQuestion}
           currentStep={diagnosticStep}
@@ -317,7 +317,7 @@ const Index = () => {
   };
 
   const renderChallenges = () => (
-    <div className="space-y-6 animate-fadeIn">
+    <div className="space-y-6 animate-fadeIn pt-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Mes Défis</h1>
         <Button variant="outline" size="sm" onClick={() => setCurrentView('dashboard')}>
@@ -344,7 +344,9 @@ const Index = () => {
   );
 
   const renderProgress = () => (
-    <ProgressPage onBack={() => setCurrentView('dashboard')} />
+    <div className="pt-4">
+      <ProgressPage onBack={() => setCurrentView('dashboard')} />
+    </div>
   );
 
   const renderProfessionals = () => (
