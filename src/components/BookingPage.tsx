@@ -5,7 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowLeft, Calendar, Clock, Video, MapPin, Phone } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, Video, MapPin, Phone, Check } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface HealthSpecialist {
   id: string;
@@ -18,24 +19,46 @@ interface HealthSpecialist {
 interface BookingPageProps {
   specialist?: HealthSpecialist;
   onBack: () => void;
+  onBookingConfirmed?: (booking: any) => void;
 }
 
-const BookingPage = ({ specialist, onBack }: BookingPageProps) => {
+const BookingPage = ({ specialist, onBack, onBookingConfirmed }: BookingPageProps) => {
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
   const [consultationType, setConsultationType] = useState('');
   const [notes, setNotes] = useState('');
+  const { toast } = useToast();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Logique de réservation
-    console.log('Booking submitted:', {
-      specialist: specialist?.id,
+    
+    const newBooking = {
+      id: Date.now().toString(),
+      specialistName: specialist?.name || '',
+      specialty: specialist?.specialty || '',
       date: selectedDate,
       time: selectedTime,
-      type: consultationType,
+      type: consultationType as 'video' | 'inPerson' | 'phone',
+      status: 'confirmed' as const,
+      price: specialist?.price || '',
       notes
+    };
+
+    // Sauvegarder dans localStorage
+    const existingBookings = JSON.parse(localStorage.getItem('userBookings') || '[]');
+    const updatedBookings = [...existingBookings, newBooking];
+    localStorage.setItem('userBookings', JSON.stringify(updatedBookings));
+
+    // Appeler la callback si fournie
+    if (onBookingConfirmed) {
+      onBookingConfirmed(newBooking);
+    }
+
+    toast({
+      title: "Réservation confirmée",
+      description: `Votre rendez-vous avec ${specialist?.name} est confirmé pour le ${new Date(selectedDate).toLocaleDateString()} à ${selectedTime}.`,
     });
+
     onBack();
   };
 
@@ -148,7 +171,7 @@ const BookingPage = ({ specialist, onBack }: BookingPageProps) => {
 
         <div className="space-y-3 pt-4">
           <Button type="submit" className="w-full h-14 bg-wellness-gradient hover:opacity-90 text-lg font-semibold">
-            <Calendar className="h-5 w-5 mr-2" />
+            <Check className="h-5 w-5 mr-2" />
             Confirmer la réservation
           </Button>
           <Button type="button" variant="outline" onClick={onBack} className="w-full h-12">
