@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,7 +22,11 @@ import {
   Brain,
   Zap,
   Download,
-  CalendarCheck
+  CalendarCheck,
+  Sun,
+  Cloud,
+  CloudRain,
+  Briefcase
 } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
@@ -42,8 +47,11 @@ const ProfilePage = () => {
     phone: '123-456-7890',
     location: '123 Main St, Anytown',
     birthDate: '1990-01-01',
+    jobPosition: 'Développeur Full-Stack',
+    company: 'Tech Solutions Inc.',
     bio: 'A short bio about the user. This could include their interests, hobbies, or anything else they want to share.',
-    goals: 'Improve wellness and reduce stress through meditation and mindfulness.'
+    goals: 'Improve wellness and reduce stress through meditation and mindfulness.',
+    wellnessWeather: 'sunny' // sunny, cloudy, rainy
   });
 
   const handleSave = (newInfo: any) => {
@@ -51,10 +59,36 @@ const ProfilePage = () => {
     setIsEditing(false);
   };
 
+  const getWeatherIcon = (weather: string) => {
+    switch (weather) {
+      case 'sunny':
+        return <Sun className="w-5 h-5 text-yellow-500" />;
+      case 'cloudy':
+        return <Cloud className="w-5 h-5 text-gray-500" />;
+      case 'rainy':
+        return <CloudRain className="w-5 h-5 text-blue-500" />;
+      default:
+        return <Sun className="w-5 h-5 text-yellow-500" />;
+    }
+  };
+
+  const getWeatherLabel = (weather: string) => {
+    switch (weather) {
+      case 'sunny':
+        return 'Excellente forme';
+      case 'cloudy':
+        return 'Forme moyenne';
+      case 'rainy':
+        return 'Besoin de repos';
+      default:
+        return 'Excellente forme';
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900 dark:to-pink-900 p-4">
       <div className="max-w-6xl mx-auto space-y-6">
-        {/* Header Section */}
+        {/* Enhanced Header Section */}
         <Card className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-purple-200 dark:border-purple-700">
           <CardContent className="p-6">
             <div className="flex flex-col md:flex-row items-center gap-6">
@@ -66,9 +100,26 @@ const ProfilePage = () => {
               </Avatar>
               
               <div className="flex-1 text-center md:text-left">
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
                   {userInfo.name}
                 </h1>
+                
+                {/* Job Position */}
+                <div className="flex items-center justify-center md:justify-start gap-2 mb-2">
+                  <Briefcase className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                  <span className="text-gray-600 dark:text-gray-300 text-sm">
+                    {userInfo.jobPosition} chez {userInfo.company}
+                  </span>
+                </div>
+
+                {/* Wellness Weather */}
+                <div className="flex items-center justify-center md:justify-start gap-2 mb-4">
+                  {getWeatherIcon(userInfo.wellnessWeather)}
+                  <span className="text-sm text-gray-600 dark:text-gray-300">
+                    Météo bien-être: {getWeatherLabel(userInfo.wellnessWeather)}
+                  </span>
+                </div>
+
                 <p className="text-gray-600 dark:text-gray-300 mb-4 max-w-md">
                   {userInfo.bio}
                 </p>
