@@ -392,46 +392,46 @@ const Index = () => {
   );
 
   const renderBottomNav = () => (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2 z-50">
+    <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-200 px-4 py-2 z-50 safe-area-inset-bottom">
       <div className="flex justify-around max-w-md mx-auto">
         <Button 
           variant={currentView === 'dashboard' ? 'default' : 'ghost'}
           size="sm"
           onClick={() => setCurrentView('dashboard')}
-          className="flex flex-col items-center space-y-1 h-12 px-3"
+          className="flex flex-col items-center space-y-1 h-12 px-3 min-w-0 flex-1"
         >
           <Heart className="h-4 w-4" />
-          <span className="text-xs">Accueil</span>
+          <span className="text-xs truncate">Accueil</span>
         </Button>
         
         <Button 
           variant={currentView === 'challenges' ? 'default' : 'ghost'}
           size="sm"
           onClick={() => setCurrentView('challenges')}
-          className="flex flex-col items-center space-y-1 h-12 px-3"
+          className="flex flex-col items-center space-y-1 h-12 px-3 min-w-0 flex-1"
         >
           <Target className="h-4 w-4" />
-          <span className="text-xs">Défis</span>
+          <span className="text-xs truncate">Défis</span>
         </Button>
         
         <Button 
           variant={currentView === 'progress' ? 'default' : 'ghost'}
           size="sm"
           onClick={() => setCurrentView('progress')}
-          className="flex flex-col items-center space-y-1 h-12 px-3"
+          className="flex flex-col items-center space-y-1 h-12 px-3 min-w-0 flex-1"
         >
           <TrendingUp className="h-4 w-4" />
-          <span className="text-xs">Progrès</span>
+          <span className="text-xs truncate">Progrès</span>
         </Button>
         
         <Button 
           variant={currentView === 'profile' ? 'default' : 'ghost'}
           size="sm"
           onClick={() => setCurrentView('profile')}
-          className="flex flex-col items-center space-y-1 h-12 px-3"
+          className="flex flex-col items-center space-y-1 h-12 px-3 min-w-0 flex-1"
         >
           <User className="h-4 w-4" />
-          <span className="text-xs">Profil</span>
+          <span className="text-xs truncate">Profil</span>
         </Button>
       </div>
     </div>
@@ -440,7 +440,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <div className="max-w-md mx-auto min-h-screen bg-white/50 backdrop-blur-sm">
-        <div className="px-4 py-6 pb-20">
+        <div className="px-4 py-6 pb-24 safe-area-inset-top">
           {currentView === 'dashboard' && renderDashboard()}
           {currentView === 'diagnostic' && renderDiagnostic()}
           {currentView === 'challenges' && renderChallenges()}
