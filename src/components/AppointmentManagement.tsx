@@ -17,6 +17,7 @@ import {
   Phone
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useAppointments } from '@/hooks/useApi';
 
 interface Appointment {
   id: string;
@@ -35,38 +36,53 @@ interface AppointmentManagementProps {
 }
 
 const AppointmentManagement = ({ onClose }: AppointmentManagementProps) => {
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
   const { toast } = useToast();
 
-  // Charger les rendez-vous depuis localStorage
-  useEffect(() => {
-    const defaultAppointments = [
-      {
-        id: '1',
-        specialistName: 'Dr. Marie Dubois',
-        specialty: 'Psychologue clinicienne',
-        date: '2024-01-15',
-        time: '14:30',
-        type: 'video' as const,
-        status: 'confirmed' as const,
-        price: '80€'
-      },
-      {
-        id: '2',
-        specialistName: 'Dr. Pierre Martin',
-        specialty: 'Médecin généraliste',
-        date: '2024-01-18',
-        time: '09:00',
-        type: 'inPerson' as const,
-        status: 'pending' as const,
-        price: '50€'
-      }
-    ];
+  // Utiliser le hook API au lieu de localStorage
+  const {
+    appointments,
+    isLoading,
+    cancelAppointment,
+    deleteAppointment,
+    updateAppointment,
+  } = useAppointments();
 
-    const savedBookings = JSON.parse(localStorage.getItem('userBookings') || '[]');
-    setAppointments([...defaultAppointments, ...savedBookings]);
-  }, []);
+  // Fallback vers localStorage si pas d'API disponible
+  const [localAppointments, setLocalAppointments] = useState<Appointment[]>([]);
+  const [useLocalStorage, setUseLocalStorage] = useState(false);
+
+  useEffect(() => {
+    // Si l'API échoue, utiliser localStorage
+    if (!isLoading && appointments.length === 0) {
+      const defaultAppointments = [
+        {
+          id: '1',
+          specialistName: 'Dr. Marie Dubois',
+          specialty: 'Psychologue clinicienne',
+          date: '2024-01-15',
+          time: '14:30',
+          type: 'video' as const,
+          status: 'confirmed' as const,
+          price: '80€'
+        },
+        {
+          id: '2',
+          specialistName: 'Dr. Pierre Martin',
+          specialty: 'Médecin généraliste',
+          date: '2024-01-18',
+          time: '09:00',
+          type: 'inPerson' as const,
+          status: 'pending' as const,
+          price: '50€'
+        }
+      ];
+
+      const savedBookings = JSON.parse(localStorage.getItem('userBookings') || '[]');
+      setLocalAppointments([...defaultAppointments, ...savedBookings]);
+      setUseLocalStorage(true);
+    }
+  }, [appointments, isLoading]);
 
   const getTypeIcon = (type: string) => {
     switch (type) {
@@ -93,18 +109,24 @@ const AppointmentManagement = ({ onClose }: AppointmentManagementProps) => {
   };
 
   const handleCancelAppointment = (appointmentId: string) => {
-    const updatedAppointments = appointments.map(apt => 
-      apt.id === appointmentId 
-        ? { ...apt, status: 'cancelled' as const }
-        : apt
-    );
-    setAppointments(updatedAppointments);
-    
-    // Mettre à jour localStorage pour les nouvelles réservations
-    const userBookings = updatedAppointments.filter(apt => 
-      !['1', '2'].includes(apt.id)
-    );
-    localStorage.setItem('userBookings', JSON.stringify(userBookings));
+    if (useLocalStorage) {
+      // Mode localStorage
+      const updatedAppointments = localAppointments.map(apt => 
+        apt.id === appointmentId 
+          ? { ...apt, status: 'cancelled' as const }
+          : apt
+      );
+      setLocalAppointments(updatedAppointments);
+      
+      // Mettre à jour localStorage pour les nouvelles réservations
+      const userBookings = updatedAppointments.filter(apt => 
+        !['1', '2'].includes(apt.id)
+      );
+      localStorage.setItem('userBookings', JSON.stringify(userBookings));
+    } else {
+      // Mode API
+      cancelAppointment(appointmentId);
+    }
 
     toast({
       title: "Rendez-vous annulé",
@@ -113,14 +135,20 @@ const AppointmentManagement = ({ onClose }: AppointmentManagementProps) => {
   };
 
   const handleDeleteAppointment = (appointmentId: string) => {
-    const updatedAppointments = appointments.filter(apt => apt.id !== appointmentId);
-    setAppointments(updatedAppointments);
-    
-    // Mettre à jour localStorage
-    const userBookings = updatedAppointments.filter(apt => 
-      !['1', '2'].includes(apt.id)
-    );
-    localStorage.setItem('userBookings', JSON.stringify(userBookings));
+    if (useLocalStorage) {
+      // Mode localStorage
+      const updatedAppointments = localAppointments.filter(apt => apt.id !== appointmentId);
+      setLocalAppointments(updatedAppointments);
+      
+      // Mettre à jour localStorage
+      const userBookings = updatedAppointments.filter(apt => 
+        !['1', '2'].includes(apt.id)
+      );
+      localStorage.setItem('userBookings', JSON.stringify(userBookings));
+    } else {
+      // Mode API
+      deleteAppointment(appointmentId);
+    }
 
     toast({
       title: "Rendez-vous supprimé",
@@ -133,16 +161,25 @@ const AppointmentManagement = ({ onClose }: AppointmentManagementProps) => {
   };
 
   const handleSaveEdit = (updatedAppointment: Appointment) => {
-    const updatedAppointments = appointments.map(apt => 
-      apt.id === updatedAppointment.id ? updatedAppointment : apt
-    );
-    setAppointments(updatedAppointments);
-    
-    // Mettre à jour localStorage
-    const userBookings = updatedAppointments.filter(apt => 
-      !['1', '2'].includes(apt.id)
-    );
-    localStorage.setItem('userBookings', JSON.stringify(userBookings));
+    if (useLocalStorage) {
+      // Mode localStorage
+      const updatedAppointments = localAppointments.map(apt => 
+        apt.id === updatedAppointment.id ? updatedAppointment : apt
+      );
+      setLocalAppointments(updatedAppointments);
+      
+      // Mettre à jour localStorage
+      const userBookings = updatedAppointments.filter(apt => 
+        !['1', '2'].includes(apt.id)
+      );
+      localStorage.setItem('userBookings', JSON.stringify(userBookings));
+    } else {
+      // Mode API
+      updateAppointment({ 
+        id: updatedAppointment.id, 
+        data: updatedAppointment 
+      });
+    }
 
     setEditingAppointment(null);
     
@@ -172,12 +209,20 @@ const AppointmentManagement = ({ onClose }: AppointmentManagementProps) => {
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {appointments.length === 0 ? (
+        {/* Afficher un indicateur de chargement si nécessaire */}
+        {isLoading && !useLocalStorage && (
+          <p className="text-center text-gray-500 dark:text-gray-400 py-8">
+            Chargement des rendez-vous...
+          </p>
+        )}
+        
+        {/* Utiliser les bonnes données selon le mode */}
+        {(useLocalStorage ? localAppointments : appointments).length === 0 && !isLoading ? (
           <p className="text-center text-gray-500 dark:text-gray-400 py-8">
             Aucun rendez-vous programmé
           </p>
         ) : (
-          appointments.map((appointment) => (
+          (useLocalStorage ? localAppointments : appointments).map((appointment) => (
             <Card key={appointment.id} className="p-4 border border-gray-200 dark:border-gray-700">
               <div className="flex items-start justify-between">
                 <div className="flex items-start space-x-3">

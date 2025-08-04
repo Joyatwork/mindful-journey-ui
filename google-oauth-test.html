@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Google OAuth - Mindful Journey</title>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            background: #f9f9f9;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        #g_id_onload { margin: 20px 0; }
+        button {
+            background: #4285f4;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover { background: #357ae8; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test Google OAuth - Mindful Journey</h1>
+        
+        <div class="status info" id="status">
+            ⏳ Initialisation en cours...
+        </div>
+
+        <h2>📋 Instructions</h2>
+        <ol>
+            <li><strong>Obtenir un Client ID Google :</strong>
+                <ul>
+                    <li>Allez sur <a href="https://console.cloud.google.com/" target="_blank">Google Cloud Console</a></li>
+                    <li>Créez un projet ou sélectionnez un projet existant</li>
+                    <li>Activez l'API "Google Identity Services"</li>
+                    <li>Créez des identifiants OAuth 2.0</li>
+                    <li>Ajoutez ces origines JavaScript autorisées :</li>
+                </ul>
+                <div class="code-block">
+http://localhost:8080<br>
+http://127.0.0.1:8080<br>
+file://
+                </div>
+            </li>
+            <li><strong>Collez votre Client ID ici :</strong></li>
+        </ol>
+
+        <input type="text" id="clientIdInput" placeholder="Votre Google Client ID ici..." 
+               style="width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px;">
+        
+        <button onclick="initializeGoogle()">🔧 Configurer Google OAuth</button>
+
+        <div id="googleButton" style="margin: 20px 0;"></div>
+
+        <button onclick="testBackendConnection()" id="testBackendBtn" disabled>
+            🔗 Tester la connexion backend
+        </button>
+
+        <h2>📊 Résultats des tests</h2>
+        <div id="testResults"></div>
+
+        <h2>🔍 Données utilisateur</h2>
+        <div id="userData" class="code-block" style="display: none;"></div>
+    </div>
+
+    <script>
+        let googleClientId = '';
+        let currentUser = null;
+
+        function updateStatus(message, type = 'info') {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = message;
+            statusEl.className = `status ${type}`;
+        }
+
+        function initializeGoogle() {
+            googleClientId = document.getElementById('clientIdInput').value.trim();
+            
+            if (!googleClientId) {
+                updateStatus('❌ Veuillez entrer un Client ID Google valide', 'error');
+                return;
+            }
+
+            try {
+                google.accounts.id.initialize({
+                    client_id: googleClientId,
+                    callback: handleCredentialResponse,
+                    auto_select: false,
+                    cancel_on_tap_outside: true,
+                });
+
+                google.accounts.id.renderButton(
+                    document.getElementById('googleButton'),
+                    {
+                        theme: 'outline',
+                        size: 'large',
+                        width: '100%',
+                        text: 'continue_with',
+                        locale: 'fr'
+                    }
+                );
+
+                document.getElementById('testBackendBtn').disabled = false;
+                updateStatus('✅ Google OAuth configuré avec succès!', 'success');
+                
+                // Test de connexion immédiate
+                google.accounts.id.prompt((notification) => {
+                    if (notification.isNotDisplayed()) {
+                        console.log('Prompt non affiché:', notification.getNotDisplayedReason());
+                    }
+                });
+
+            } catch (error) {
+                updateStatus(`❌ Erreur lors de l'initialisation: ${error.message}`, 'error');
+                console.error('Erreur Google:', error);
+            }
+        }
+
+        function handleCredentialResponse(response) {
+            try {
+                if (!response.credential) {
+                    throw new Error('Aucun credential reçu');
+                }
+
+                // Décoder le JWT token
+                const payload = JSON.parse(atob(response.credential.split('.')[1]));
+                
+                currentUser = {
+                    id: payload.sub,
+                    name: payload.name || `${payload.given_name} ${payload.family_name}`,
+                    email: payload.email,
+                    picture: payload.picture,
+                    credential: response.credential
+                };
+
+                // Afficher les données utilisateur
+                document.getElementById('userData').style.display = 'block';
+                document.getElementById('userData').innerHTML = JSON.stringify(currentUser, null, 2);
+
+                updateStatus(`✅ Connexion Google réussie! Bienvenue ${currentUser.name}`, 'success');
+                
+                // Test automatique du backend
+                testBackendConnection();
+
+            } catch (error) {
+                updateStatus(`❌ Erreur lors du décodage: ${error.message}`, 'error');
+                console.error('Erreur décodage:', error);
+            }
+        }
+
+        async function testBackendConnection() {
+            if (!currentUser) {
+                updateStatus('❌ Veuillez d\'abord vous connecter avec Google', 'error');
+                return;
+            }
+
+            const resultsEl = document.getElementById('testResults');
+            resultsEl.innerHTML = '<div class="status info">🔄 Test du backend en cours...</div>';
+
+            try {
+                const response = await fetch('http://127.0.0.1:8081/api/auth/google/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        access_token: currentUser.credential,
+                        id: currentUser.id,
+                        name: currentUser.name,
+                        email: currentUser.email,
+                        avatar: currentUser.picture
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultsEl.innerHTML = `
+                        <div class="status success">✅ Backend connecté avec succès!</div>
+                        <div class="code-block">${JSON.stringify(data, null, 2)}</div>
+                    `;
+                } else {
+                    resultsEl.innerHTML = `
+                        <div class="status error">❌ Erreur backend: ${data.message || 'Erreur inconnue'}</div>
+                        <div class="code-block">${JSON.stringify(data, null, 2)}</div>
+                    `;
+                }
+            } catch (error) {
+                resultsEl.innerHTML = `
+                    <div class="status error">❌ Erreur de connexion backend: ${error.message}</div>
+                    <div class="code-block">
+Erreur: ${error.message}
+URL testée: http://127.0.0.1:8081/api/auth/google/login
+
+Vérifiez que:
+1. Le serveur Laravel tourne sur le port 8081
+2. Les routes API sont correctement configurées
+3. CORS est activé pour cette origine
+                    </div>
+                `;
+            }
+        }
+
+        // Initialisation de la page
+        window.onload = function() {
+            if (typeof google === 'undefined') {
+                updateStatus('❌ Script Google non chargé. Rechargez la page.', 'error');
+            } else {
+                updateStatus('✅ Script Google chargé. Entrez votre Client ID pour continuer.', 'success');
+            }
+        };
+    </script>
+</body>
+</html>

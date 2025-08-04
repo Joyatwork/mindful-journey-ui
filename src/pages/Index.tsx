@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { useAuth } from '@/contexts/AuthContext';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import MoodSelector from '@/components/MoodSelector';
 import WellnessCard from '@/components/WellnessCard';
 import ProgressChart from '@/components/ProgressChart';
@@ -29,16 +31,26 @@ import {
   Bell,
   User,
   Settings,
-  UserCheck
+  UserCheck,
+  LogOut
 } from 'lucide-react';
 
 const Index = () => {
+  const { user, logout } = useAuth();
   const [currentView, setCurrentView] = useState('dashboard');
   const [selectedMood, setSelectedMood] = useState<number>();
   const [challengeFilters, setChallengeFilters] = useState<string[]>([]);
   const [diagnosticStep, setDiagnosticStep] = useState(1);
   const [diagnosticAnswers, setDiagnosticAnswers] = useState<Record<string, any>>({});
   const [selectedSpecialist, setSelectedSpecialist] = useState<any>(null);
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error('Erreur lors de la déconnexion:', error);
+    }
+  };
 
   const progressData = [
     { date: 'Lun', mood: 3, stress: 4, energy: 3, sleep: 4 },
@@ -168,7 +180,7 @@ const Index = () => {
         <div className="relative z-10">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className="text-2xl font-bold mb-1">Bonjour Sarah ! 👋</h1>
+              <h1 className="text-2xl font-bold mb-1">Bonjour {user?.name || 'Utilisateur'} ! 👋</h1>
               <p className="text-white/90">Comment vous sentez-vous aujourd'hui ?</p>
             </div>
             <div className="flex space-x-2">
@@ -442,6 +454,19 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <div className="max-w-md mx-auto min-h-screen bg-white/50 backdrop-blur-sm">
+        {/* Bouton de déconnexion discret */}
+        <div className="absolute top-4 right-4 z-50">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleLogout}
+            className="text-gray-400 hover:text-red-600 hover:bg-red-50 bg-white/70 backdrop-blur-sm"
+            title="Se déconnecter"
+          >
+            <LogOut className="h-4 w-4" />
+          </Button>
+        </div>
+
         <div className="px-4 py-6 pb-32 safe-area-inset-top">
           {currentView === 'dashboard' && renderDashboard()}
           {currentView === 'diagnostic' && renderDiagnostic()}

@@ -5,6 +5,7 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
+import { useAuth } from '@/contexts/AuthContext';
 import { 
   User, 
   Mail, 
@@ -30,33 +31,89 @@ import {
 } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
+import { useToast } from '@/hooks/use-toast';
 import EditProfileForm from './EditProfileForm';
 import AppointmentManagement from './AppointmentManagement';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const ProfilePage = () => {
   const { isDarkMode, toggleDarkMode } = useTheme();
   const { isInstallable, installPWA } = usePWAInstall();
+  const { user, updateProfile } = useAuth();
+  const { toast } = useToast();
 
   const [isEditing, setIsEditing] = useState(false);
   const [showAppointments, setShowAppointments] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const [userInfo, setUserInfo] = useState({
-    name: 'John Smith',
-    email: 'john.smith@example.com',
-    phone: '123-456-7890',
-    location: '123 Main St, Anytown',
-    birthDate: '1990-01-01',
-    jobPosition: 'Développeur Full-Stack',
-    company: 'Tech Solutions Inc.',
-    bio: 'Passionné par le développement web et le bien-être personnel.',
-    goals: 'Improve wellness and reduce stress through meditation and mindfulness.',
+    name: user?.name || 'Utilisateur',
+    email: user?.email || 'email@example.com',
+    phone: user?.phone || '',
+    location: user?.location || '',
+    birthDate: user?.birth_date || '',
+    jobPosition: user?.job_position || 'Non spécifié',
+    company: user?.company || 'Non spécifiée',
+    bio: user?.bio || '',
+    goals: user?.goals || '',
     wellnessWeather: 'sunny' // sunny, cloudy, rainy
   });
 
-  const handleSave = (newInfo: any) => {
-    setUserInfo(newInfo);
-    setIsEditing(false);
+  // Mettre à jour les données utilisateur quand elles changent
+  useEffect(() => {
+    if (user) {
+      setUserInfo(prevInfo => ({
+        ...prevInfo,
+        name: user.name,
+        email: user.email,
+        phone: user.phone || '',
+        location: user.location || '',
+        birthDate: user.birth_date || '',
+        jobPosition: user.job_position || 'Non spécifié',
+        company: user.company || 'Non spécifiée',
+        bio: user.bio || '',
+        goals: user.goals || ''
+      }));
+    }
+  }, [user]);
+
+  const handleSave = async (newInfo: any) => {
+    setIsUpdating(true);
+    try {
+      // Préparer les données pour l'API
+      const profileData = {
+        name: newInfo.name,
+        email: newInfo.email,
+        phone: newInfo.phone,
+        location: newInfo.location,
+        birthDate: newInfo.birthDate,
+        jobPosition: newInfo.jobPosition,
+        company: newInfo.company,
+        bio: newInfo.bio,
+        goals: newInfo.goals
+      };
+
+      await updateProfile(profileData);
+      
+      // Mettre à jour l'état local
+      setUserInfo(newInfo);
+      setIsEditing(false);
+      
+      toast({
+        title: "Profil mis à jour",
+        description: "Vos informations ont été sauvegardées avec succès.",
+        variant: "default",
+      });
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour du profil:', error);
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue lors de la sauvegarde. Veuillez réessayer.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   const getWeatherIcon = (weather: string) => {
@@ -177,6 +234,7 @@ const ProfilePage = () => {
             initialData={userInfo}
             onSave={handleSave}
             onCancel={() => setIsEditing(false)}
+            isLoading={isUpdating}
           />
         )}
 

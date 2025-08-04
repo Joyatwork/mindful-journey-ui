@@ -28,6 +28,7 @@ interface EditProfileFormProps {
   onSave: (data: UserProfileData) => void;
   onCancel: () => void;
   initialData: UserProfileData;
+  isLoading?: boolean;
 }
 
 interface UserProfileData {
@@ -38,9 +39,11 @@ interface UserProfileData {
   bio: string;
   birthDate: string;
   goals: string;
+  jobPosition: string;
+  company: string;
 }
 
-const EditProfileForm: React.FC<EditProfileFormProps> = ({ onSave, onCancel, initialData }) => {
+const EditProfileForm: React.FC<EditProfileFormProps> = ({ onSave, onCancel, initialData, isLoading = false }) => {
   const form = useForm<UserProfileData>({
     defaultValues: initialData
   });
@@ -173,6 +176,46 @@ const EditProfileForm: React.FC<EditProfileFormProps> = ({ onSave, onCancel, ini
           </Card>
 
           <Card className="p-4">
+            <h2 className="text-lg font-semibold mb-4">Informations professionnelles</h2>
+            
+            <div className="space-y-4">
+              <FormField
+                control={form.control}
+                name="jobPosition"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center space-x-2">
+                      <User className="h-4 w-4" />
+                      <span>Poste</span>
+                    </FormLabel>
+                    <FormControl>
+                      <Input placeholder="Votre poste actuel" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="company"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center space-x-2">
+                      <User className="h-4 w-4" />
+                      <span>Entreprise</span>
+                    </FormLabel>
+                    <FormControl>
+                      <Input placeholder="Votre entreprise" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </Card>
+
+          <Card className="p-4">
             <h2 className="text-lg font-semibold mb-4">À propos</h2>
             
             <div className="space-y-4">
@@ -218,15 +261,17 @@ const EditProfileForm: React.FC<EditProfileFormProps> = ({ onSave, onCancel, ini
             <Button 
               type="submit" 
               className="flex-1 bg-wellness-gradient hover:opacity-90 text-white"
+              disabled={isLoading}
             >
               <Save className="h-4 w-4 mr-2" />
-              Sauvegarder
+              {isLoading ? 'Sauvegarde...' : 'Sauvegarder'}
             </Button>
             <Button 
               type="button" 
               variant="outline" 
               onClick={onCancel}
               className="flex-1"
+              disabled={isLoading}
             >
               Annuler
             </Button>

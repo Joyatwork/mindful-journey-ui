@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Création Projet Google Cloud - Mindful Journey</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .step {
+            background: #f8f9fa;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            border-left: 5px solid #4285f4;
+        }
+        .step h3 {
+            color: #4285f4;
+            margin-top: 0;
+        }
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+        .btn {
+            display: inline-block;
+            background: #4285f4;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 10px 5px;
+            transition: background 0.3s;
+        }
+        .btn:hover {
+            background: #357ae8;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        .warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        input[type="text"]:focus {
+            border-color: #4285f4;
+            outline: none;
+        }
+        .result {
+            background: #e7f3ff;
+            border: 2px solid #4285f4;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Création Projet Google Cloud Console</h1>
+        <p><strong>Projet:</strong> Mindful Journey - Authentification Google OAuth</p>
+
+        <div class="step">
+            <h3>📋 Étape 1: Créer le Projet Google Cloud</h3>
+            <p>1. Cliquez sur le bouton ci-dessous pour ouvrir Google Cloud Console :</p>
+            <a href="https://console.cloud.google.com/projectcreate" target="_blank" class="btn">
+                🌐 Ouvrir Google Cloud Console
+            </a>
+            
+            <p>2. Remplissez les informations :</p>
+            <div class="code-block">
+Nom du projet: mindful-journey-app
+ID du projet: mindful-journey-app-[random-numbers]
+            </div>
+            
+            <p>3. Cliquez sur <strong>"CRÉER"</strong></p>
+        </div>
+
+        <div class="step">
+            <h3>🔧 Étape 2: Activer l'API Google Identity</h3>
+            <p>1. Dans votre nouveau projet, allez dans :</p>
+            <div class="code-block">Menu ☰ → APIs et Services → Bibliothèque</div>
+            
+            <p>2. Recherchez : <strong>"Google Identity Services API"</strong></p>
+            <p>3. Cliquez dessus et appuyez sur <strong>"ACTIVER"</strong></p>
+            
+            <a href="https://console.cloud.google.com/apis/library/identitytoolkit.googleapis.com" target="_blank" class="btn">
+                🔍 Rechercher l'API Google Identity
+            </a>
+        </div>
+
+        <div class="step">
+            <h3>👥 Étape 3: Configurer l'Écran de Consentement</h3>
+            <p>1. Allez dans :</p>
+            <div class="code-block">APIs et Services → Écran de consentement OAuth</div>
+            
+            <p>2. Choisissez <strong>"Externe"</strong></p>
+            <p>3. Remplissez :</p>
+            <div class="code-block">
+Nom de l'application: Mindful Journey
+E-mail d'assistance utilisateur: alicamara291@gmail.com
+E-mail de contact du développeur: alicamara291@gmail.com
+            </div>
+            
+            <p>4. Dans <strong>"Utilisateurs de test"</strong>, ajoutez :</p>
+            <div class="code-block">alicamara291@gmail.com</div>
+        </div>
+
+        <div class="step">
+            <h3>🔑 Étape 4: Créer les Identifiants OAuth</h3>
+            <p>1. Allez dans :</p>
+            <div class="code-block">APIs et Services → Identifiants</div>
+            
+            <p>2. Cliquez sur <strong>"CRÉER DES IDENTIFIANTS"</strong> → <strong>"ID client OAuth 2.0"</strong></p>
+            
+            <p>3. Configuration :</p>
+            <div class="code-block">
+Type d'application: Application Web
+Nom: Mindful Journey Web Client
+
+Origines JavaScript autorisées:
+• http://localhost:8080
+• http://127.0.0.1:8080
+
+URI de redirection autorisées:
+• http://127.0.0.1:8081/api/auth/google/callback
+            </div>
+            
+            <p>4. Cliquez sur <strong>"CRÉER"</strong></p>
+        </div>
+
+        <div class="step">
+            <h3>📋 Étape 5: Copier vos Identifiants</h3>
+            <p>Une fois créé, Google vous donnera :</p>
+            
+            <div class="warning">
+                <strong>⚠️ Important:</strong> Copiez ces identifiants dans les champs ci-dessous
+            </div>
+            
+            <label><strong>Client ID:</strong></label>
+            <input type="text" id="clientId" placeholder="123456789-abcdefgh...googleusercontent.com">
+            
+            <label><strong>Client Secret (optionnel):</strong></label>
+            <input type="text" id="clientSecret" placeholder="GOCSPX-abcdefghijklmnop...">
+            
+            <button onclick="generateConfig()" class="btn">🔧 Générer la Configuration</button>
+        </div>
+
+        <div class="result" id="configResult">
+            <h3>✅ Configuration Générée</h3>
+            <p><strong>Copiez ces configurations dans vos fichiers :</strong></p>
+            
+            <h4>Frontend (.env) :</h4>
+            <div class="code-block" id="frontendConfig"></div>
+            
+            <h4>Backend (.env) :</h4>
+            <div class="code-block" id="backendConfig"></div>
+            
+            <div class="success">
+                <strong>🎉 Prêt !</strong> Une fois ces configurations appliquées, redémarrez vos serveurs et testez l'authentification Google !
+            </div>
+        </div>
+
+        <div class="step">
+            <h3>🧪 Étape 6: Test Final</h3>
+            <p>Une fois la configuration appliquée :</p>
+            <div class="code-block">
+1. Redémarrez les serveurs
+2. Allez sur http://localhost:8080/login  
+3. Cliquez sur "Se connecter avec Google"
+4. Utilisez votre compte: alicamara291@gmail.com
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function generateConfig() {
+            const clientId = document.getElementById('clientId').value.trim();
+            const clientSecret = document.getElementById('clientSecret').value.trim();
+            
+            if (!clientId) {
+                alert('⚠️ Veuillez entrer votre Client ID');
+                return;
+            }
+            
+            // Configuration Frontend
+            const frontendConfig = `# Configuration de l'API
+VITE_API_URL=http://127.0.0.1:8081/api
+
+# Configuration Google OAuth
+VITE_GOOGLE_CLIENT_ID=${clientId}
+
+# Configuration de l'application
+VITE_APP_NAME=Mindful Journey`;
+            
+            // Configuration Backend
+            const backendConfig = `# Google OAuth Configuration
+GOOGLE_CLIENT_ID=${clientId}
+GOOGLE_CLIENT_SECRET=${clientSecret || ''}
+GOOGLE_REDIRECT_URI=http://127.0.0.1:8081/api/auth/google/callback`;
+            
+            document.getElementById('frontendConfig').textContent = frontendConfig;
+            document.getElementById('backendConfig').textContent = backendConfig;
+            document.getElementById('configResult').style.display = 'block';
+            
+            // Scroll vers les résultats
+            document.getElementById('configResult').scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>
