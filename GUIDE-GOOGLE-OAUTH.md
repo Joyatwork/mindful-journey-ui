@@ -5,9 +5,32 @@
 - Backend Laravel : http://127.0.0.1:8081
 - Frontend React : http://localhost:8080
 
-❌ **Google OAuth désactivé temporairement**
-- Les boutons Google OAuth sont désactivés
-- Utilisez l'authentification par email/mot de passe pour tester
+✅ **Google OAuth réactivé et fonctionnel !**
+- Endpoint backend : `/api/auth/google/login`
+- Component frontend : `GoogleAuthButton`
+- Hook personnalisé : `useGoogleAuth`
+
+## Configuration requise
+
+### 1. Créer un projet Google Cloud
+1. Allez sur [Google Cloud Console](https://console.cloud.google.com/)
+2. Créez un nouveau projet ou sélectionnez un projet existant
+3. Activez l'API Google+ 
+
+### 2. Configurer OAuth 2.0
+1. Dans la Console Google Cloud, allez dans "APIs & Services" > "Credentials"
+2. Cliquez sur "Create Credentials" > "OAuth 2.0 Client IDs"
+3. Configurez l'écran de consentement OAuth si ce n'est pas déjà fait
+4. Sélectionnez "Web application" comme type d'application
+5. Ajoutez les URL autorisées :
+   - **Origines JavaScript autorisées**: `http://localhost:8080`
+   - **URIs de redirection autorisées**: `http://localhost:8080`
+
+### 3. Configuration du fichier .env
+Remplacez `test-client-id-for-development` par votre vrai Client ID :
+```
+VITE_GOOGLE_CLIENT_ID=votre-vrai-client-id-google.apps.googleusercontent.com
+```
 
 ## 📋 Pour activer Google OAuth
 

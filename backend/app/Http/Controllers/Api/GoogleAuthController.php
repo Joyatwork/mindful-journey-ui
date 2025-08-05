@@ -94,6 +94,9 @@ class GoogleAuthController extends Controller
     public function loginWithGoogle(Request $request): JsonResponse
     {
         try {
+            // Log des données reçues pour debugging
+            Log::info('Google OAuth Request Data:', $request->all());
+            
             $request->validate([
                 'access_token' => 'required|string',
                 'id' => 'required|string',
@@ -161,9 +164,15 @@ class GoogleAuthController extends Controller
             ], 200);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::error('Google Auth Validation Error:', [
+                'errors' => $e->errors(),
+                'request_data' => $request->all()
+            ]);
+            
             return response()->json([
                 'message' => 'Données invalides',
-                'errors' => $e->errors()
+                'errors' => $e->errors(),
+                'received_data' => $request->all() // Pour debugging
             ], 422);
         } catch (\Exception $e) {
             Log::error('Erreur Google Auth: ' . $e->getMessage(), [

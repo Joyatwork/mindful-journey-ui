@@ -1,0 +1,76 @@
+
+import React from "react";
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ThemeProvider } from "@/contexts/ThemeContext";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { PWAInstallBanner } from "@/components/PWAInstallBanner";
+import ProtectedRoute from "@/components/ProtectedRoute";
+import Index from "./pages/Index";
+import LoginPage from "./pages/LoginPage";
+import TestAPI from "./pages/TestAPI";
+import ApiTest from "./pages/ApiTest";
+import AuthTest from "./pages/AuthTest";
+import DatabaseViewer from "./pages/DatabaseViewer";
+import MoodPage from "./pages/MoodPage";
+import MeditationPage from "./pages/MeditationPage";
+import NotFound from "./pages/NotFound";
+
+const queryClient = new QueryClient();
+
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <ThemeProvider>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <PWAInstallBanner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/" element={
+                <ProtectedRoute>
+                  <Index />
+                </ProtectedRoute>
+              } />
+              <Route path="/test-api" element={
+                <ProtectedRoute>
+                  <TestAPI />
+                </ProtectedRoute>
+              } />
+              <Route path="/api-test" element={
+                <ProtectedRoute>
+                  <ApiTest />
+                </ProtectedRoute>
+              } />
+              <Route path="/auth-test" element={<AuthTest />} />
+              <Route path="/database" element={
+                <ProtectedRoute>
+                  <DatabaseViewer />
+                </ProtectedRoute>
+              } />
+              <Route path="/mood" element={
+                <ProtectedRoute>
+                  <MoodPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/meditation" element={
+                <ProtectedRoute>
+                  <MeditationPage />
+                </ProtectedRoute>
+              } />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </AuthProvider>
+    </ThemeProvider>
+  </QueryClientProvider>
+);
+
+export default App;
