@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Google OAuth - Mindful Journey</title>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .success { color: #28a745; }
+        .error { color: #dc3545; }
+        .info { color: #17a2b8; }
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        button {
+            background: #4285f4;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #357ae8;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 10px 0;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test Google OAuth - Mindful Journey</h1>
+        
+        <div class="test-section">
+            <h3>📋 Configuration actuelle</h3>
+            <p><strong>Client ID:</strong> <span id="clientId">Chargement...</span></p>
+            <p><strong>API Backend:</strong> http://127.0.0.1:8081/api</p>
+            <p><strong>Endpoint OAuth:</strong> /auth/google/login</p>
+        </div>
+
+        <div class="test-section">
+            <h3>🔧 Tests automatiques</h3>
+            <button onclick="testServerConnection()">Tester connexion serveur</button>
+            <button onclick="testOAuthEndpoint()">Tester endpoint OAuth</button>
+            <button onclick="clearLog()">Effacer logs</button>
+            <div id="autoTestLog" class="log"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔑 Test Google Sign-In</h3>
+            <p class="info">Cliquez sur le bouton ci-dessous pour tester l'authentification Google :</p>
+            <div id="g_id_onload"
+                 data-client_id="test-client-id-for-development"
+                 data-callback="handleCredentialResponse"
+                 data-auto_prompt="false">
+            </div>
+            <div class="g_id_signin" 
+                 data-type="standard"
+                 data-size="large"
+                 data-theme="outline"
+                 data-text="sign_in_with"
+                 data-shape="rectangular"
+                 data-logo_alignment="left">
+            </div>
+            <div id="googleTestLog" class="log"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 État de l'intégration</h3>
+            <div id="integrationStatus">
+                <p>Statut: <span id="statusText" class="info">En attente de tests...</span></p>
+                <div id="statusDetails"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://127.0.0.1:8081/api';
+        const CLIENT_ID = 'test-client-id-for-development'; // Sera remplacé par le vrai client ID
+
+        // Affichage du client ID
+        document.getElementById('clientId').textContent = CLIENT_ID;
+
+        // Fonction de log
+        function log(message, elementId = 'autoTestLog', type = 'info') {
+            const logElement = document.getElementById(elementId);
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : 'info';
+            logElement.innerHTML += `<div class="${className}">[${timestamp}] ${message}</div>`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+
+        function clearLog() {
+            document.getElementById('autoTestLog').innerHTML = '';
+            document.getElementById('googleTestLog').innerHTML = '';
+        }
+
+        // Test de connexion au serveur
+        async function testServerConnection() {
+            log('🔍 Test de connexion au serveur Laravel...');
+            
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: 'test@test.com',
+                        password: 'wrongpassword'
+                    })
+                });
+
+                // On s'attend à une erreur 422 (validation) ou 401 (unauthorized)
+                if (response.status === 422 || response.status === 401) {
+                    log('✅ Serveur Laravel accessible et fonctionnel', 'autoTestLog', 'success');
+                } else if (response.status === 404) {
+                    log('❌ Erreur 404: Route non trouvée', 'autoTestLog', 'error');
+                } else {
+                    log(`⚠️ Réponse inattendue: ${response.status}`, 'autoTestLog', 'error');
+                }
+            } catch (error) {
+                log(`❌ Erreur de connexion: ${error.message}`, 'autoTestLog', 'error');
+            }
+        }
+
+        // Test de l'endpoint OAuth
+        async function testOAuthEndpoint() {
+            log('🔍 Test de l\'endpoint Google OAuth...');
+            
+            const testData = {
+                access_token: 'test_token_123',
+                id: 'test_google_id_456',
+                name: 'Test User',
+                email: 'test.oauth@gmail.com',
+                avatar: 'https://example.com/avatar.jpg'
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/auth/google/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(testData)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    log('✅ Endpoint OAuth fonctionnel !', 'autoTestLog', 'success');
+                    log(`👤 Utilisateur créé: ${result.user.name} (${result.user.email})`, 'autoTestLog', 'success');
+                    log(`🔑 Token généré: ${result.token ? 'Oui' : 'Non'}`, 'autoTestLog', 'success');
+                } else {
+                    log(`❌ Erreur OAuth: ${result.message}`, 'autoTestLog', 'error');
+                    if (result.errors) {
+                        log(`🔍 Détails: ${JSON.stringify(result.errors, null, 2)}`, 'autoTestLog', 'error');
+                    }
+                }
+            } catch (error) {
+                log(`❌ Erreur OAuth: ${error.message}`, 'autoTestLog', 'error');
+            }
+        }
+
+        // Callback pour Google Sign-In
+        async function handleCredentialResponse(response) {
+            log('🔑 Credential reçu de Google', 'googleTestLog', 'info');
+            
+            try {
+                // Décoder le JWT token pour obtenir les informations utilisateur
+                const payload = JSON.parse(atob(response.credential.split('.')[1]));
+                
+                log(`👤 Utilisateur Google: ${payload.name} (${payload.email})`, 'googleTestLog', 'info');
+
+                // Préparer les données pour l'API
+                const googleData = {
+                    access_token: response.credential,
+                    id: payload.sub,
+                    name: payload.name,
+                    email: payload.email,
+                    avatar: payload.picture
+                };
+
+                // Envoyer à notre API
+                const apiResponse = await fetch(`${API_BASE}/auth/google/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(googleData)
+                });
+
+                const result = await apiResponse.json();
+
+                if (apiResponse.ok) {
+                    log('🎉 Authentification Google réussie !', 'googleTestLog', 'success');
+                    log(`✅ Utilisateur connecté: ${result.user.name}`, 'googleTestLog', 'success');
+                    log(`🔐 Token d'accès reçu`, 'googleTestLog', 'success');
+                    
+                    // Mettre à jour le statut
+                    updateIntegrationStatus('success', 'Google OAuth fonctionne parfaitement !');
+                } else {
+                    log(`❌ Erreur API: ${result.message}`, 'googleTestLog', 'error');
+                    updateIntegrationStatus('error', `Erreur API: ${result.message}`);
+                }
+
+            } catch (error) {
+                log(`❌ Erreur lors du traitement: ${error.message}`, 'googleTestLog', 'error');
+                updateIntegrationStatus('error', `Erreur: ${error.message}`);
+            }
+        }
+
+        function updateIntegrationStatus(status, message) {
+            const statusText = document.getElementById('statusText');
+            const statusDetails = document.getElementById('statusDetails');
+            
+            statusText.className = status;
+            statusText.textContent = message;
+            
+            if (status === 'success') {
+                statusDetails.innerHTML = `
+                    <p class="success">✅ Backend Laravel: Fonctionnel</p>
+                    <p class="success">✅ Endpoint OAuth: Accessible</p>
+                    <p class="success">✅ Google Sign-In: Configuré</p>
+                    <p class="success">✅ Intégration complète: Opérationnelle</p>
+                `;
+            }
+        }
+
+        // Tests automatiques au chargement
+        window.onload = function() {
+            setTimeout(() => {
+                testServerConnection();
+                setTimeout(() => testOAuthEndpoint(), 1000);
+            }, 500);
+        };
+    </script>
+</body>
+</html>

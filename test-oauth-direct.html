@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Direct Google OAuth API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .btn {
+            background: #4285f4;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        .btn:hover { background: #357ae8; }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test Direct API Google OAuth</h1>
+        
+        <p>Ce test simule exactement ce que fait votre application React, sans les complications du vrai bouton Google.</p>
+        
+        <button class="btn" onclick="testGoogleOAuth()">🔍 Tester Google OAuth API</button>
+        <button class="btn" onclick="testMissingField()">❌ Tester Champ Manquant</button>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://127.0.0.1:8081/api';
+        
+        function showResult(content, isSuccess) {
+            const result = document.getElementById('result');
+            result.className = `result ${isSuccess ? 'success' : 'error'}`;
+            result.textContent = content;
+        }
+
+        async function testGoogleOAuth() {
+            console.log('🧪 Test de l\'API Google OAuth...');
+            
+            // Simulation exacte des données que Google envoie
+            const googleData = {
+                access_token: 'fake_google_token_' + Date.now(),
+                id: 'google_user_12345',
+                name: 'Test User Gmail',
+                email: 'test.user@gmail.com',
+                avatar: 'https://lh3.googleusercontent.com/a/default-user'
+            };
+
+            try {
+                console.log('📤 Envoi des données:', googleData);
+                
+                const response = await fetch(`${API_BASE_URL}/auth/google/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify(googleData)
+                });
+
+                console.log('📡 Statut:', response.status);
+                const result = await response.json();
+                console.log('📥 Réponse:', result);
+
+                if (response.ok) {
+                    showResult(`✅ SUCCÈS !
+
+Statut: ${response.status}
+Utilisateur: ${result.user.name} (${result.user.email})
+Token: ${result.token ? 'Généré' : 'Non généré'}
+Provider: ${result.user.provider}
+Google ID: ${result.user.google_id}
+
+🎉 L'API Google OAuth fonctionne parfaitement !`, true);
+                } else {
+                    showResult(`❌ ÉCHEC
+
+Statut: ${response.status}
+Message: ${result.message}
+Erreurs: ${JSON.stringify(result.errors || {}, null, 2)}
+Données reçues: ${JSON.stringify(result.received_data || {}, null, 2)}`, false);
+                }
+
+            } catch (error) {
+                console.error('💥 Erreur:', error);
+                showResult(`💥 ERREUR RÉSEAU
+
+${error.message}
+
+Vérifiez que le serveur Laravel fonctionne sur le port 8081.`, false);
+            }
+        }
+
+        async function testMissingField() {
+            console.log('🧪 Test avec champ manquant...');
+            
+            // Test avec un champ manquant pour voir l'erreur de validation
+            const invalidData = {
+                access_token: 'fake_token',
+                id: 'test_id',
+                // name: manquant volontairement
+                email: 'test@gmail.com',
+                avatar: null
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/google/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(invalidData)
+                });
+
+                const result = await response.json();
+
+                showResult(`📊 TEST CHAMP MANQUANT
+
+Statut: ${response.status}
+Message: ${result.message}
+Erreurs: ${JSON.stringify(result.errors || {}, null, 2)}
+
+Ceci montre comment l'API gère les erreurs de validation.`, response.status === 422);
+
+            } catch (error) {
+                showResult(`💥 ERREUR: ${error.message}`, false);
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Connexion Gmail - Mindful Journey</title>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.2em;
+        }
+        .status-card {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .status-success {
+            background: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        .status-info {
+            background: #e3f2fd;
+            border-color: #90caf9;
+            color: #0d47a1;
+        }
+        .status-warning {
+            background: #fff3cd;
+            border-color: #ffeaa7;
+            color: #856404;
+        }
+        .config-info {
+            background: #f1f3f4;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .btn {
+            background: #4285f4;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        .btn:hover {
+            background: #357ae8;
+            transform: translateY(-2px);
+        }
+        .btn-success {
+            background: #34a853;
+        }
+        .btn-success:hover {
+            background: #137333;
+        }
+        .test-result {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 5px solid #4285f4;
+            background: #f8f9fa;
+        }
+        .google-signin-container {
+            text-align: center;
+            margin: 30px 0;
+            padding: 30px;
+            background: #fafafa;
+            border-radius: 10px;
+            border: 2px dashed #e0e0e0;
+        }
+        .log-container {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin: 20px 0;
+        }
+        .timestamp {
+            color: #a0aec0;
+        }
+        .success { color: #68d391; }
+        .error { color: #f56565; }
+        .info { color: #63b3ed; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Test Connexion Gmail</h1>
+        
+        <div class="status-card status-success">
+            <h3>✅ Configuration Active</h3>
+            <p><strong>Client ID :</strong> 210024066224-tmmctnove78hoh8cnqpls2mt5iboccku.apps.googleusercontent.com</p>
+            <p><strong>Backend :</strong> http://127.0.0.1:8081/api</p>
+            <p><strong>Frontend :</strong> http://localhost:8080</p>
+        </div>
+
+        <div class="status-card status-info">
+            <h3>🧪 Test de Connexion Google</h3>
+            <p>Cliquez sur le bouton Google ci-dessous pour tester l'authentification avec votre compte Gmail.</p>
+        </div>
+
+        <div class="google-signin-container">
+            <h3>🔑 Connexion avec Google</h3>
+            <p>Utilisez votre compte Gmail pour vous connecter :</p>
+            
+            <div id="g_id_onload"
+                 data-client_id="210024066224-tmmctnove78hoh8cnqpls2mt5iboccku.apps.googleusercontent.com"
+                 data-callback="handleCredentialResponse"
+                 data-auto_prompt="false">
+            </div>
+            
+            <div class="g_id_signin" 
+                 data-type="standard"
+                 data-size="large"
+                 data-theme="outline"
+                 data-text="signin_with"
+                 data-shape="rectangular"
+                 data-logo_alignment="left">
+            </div>
+        </div>
+
+        <div class="test-result" id="testResult" style="display: none;">
+            <h4>📊 Résultat du Test</h4>
+            <div id="resultContent"></div>
+        </div>
+
+        <div class="log-container" id="logContainer">
+            <div class="timestamp">[En attente du test...]</div>
+        </div>
+
+        <div style="text-align: center; margin-top: 30px;">
+            <a href="http://localhost:8080" class="btn btn-success" target="_blank">
+                🚀 Ouvrir l'Application Principale
+            </a>
+            <button class="btn" onclick="testBackendConnection()">
+                🔧 Tester Backend
+            </button>
+            <button class="btn" onclick="clearLogs()">
+                🧹 Effacer Logs
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://127.0.0.1:8081/api';
+        
+        function log(message, type = 'info') {
+            const logContainer = document.getElementById('logContainer');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.innerHTML = `<span class="timestamp">[${timestamp}]</span> <span class="${type}">${message}</span>`;
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        function clearLogs() {
+            document.getElementById('logContainer').innerHTML = '<div class="timestamp">[Logs effacés...]</div>';
+        }
+
+        function showResult(success, title, details) {
+            const testResult = document.getElementById('testResult');
+            const resultContent = document.getElementById('resultContent');
+            
+            testResult.style.display = 'block';
+            testResult.className = `test-result ${success ? 'status-success' : 'status-warning'}`;
+            
+            resultContent.innerHTML = `
+                <h4>${success ? '✅' : '❌'} ${title}</h4>
+                <div>${details}</div>
+            `;
+        }
+
+        async function handleCredentialResponse(response) {
+            log('🔑 Credential Google reçu', 'info');
+            
+            try {
+                // Décoder le JWT pour extraire les informations utilisateur
+                const payload = JSON.parse(atob(response.credential.split('.')[1]));
+                
+                log(`👤 Utilisateur Google: ${payload.name} (${payload.email})`, 'success');
+                log(`🆔 Google ID: ${payload.sub}`, 'info');
+
+                // Préparer les données pour notre API
+                const googleData = {
+                    access_token: response.credential,
+                    id: payload.sub,
+                    name: payload.name,
+                    email: payload.email,
+                    avatar: payload.picture || null
+                };
+
+                log('📤 Envoi vers l\'API Laravel...', 'info');
+
+                // Envoyer à notre API Laravel
+                const apiResponse = await fetch(`${API_BASE_URL}/auth/google/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify(googleData)
+                });
+
+                const result = await apiResponse.json();
+                
+                if (apiResponse.ok) {
+                    log('🎉 Authentification réussie !', 'success');
+                    log(`✅ Utilisateur créé/connecté: ${result.user.name}`, 'success');
+                    log(`🔐 Token généré: ${result.token ? 'Oui' : 'Non'}`, 'success');
+                    
+                    showResult(true, 'Connexion Gmail Réussie !', `
+                        <p><strong>Nom :</strong> ${result.user.name}</p>
+                        <p><strong>Email :</strong> ${result.user.email}</p>
+                        <p><strong>Provider :</strong> ${result.user.provider}</p>
+                        <p><strong>ID Utilisateur :</strong> ${result.user.id}</p>
+                        <p><strong>Token généré :</strong> ✅ Oui</p>
+                        <p><strong>Avatar :</strong> ${result.user.avatar_url ? '✅ Configuré' : '❌ Non configuré'}</p>
+                        <br>
+                        <strong>🎯 Résultat :</strong> Vous pouvez maintenant utiliser votre compte Gmail pour vous connecter à l'application !
+                    `);
+
+                    // Test d'une requête authentifiée
+                    await testAuthenticatedRequest(result.token);
+
+                } else {
+                    log(`❌ Erreur API: ${result.message}`, 'error');
+                    if (result.errors) {
+                        log(`🔍 Détails: ${JSON.stringify(result.errors)}`, 'error');
+                    }
+                    
+                    showResult(false, 'Erreur API', `
+                        <p><strong>Message :</strong> ${result.message}</p>
+                        ${result.errors ? `<p><strong>Erreurs :</strong> ${JSON.stringify(result.errors, null, 2)}</p>` : ''}
+                    `);
+                }
+
+            } catch (error) {
+                log(`💥 Erreur lors du traitement: ${error.message}`, 'error');
+                showResult(false, 'Erreur de Traitement', `
+                    <p><strong>Erreur :</strong> ${error.message}</p>
+                    <p>Vérifiez que le serveur Laravel fonctionne sur le port 8081.</p>
+                `);
+            }
+        }
+
+        async function testAuthenticatedRequest(token) {
+            log('🔐 Test requête authentifiée...', 'info');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/user`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const userData = await response.json();
+                    log('✅ Requête authentifiée réussie !', 'success');
+                    log(`📋 Profil récupéré: ${userData.name}`, 'success');
+                } else {
+                    log('⚠️ Requête authentifiée échouée', 'error');
+                }
+            } catch (error) {
+                log(`💥 Erreur requête authentifiée: ${error.message}`, 'error');
+            }
+        }
+
+        async function testBackendConnection() {
+            log('🔍 Test de connexion au backend...', 'info');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/google/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        access_token: 'test',
+                        id: 'test',
+                        name: 'Test',
+                        email: 'test@test.com'
+                    })
+                });
+
+                if (response.status === 200 || response.status === 422) {
+                    log('✅ Backend accessible et fonctionnel', 'success');
+                } else {
+                    log(`⚠️ Backend répond avec le statut: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Backend non accessible: ${error.message}`, 'error');
+            }
+        }
+
+        // Test automatique au chargement
+        window.onload = function() {
+            log('🚀 Page de test chargée avec Client ID configuré', 'success');
+            log('📋 Client ID: 210024066224-tmmctnove78hoh8cnqpls2mt5iboccku.apps.googleusercontent.com', 'info');
+            
+            // Test automatique du backend
+            setTimeout(testBackendConnection, 1000);
+        };
+    </script>
+</body>
+</html>

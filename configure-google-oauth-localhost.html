@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuration Google OAuth - Mindful Journey</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+            background: linear-gradient(135deg, #4285f4 0%, #34a853 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .step {
+            background: #f8f9fa;
+            border-left: 4px solid #4285f4;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .step h3 {
+            margin-top: 0;
+            color: #1a73e8;
+        }
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+        .btn {
+            background: #4285f4;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+        .btn:hover {
+            background: #357ae8;
+        }
+        .btn-success {
+            background: #34a853;
+        }
+        .btn-success:hover {
+            background: #137333;
+        }
+        .btn-warning {
+            background: #fbbc04;
+            color: #333;
+        }
+        .input-group {
+            margin: 15px 0;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        .input-group input:focus {
+            border-color: #4285f4;
+            outline: none;
+        }
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        .alert-info {
+            background: #e3f2fd;
+            border: 1px solid #90caf9;
+            color: #0d47a1;
+        }
+        .alert-success {
+            background: #e8f5e8;
+            border: 1px solid #81c784;
+            color: #2e7d32;
+        }
+        .alert-warning {
+            background: #fff3e0;
+            border: 1px solid #ffcc02;
+            color: #f57c00;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .urls-section {
+            background: #f1f3f4;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Configuration Google OAuth</h1>
+        
+        <div class="alert alert-info">
+            <strong>📋 Vous avez déjà créé des clients OAuth !</strong><br>
+            Suivez les étapes ci-dessous pour configurer votre application.
+        </div>
+
+        <div class="step">
+            <h3>📋 Étape 1 : Récupérer votre Client ID</h3>
+            <p>Dans Google Cloud Console :</p>
+            <ol>
+                <li>Cliquez sur l'un de vos "Mindful Journey Laravel Client"</li>
+                <li>Copiez le <strong>Client ID</strong> complet (commence par 210024066224-...)</li>
+                <li>Collez-le dans le champ ci-dessous :</li>
+            </ol>
+            
+            <div class="input-group">
+                <label for="clientId">Client ID Google :</label>
+                <input type="text" id="clientId" placeholder="210024066224-xxxxxxxxx.apps.googleusercontent.com">
+                <button class="btn" onclick="updateClientId()">📝 Utiliser ce Client ID</button>
+            </div>
+        </div>
+
+        <div class="step">
+            <h3>🔧 Étape 2 : Vérifier les URLs autorisées</h3>
+            <p>Assurez-vous que ces URLs sont dans vos <strong>"Origines JavaScript autorisées"</strong> :</p>
+            <div class="urls-section">
+                <strong>URLs à ajouter :</strong><br>
+                • http://localhost:8080<br>
+                • http://127.0.0.1:8080
+            </div>
+            <button class="btn btn-warning" onclick="copyUrls()">📋 Copier les URLs</button>
+        </div>
+
+        <div class="step">
+            <h3>⚙️ Étape 3 : Mise à jour automatique du fichier .env</h3>
+            <p>Une fois le Client ID saisi, copiez cette ligne dans votre fichier <code>.env</code> :</p>
+            <div class="code-block" id="envLine">
+                VITE_GOOGLE_CLIENT_ID=votre_client_id_ici
+            </div>
+            <button class="btn" onclick="copyEnvLine()">📋 Copier la ligne .env</button>
+        </div>
+
+        <div class="step">
+            <h3>🔄 Étape 4 : Redémarrer le serveur</h3>
+            <p>Après avoir mis à jour le fichier .env :</p>
+            <div class="code-block">
+# Arrêtez le serveur (Ctrl+C dans le terminal)
+# Puis redémarrez :
+npm run dev
+            </div>
+        </div>
+
+        <div class="step">
+            <h3>🧪 Étape 5 : Tester la connexion Gmail</h3>
+            <div class="alert alert-success">
+                <strong>Une fois configuré, vous pourrez :</strong><br>
+                ✅ Cliquer sur "Se connecter avec Google"<br>
+                ✅ Utiliser votre vraie adresse Gmail<br>
+                ✅ Être automatiquement connecté à l'application
+            </div>
+            
+            <a href="http://localhost:8080" class="btn btn-success" target="_blank">
+                🚀 Ouvrir l'application
+            </a>
+            
+            <button class="btn" onclick="testConfiguration()">
+                🧪 Tester la configuration
+            </button>
+        </div>
+
+        <div id="testResult"></div>
+    </div>
+
+    <script>
+        function updateClientId() {
+            const clientId = document.getElementById('clientId').value.trim();
+            
+            if (!clientId) {
+                alert('⚠️ Veuillez saisir votre Client ID');
+                return;
+            }
+            
+            if (!clientId.includes('.apps.googleusercontent.com')) {
+                alert('⚠️ Le Client ID doit se terminer par .apps.googleusercontent.com');
+                return;
+            }
+
+            // Mettre à jour la ligne .env
+            document.getElementById('envLine').textContent = `VITE_GOOGLE_CLIENT_ID=${clientId}`;
+            
+            // Afficher un message de succès
+            const result = document.getElementById('testResult');
+            result.innerHTML = `
+                <div class="alert alert-success">
+                    <strong>✅ Client ID configuré !</strong><br>
+                    Client ID : ${clientId}<br><br>
+                    <strong>Prochaines étapes :</strong><br>
+                    1. Copiez la ligne .env ci-dessus<br>
+                    2. Collez-la dans votre fichier .env<br>
+                    3. Redémarrez le serveur avec npm run dev<br>
+                    4. Testez la connexion Gmail !
+                </div>
+            `;
+        }
+
+        function copyUrls() {
+            const urls = 'http://localhost:8080\nhttp://127.0.0.1:8080';
+            navigator.clipboard.writeText(urls).then(() => {
+                alert('✅ URLs copiées ! Collez-les dans "Origines JavaScript autorisées"');
+            }).catch(() => {
+                alert('📋 URLs :\nhttp://localhost:8080\nhttp://127.0.0.1:8080');
+            });
+        }
+
+        function copyEnvLine() {
+            const envLine = document.getElementById('envLine').textContent;
+            navigator.clipboard.writeText(envLine).then(() => {
+                alert('✅ Ligne .env copiée ! Collez-la dans votre fichier .env');
+            }).catch(() => {
+                alert('📋 Ligne à copier :\n' + envLine);
+            });
+        }
+
+        async function testConfiguration() {
+            const clientId = document.getElementById('clientId').value.trim();
+            const result = document.getElementById('testResult');
+            
+            if (!clientId) {
+                result.innerHTML = `
+                    <div class="alert alert-warning">
+                        ⚠️ Veuillez d'abord saisir votre Client ID
+                    </div>
+                `;
+                return;
+            }
+
+            result.innerHTML = `
+                <div class="alert alert-info">
+                    🔄 Test de la configuration en cours...
+                </div>
+            `;
+
+            try {
+                // Tester si le serveur React répond
+                const reactTest = await fetch('http://localhost:8080');
+                
+                // Tester si le serveur Laravel répond
+                const laravelTest = await fetch('http://127.0.0.1:8081/api/auth/google/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        access_token: 'test',
+                        id: 'test',
+                        name: 'Test',
+                        email: 'test@test.com'
+                    })
+                });
+
+                result.innerHTML = `
+                    <div class="alert alert-success">
+                        <strong>✅ Configuration testée !</strong><br><br>
+                        📱 Serveur React : ${reactTest.ok ? '✅ Fonctionnel' : '❌ Problème'}<br>
+                        🔧 Serveur Laravel : ${laravelTest.status === 200 || laravelTest.status === 422 ? '✅ Fonctionnel' : '❌ Problème'}<br>
+                        🔑 Client ID : ${clientId}<br><br>
+                        <strong>🎉 Vous pouvez maintenant tester avec Gmail !</strong><br>
+                        <a href="http://localhost:8080" target="_blank" class="btn btn-success">
+                            🚀 Ouvrir l'application
+                        </a>
+                    </div>
+                `;
+            } catch (error) {
+                result.innerHTML = `
+                    <div class="alert alert-warning">
+                        ⚠️ <strong>Problème détecté :</strong><br>
+                        ${error.message}<br><br>
+                        Assurez-vous que les serveurs fonctionnent :<br>
+                        • npm run dev (port 8080)<br>
+                        • php artisan serve --port=8081
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

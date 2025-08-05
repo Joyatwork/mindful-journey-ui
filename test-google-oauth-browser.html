@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Google OAuth - Mindful Journey</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .btn {
+            background: #4285f4;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .btn:hover {
+            background: #357ae8;
+        }
+        .btn-success {
+            background: #28a745;
+        }
+        .btn-success:hover {
+            background: #218838;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+        }
+        .error {
+            border-left-color: #dc3545;
+            background: #f8d7da;
+        }
+        .success {
+            border-left-color: #28a745;
+            background: #d4edda;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .info {
+            background: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .test-data {
+            background: #f1f3f4;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 14px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Test Google OAuth Integration</h1>
+        
+        <div class="info">
+            <h3>📋 Information</h3>
+            <p>Cette page teste l'intégration Google OAuth avec votre backend Laravel.</p>
+            <p><strong>URLs:</strong></p>
+            <ul>
+                <li>Frontend React: <a href="http://localhost:8080" target="_blank">http://localhost:8080</a></li>
+                <li>Backend Laravel: <a href="http://127.0.0.1:8081" target="_blank">http://127.0.0.1:8081</a></li>
+            </ul>
+        </div>
+
+        <h3>🧪 Tests disponibles</h3>
+        
+        <button class="btn" onclick="testGoogleOAuth()">
+            📧 Simuler Connexion Google
+        </button>
+        
+        <button class="btn" onclick="testRegularAuth()">
+            🔑 Test Connexion Classique
+        </button>
+        
+        <button class="btn btn-success" onclick="openMainApp()">
+            🚀 Ouvrir l'Application Principale
+        </button>
+
+        <div class="test-data">
+            <strong>Données de test Google simulées :</strong><br>
+            Email: test.user@gmail.com<br>
+            Nom: Test User<br>
+            ID Google: google_user_123456
+        </div>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://127.0.0.1:8081/api';
+        
+        function showResult(message, type = 'info') {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = `<div class="result ${type}">${message}</div>`;
+        }
+
+        async function testGoogleOAuth() {
+            showResult('🔄 Test de l\'authentification Google en cours...', 'info');
+            
+            const testData = {
+                access_token: 'test_token_' + Date.now(),
+                id: 'google_user_123456',
+                name: 'Test User',
+                email: 'test.user@gmail.com',
+                avatar: 'https://lh3.googleusercontent.com/a/default-user'
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/google/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify(testData)
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult(`
+                        ✅ <strong>Connexion Google réussie !</strong><br>
+                        👤 Utilisateur: ${data.user.name} (${data.user.email})<br>
+                        🆔 ID: ${data.user.id}<br>
+                        🔑 Token généré: ${data.token ? 'Oui' : 'Non'}<br>
+                        📅 Créé le: ${new Date(data.user.created_at).toLocaleString()}<br>
+                        <br>
+                        <button class="btn btn-success" onclick="testAuthenticatedRequest('${data.token}')">
+                            🔐 Tester Requête Authentifiée
+                        </button>
+                    `, 'success');
+                } else {
+                    showResult(`
+                        ❌ <strong>Échec de la connexion</strong><br>
+                        Message: ${data.message}<br>
+                        ${data.errors ? 'Erreurs: ' + JSON.stringify(data.errors, null, 2) : ''}
+                    `, 'error');
+                }
+            } catch (error) {
+                showResult(`
+                    💥 <strong>Erreur de connexion</strong><br>
+                    ${error.message}<br>
+                    <em>Assurez-vous que le serveur Laravel fonctionne sur le port 8081</em>
+                `, 'error');
+            }
+        }
+
+        async function testAuthenticatedRequest(token) {
+            showResult('🔐 Test d\'une requête authentifiée...', 'info');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/user`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult(`
+                        ✅ <strong>Requête authentifiée réussie !</strong><br>
+                        👤 Profil récupéré: ${data.name} (${data.email})<br>
+                        🔗 Provider: ${data.provider || 'email'}<br>
+                        📱 Téléphone: ${data.phone || 'Non renseigné'}<br>
+                        📝 Bio: ${data.bio || 'Non renseignée'}
+                    `, 'success');
+                } else {
+                    showResult(`
+                        ❌ <strong>Requête authentifiée échouée</strong><br>
+                        ${data.message}
+                    `, 'error');
+                }
+            } catch (error) {
+                showResult(`
+                    💥 <strong>Erreur requête authentifiée</strong><br>
+                    ${error.message}
+                `, 'error');
+            }
+        }
+
+        async function testRegularAuth() {
+            showResult('🔄 Test de l\'authentification classique...', 'info');
+            
+            const loginData = {
+                email: 'test@example.com',
+                password: 'password123'
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(loginData)
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult(`
+                        ✅ <strong>Connexion classique réussie !</strong><br>
+                        👤 Utilisateur: ${data.user.name}<br>
+                        📧 Email: ${data.user.email}
+                    `, 'success');
+                } else {
+                    showResult(`
+                        ℹ️ <strong>Connexion classique</strong><br>
+                        ${data.message}<br>
+                        <em>C'est normal si aucun utilisateur test n'existe</em>
+                    `, 'info');
+                }
+            } catch (error) {
+                showResult(`
+                    💥 <strong>Erreur connexion classique</strong><br>
+                    ${error.message}
+                `, 'error');
+            }
+        }
+
+        function openMainApp() {
+            window.open('http://localhost:8080', '_blank');
+        }
+
+        // Test automatique au chargement
+        window.onload = function() {
+            showResult('🚀 Page de test chargée. Cliquez sur un bouton pour commencer les tests.', 'info');
+        };
+    </script>
+</body>
+</html>

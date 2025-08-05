@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Google OAuth - Mindful Journey</title>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .debug-section {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 5px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .json-display {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        .btn {
+            background: #4285f4;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        .success { color: #28a745; }
+        .error { color: #dc3545; }
+        .warning { color: #ffc107; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Debug Google OAuth</h1>
+        
+        <div class="debug-section">
+            <h3>📋 Configuration</h3>
+            <p><strong>Client ID:</strong> 210024066224-tmmctnove78hoh8cnqpls2mt5iboccku.apps.googleusercontent.com</p>
+            <p><strong>Backend:</strong> http://127.0.0.1:8081/api/auth/google/login</p>
+        </div>
+
+        <div class="debug-section">
+            <h3>🔑 Test Google Sign-In</h3>
+            <div id="g_id_onload"
+                 data-client_id="210024066224-tmmctnove78hoh8cnqpls2mt5iboccku.apps.googleusercontent.com"
+                 data-callback="handleCredentialResponse"
+                 data-auto_prompt="false">
+            </div>
+            <div class="g_id_signin" 
+                 data-type="standard"
+                 data-size="large"
+                 data-theme="outline"
+                 data-text="signin_with"
+                 data-shape="rectangular"
+                 data-logo_alignment="left">
+            </div>
+        </div>
+
+        <div class="debug-section">
+            <h3>📊 Données brutes de Google</h3>
+            <div id="rawGoogleData" class="json-display">En attente de connexion Google...</div>
+        </div>
+
+        <div class="debug-section">
+            <h3>📤 Données envoyées à l'API</h3>
+            <div id="apiData" class="json-display">En attente...</div>
+        </div>
+
+        <div class="debug-section">
+            <h3>📥 Réponse de l'API</h3>
+            <div id="apiResponse" class="json-display">En attente...</div>
+        </div>
+
+        <div class="debug-section">
+            <h3>🧪 Test manuel</h3>
+            <button class="btn" onclick="testWithValidData()">Tester avec données valides</button>
+            <button class="btn" onclick="testWithMissingAvatar()">Tester sans avatar</button>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://127.0.0.1:8081/api';
+        
+        function updateDisplay(elementId, data, type = 'info') {
+            const element = document.getElementById(elementId);
+            if (typeof data === 'object') {
+                element.textContent = JSON.stringify(data, null, 2);
+            } else {
+                element.textContent = data;
+            }
+            
+            if (type === 'error') {
+                element.style.color = '#dc3545';
+            } else if (type === 'success') {
+                element.style.color = '#28a745';
+            }
+        }
+
+        async function handleCredentialResponse(response) {
+            console.log('🔐 Raw Google Response:', response);
+            
+            try {
+                // Afficher la réponse brute
+                updateDisplay('rawGoogleData', response);
+
+                // Décoder le JWT
+                const payload = JSON.parse(atob(response.credential.split('.')[1]));
+                console.log('📋 Decoded Payload:', payload);
+
+                // Afficher les données décodées
+                updateDisplay('rawGoogleData', {
+                    credential: response.credential.substring(0, 50) + '...',
+                    decoded_payload: payload
+                });
+
+                // Préparer les données pour l'API (exactement comme dans notre composant)
+                const googleData = {
+                    access_token: response.credential,
+                    id: payload.sub,
+                    name: payload.name,
+                    email: payload.email,
+                    avatar: payload.picture || null  // Gérer le cas où picture est undefined
+                };
+
+                console.log('📤 Data to send:', googleData);
+                updateDisplay('apiData', googleData);
+
+                // Envoyer à l'API
+                await sendToAPI(googleData);
+
+            } catch (error) {
+                console.error('❌ Error:', error);
+                updateDisplay('rawGoogleData', `ERREUR: ${error.message}`, 'error');
+            }
+        }
+
+        async function sendToAPI(googleData) {
+            try {
+                console.log('📡 Sending to API:', googleData);
+                
+                const response = await fetch(`${API_BASE_URL}/auth/google/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify(googleData)
+                });
+
+                console.log('📡 Response status:', response.status);
+                const result = await response.json();
+                console.log('📥 Response data:', result);
+
+                if (response.ok) {
+                    updateDisplay('apiResponse', {
+                        status: 'SUCCESS',
+                        statusCode: response.status,
+                        data: result
+                    }, 'success');
+                } else {
+                    updateDisplay('apiResponse', {
+                        status: 'ERROR',
+                        statusCode: response.status,
+                        data: result
+                    }, 'error');
+                }
+
+            } catch (error) {
+                console.error('💥 API Error:', error);
+                updateDisplay('apiResponse', `ERREUR API: ${error.message}`, 'error');
+            }
+        }
+
+        async function testWithValidData() {
+            const testData = {
+                access_token: 'fake_token_' + Date.now(),
+                id: 'google_test_12345',
+                name: 'Test User',
+                email: 'test.debug@gmail.com',
+                avatar: 'https://lh3.googleusercontent.com/a/default-user'
+            };
+
+            updateDisplay('apiData', testData);
+            await sendToAPI(testData);
+        }
+
+        async function testWithMissingAvatar() {
+            const testData = {
+                access_token: 'fake_token_' + Date.now(),
+                id: 'google_test_67890',
+                name: 'Test User No Avatar',
+                email: 'test.noavatar@gmail.com',
+                avatar: null
+            };
+
+            updateDisplay('apiData', testData);
+            await sendToAPI(testData);
+        }
+    </script>
+</body>
+</html>
