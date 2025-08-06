@@ -7,10 +7,10 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
-import { Heart, Shield, User } from 'lucide-react';
+import { Heart, Shield, User, Mail } from 'lucide-react';
 
 const LoginPage = () => {
-  const { login, register, isAuthenticated, isLoading } = useAuth();
+  const { login, register, loginWithGoogle, isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
   const from = location.state?.from?.pathname || '/';
 
@@ -76,6 +76,16 @@ const LoginPage = () => {
     } catch (error: any) {
       showMessage('error', error.message);
     } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    try {
+      setLoading(true);
+      await loginWithGoogle();
+    } catch (error: any) {
+      showMessage('error', error.message || 'Erreur lors de la connexion avec Google');
       setLoading(false);
     }
   };
@@ -154,6 +164,28 @@ const LoginPage = () => {
                   {loading ? 'Connexion...' : 'Se connecter'}
                 </Button>
               </form>
+              
+              {/* Divider */}
+              <div className="relative my-4">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-white px-2 text-muted-foreground">Ou continuer avec</span>
+                </div>
+              </div>
+              
+              {/* Google Login Button */}
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={handleGoogleLogin}
+                disabled={loading}
+              >
+                <Mail className="h-4 w-4 mr-2" />
+                Continuer avec Google
+              </Button>
             </TabsContent>
 
             <TabsContent value="register" className="space-y-4">
@@ -206,6 +238,28 @@ const LoginPage = () => {
                   {loading ? 'Inscription...' : 'S\'inscrire'}
                 </Button>
               </form>
+              
+              {/* Divider */}
+              <div className="relative my-4">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-white px-2 text-muted-foreground">Ou continuer avec</span>
+                </div>
+              </div>
+              
+              {/* Google Login Button */}
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={handleGoogleLogin}
+                disabled={loading}
+              >
+                <Mail className="h-4 w-4 mr-2" />
+                Continuer avec Google
+              </Button>
             </TabsContent>
           </Tabs>
         </CardContent>

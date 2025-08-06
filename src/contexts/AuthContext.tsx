@@ -22,6 +22,8 @@ interface AuthContextType {
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string, password_confirmation: string) => Promise<void>;
+  loginWithGoogle: () => Promise<void>;
+  handleGoogleCallback: (token: string) => Promise<void>;
   logout: () => Promise<void>;
   updateProfile: (profileData: any) => Promise<any>;
 }
@@ -220,6 +222,48 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const loginWithGoogle = async () => {
+    try {
+      console.log('🔄 Début de l\'authentification Google...');
+      
+      // Obtenir l'URL de redirection Google
+      const response = await fetch('/api/auth/google');
+      const data = await response.json();
+      
+      if (data.url) {
+        // Rediriger vers Google OAuth
+        window.location.href = data.url;
+      } else {
+        throw new Error('Impossible d\'obtenir l\'URL Google');
+      }
+    } catch (error: any) {
+      console.error('❌ Erreur lors de l\'authentification Google:', error);
+      throw new Error(error.message || 'Erreur lors de l\'authentification Google');
+    }
+  };
+
+  const handleGoogleCallback = async (token: string) => {
+    try {
+      console.log('🔄 Traitement du callback Google...');
+      
+      // Utiliser le token reçu pour obtenir les informations utilisateur
+      const response = await testApiService.auth.getUser(token);
+      
+      if (response.user) {
+        setUser(response.user);
+        setToken(token);
+        
+        // Sauvegarder dans localStorage
+        localStorage.setItem('auth_token', token);
+        localStorage.setItem('auth_user', JSON.stringify(response.user));
+        console.log('✅ Connexion Google réussie:', response.user);
+      }
+    } catch (error: any) {
+      console.error('❌ Erreur lors du traitement du callback Google:', error);
+      throw new Error(error.message || 'Erreur lors du traitement du callback Google');
+    }
+  };
+
   const value: AuthContextType = {
     user,
     token,
@@ -227,6 +271,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isAuthenticated,
     login,
     register,
+    loginWithGoogle,
+    handleGoogleCallback,
     logout,
     updateProfile,
   };

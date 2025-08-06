@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Inscription Frontend</title>
+</head>
+<body>
+    <h1>Test d'inscription</h1>
+    <div id="result"></div>
+    
+    <script>
+        async function testRegister() {
+            const API_BASE_URL = 'http://127.0.0.1:8081/api';
+            const resultDiv = document.getElementById('result');
+            
+            try {
+                resultDiv.innerHTML = '🔄 Test en cours...';
+                
+                // 1. Récupérer le token CSRF
+                console.log('🔒 Récupération du token CSRF...');
+                const csrfResponse = await fetch('http://127.0.0.1:8081/sanctum/csrf-cookie', {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Accept': 'application/json',
+                    },
+                });
+                
+                if (!csrfResponse.ok) {
+                    throw new Error(`CSRF failed: ${csrfResponse.status}`);
+                }
+                
+                console.log('✅ CSRF token récupéré');
+                
+                // 2. Tenter l'inscription
+                console.log('📝 Tentative d\'inscription...');
+                const registerResponse = await fetch(`${API_BASE_URL}/auth/register`, {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    body: JSON.stringify({
+                        name: 'Test Frontend User',
+                        email: 'testfrontend@example.com',
+                        password: 'password123'
+                    })
+                });
+                
+                console.log('📨 Response status:', registerResponse.status);
+                
+                if (!registerResponse.ok) {
+                    const errorText = await registerResponse.text();
+                    console.error('❌ Error response:', errorText);
+                    throw new Error(`Registration failed: ${registerResponse.status} - ${errorText}`);
+                }
+                
+                const result = await registerResponse.json();
+                console.log('✅ Success:', result);
+                
+                resultDiv.innerHTML = `
+                    <h2>✅ Inscription réussie!</h2>
+                    <pre>${JSON.stringify(result, null, 2)}</pre>
+                `;
+                
+            } catch (error) {
+                console.error('🚨 Error:', error);
+                resultDiv.innerHTML = `
+                    <h2>❌ Erreur d'inscription</h2>
+                    <p><strong>Message:</strong> ${error.message}</p>
+                    <p><strong>Détails:</strong> Vérifiez la console pour plus d'informations</p>
+                `;
+            }
+        }
+        
+        // Lancer le test automatiquement
+        testRegister();
+    </script>
+</body>
+</html>

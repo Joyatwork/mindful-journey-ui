@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Inscription</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .result { margin: 20px 0; padding: 20px; border: 1px solid #ddd; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        button { padding: 10px 20px; margin: 10px; font-size: 16px; }
+        pre { background: #f8f9fa; padding: 10px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>Debug Inscription - Comparaison API vs Frontend</h1>
+    
+    <button onclick="testDirectAPI()">🔬 Test API Direct</button>
+    <button onclick="testFrontendAPI()">🌐 Test Frontend API</button>
+    <button onclick="clearResults()">🧹 Effacer</button>
+    
+    <div id="results"></div>
+    
+    <script>
+        const API_BASE_URL = 'http://127.0.0.1:8081/api';
+        const resultsDiv = document.getElementById('results');
+        
+        function addResult(content, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.innerHTML = content;
+            resultsDiv.appendChild(div);
+        }
+        
+        function clearResults() {
+            resultsDiv.innerHTML = '';
+        }
+        
+        async function testDirectAPI() {
+            try {
+                addResult('<h3>🔬 Test API Direct (sans CSRF)</h3><p>🔄 En cours...</p>');
+                
+                const response = await fetch(`${API_BASE_URL}/auth/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name: 'Test Direct API',
+                        email: 'testdirect@example.com',
+                        password: 'password123'
+                    })
+                });
+                
+                console.log('Direct API Response:', response);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    addResult(`
+                        <h3>✅ API Direct - SUCCESS</h3>
+                        <p><strong>Status:</strong> ${response.status}</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `, 'success');
+                } else {
+                    const errorText = await response.text();
+                    addResult(`
+                        <h3>❌ API Direct - ERROR</h3>
+                        <p><strong>Status:</strong> ${response.status}</p>
+                        <p><strong>Response:</strong></p>
+                        <pre>${errorText}</pre>
+                    `, 'error');
+                }
+                
+            } catch (error) {
+                addResult(`
+                    <h3>🚨 API Direct - EXCEPTION</h3>
+                    <p><strong>Error:</strong> ${error.message}</p>
+                `, 'error');
+            }
+        }
+        
+        async function testFrontendAPI() {
+            try {
+                addResult('<h3>🌐 Test Frontend API (avec CSRF)</h3><p>🔄 En cours...</p>');
+                
+                // 1. Récupérer le token CSRF
+                console.log('🔒 Getting CSRF token...');
+                const csrfResponse = await fetch('http://127.0.0.1:8081/sanctum/csrf-cookie', {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Accept': 'application/json',
+                    },
+                });
+                
+                addResult(`
+                    <h4>🔒 CSRF Token Request</h4>
+                    <p><strong>Status:</strong> ${csrfResponse.status}</p>
+                    <p><strong>OK:</strong> ${csrfResponse.ok}</p>
+                `);
+                
+                if (!csrfResponse.ok) {
+                    throw new Error(`CSRF failed: ${csrfResponse.status}`);
+                }
+                
+                // 2. Essayer l'inscription
+                console.log('📝 Attempting registration...');
+                const registerResponse = await fetch(`${API_BASE_URL}/auth/register`, {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    body: JSON.stringify({
+                        name: 'Test Frontend API',
+                        email: 'testfrontend@example.com',
+                        password: 'password123'
+                    })
+                });
+                
+                console.log('Frontend API Response:', registerResponse);
+                
+                if (registerResponse.ok) {
+                    const data = await registerResponse.json();
+                    addResult(`
+                        <h3>✅ Frontend API - SUCCESS</h3>
+                        <p><strong>Status:</strong> ${registerResponse.status}</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `, 'success');
+                } else {
+                    const errorText = await registerResponse.text();
+                    addResult(`
+                        <h3>❌ Frontend API - ERROR</h3>
+                        <p><strong>Status:</strong> ${registerResponse.status}</p>
+                        <p><strong>Response:</strong></p>
+                        <pre>${errorText}</pre>
+                    `, 'error');
+                }
+                
+            } catch (error) {
+                addResult(`
+                    <h3>🚨 Frontend API - EXCEPTION</h3>
+                    <p><strong>Error:</strong> ${error.message}</p>
+                `, 'error');
+            }
+        }
+        
+        // Test automatique au chargement
+        window.onload = function() {
+            addResult('<h2>🚀 Tests automatiques</h2>');
+            setTimeout(() => testDirectAPI(), 1000);
+            setTimeout(() => testFrontendAPI(), 3000);
+        };
+    </script>
+</body>
+</html>

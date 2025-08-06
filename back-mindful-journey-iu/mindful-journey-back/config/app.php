@@ -56,6 +56,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Frontend URL
+    |--------------------------------------------------------------------------
+    |
+    | This URL is used for redirecting after OAuth callbacks to the frontend
+    | application. This should be set to the URL of your React frontend.
+    |
+    */
+
+    'frontend_url' => env('FRONTEND_URL', 'http://localhost:8080'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

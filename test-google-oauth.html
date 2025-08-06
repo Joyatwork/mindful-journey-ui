@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Google OAuth</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .result { margin: 20px 0; padding: 20px; border: 1px solid #ddd; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        button { padding: 10px 20px; margin: 10px; font-size: 16px; }
+    </style>
+</head>
+<body>
+    <h1>Test Google OAuth</h1>
+    
+    <button onclick="testGoogleAuth()">🔍 Tester l'obtention de l'URL Google</button>
+    <button onclick="redirectToGoogle()">🚀 Rediriger vers Google OAuth</button>
+    
+    <div id="result"></div>
+    
+    <script>
+        const API_BASE_URL = 'http://127.0.0.1:8081/api';
+        const resultDiv = document.getElementById('result');
+        
+        async function testGoogleAuth() {
+            try {
+                resultDiv.innerHTML = '<div class="result">🔄 Test en cours...</div>';
+                
+                const response = await fetch(`${API_BASE_URL}/auth/google`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                    },
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                console.log('✅ Success:', data);
+                
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        <h3>✅ URL Google générée avec succès!</h3>
+                        <p><strong>URL:</strong> ${data.url}</p>
+                        <p><strong>Status:</strong> ${data.status}</p>
+                    </div>
+                `;
+                
+                // Stocker l'URL pour usage ultérieur
+                window.googleAuthUrl = data.url;
+                
+            } catch (error) {
+                console.error('🚨 Error:', error);
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        <h3>❌ Erreur lors du test</h3>
+                        <p><strong>Message:</strong> ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        async function redirectToGoogle() {
+            if (!window.googleAuthUrl) {
+                alert('Veuillez d\'abord tester l\'obtention de l\'URL Google');
+                return;
+            }
+            
+            // Rediriger vers Google OAuth
+            window.location.href = window.googleAuthUrl;
+        }
+        
+        // Test automatique au chargement
+        testGoogleAuth();
+    </script>
+</body>
+</html>

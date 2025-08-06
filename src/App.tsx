@@ -11,6 +11,7 @@ import { PWAInstallBanner } from "@/components/PWAInstallBanner";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import LoginPage from "./pages/LoginPage";
+import GoogleCallback from "./pages/GoogleCallback";
 import TestAPI from "./pages/TestAPI";
 import ApiTest from "./pages/ApiTest";
 import AuthTest from "./pages/AuthTest";
@@ -32,6 +33,7 @@ const App = () => (
           <BrowserRouter>
             <Routes>
               <Route path="/login" element={<LoginPage />} />
+              <Route path="/auth/google/callback" element={<GoogleCallback />} />
               <Route path="/" element={
                 <ProtectedRoute>
                   <Index />
