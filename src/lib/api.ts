@@ -1,10 +1,10 @@
 // Configuration de base pour l'API Laravel
-const API_BASE_URL = 'http://127.0.0.1:8081/api';
+const API_BASE_URL = '/api';
 
 // Fonction pour obtenir le token CSRF (Laravel Sanctum)
 const getCsrfToken = async () => {
   try {
-    const csrfUrl = 'http://127.0.0.1:8081/sanctum/csrf-cookie';
+    const csrfUrl = '/sanctum/csrf-cookie';
     console.log('🔒 Fetching CSRF from:', csrfUrl);
     
     const response = await fetch(csrfUrl, {
@@ -47,17 +47,16 @@ async function apiRequest(endpoint: string, options: RequestInit = {}) {
     method: options.method || 'GET'
   });
   
-  // Obtenir le token CSRF pour les requêtes de modification
-  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(options.method?.toUpperCase() || 'GET')) {
-    console.log('🔒 Getting CSRF token...');
-    await getCsrfToken();
-  }
+  // Récupérer le token d'authentification
+  const token = localStorage.getItem('auth_token');
   
+  // Pour l'authentification Bearer, pas besoin de CSRF
   const config = {
     ...defaultOptions,
     ...options,
     headers: {
       ...defaultOptions.headers,
+      ...(token && { 'Authorization': `Bearer ${token}` }),
       ...options.headers,
     },
   };
@@ -84,35 +83,6 @@ async function apiRequest(endpoint: string, options: RequestInit = {}) {
   } catch (error) {
     console.error('🚨 Request failed:', error);
     throw error;
-  }
-
-  try {
-    const response = await fetch(url, config);
-    
-    // Gestion des erreurs HTTP
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new ApiError(
-        errorData.message || `HTTP error! status: ${response.status}`,
-        response.status,
-        errorData
-      );
-    }
-    
-    // Retourner les données JSON ou null si pas de contenu
-    const contentType = response.headers.get('content-type');
-    if (contentType && contentType.includes('application/json')) {
-      return await response.json();
-    }
-    
-    return null;
-  } catch (error) {
-    if (error instanceof ApiError) {
-      throw error;
-    }
-    
-    console.error('API Request Error:', error);
-    throw new ApiError('Erreur de connexion au serveur', 0, error);
   }
 }
 
@@ -206,11 +176,11 @@ export const apiService = {
   healthData: {
     getMoodData: (period?: string) => {
       const queryParams = period ? `?period=${period}` : '';
-      return apiRequest(`/health-data/mood${queryParams}`);
+      return apiRequest(`/mood${queryParams}`);
     },
     
     saveMoodData: (moodData: any) =>
-      apiRequest('/health-data/mood', {
+      apiRequest('/mood', {
         method: 'POST',
         body: JSON.stringify(moodData),
       }),
@@ -243,6 +213,28 @@ export const apiService = {
       }),
     
     get: () => apiRequest('/diagnostic'),
+  },
+
+  // Système de recommandations intelligent
+  recommendations: {
+    getPersonalized: (context: {
+      mood?: number;
+      stress?: number;
+      energy?: number;
+      time_of_day?: number;
+      diagnostic?: any;
+    }) => {
+      const params = new URLSearchParams();
+      if (context.mood !== undefined) params.append('mood', context.mood.toString());
+      if (context.stress !== undefined) params.append('stress', context.stress.toString());
+      if (context.energy !== undefined) params.append('energy', context.energy.toString());
+      if (context.time_of_day !== undefined) params.append('time_of_day', context.time_of_day.toString());
+      if (context.diagnostic) params.append('diagnostic', JSON.stringify(context.diagnostic));
+      
+      return apiRequest(`/recommendations/personalized?${params.toString()}`);
+    },
+    
+    getHistoryBased: () => apiRequest('/recommendations/history-based'),
   },
 };
 
