@@ -13,7 +13,8 @@ use App\Http\Controllers\Api\{
     ProfileController,
     DatabaseController,
     MoodController,
-    MeditationController
+    MeditationController,
+    RecommendationController
 };
 
 /*
@@ -105,9 +106,15 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/toggle-favorite/{sessionId}', [MeditationController::class, 'toggleFavorite']);
     });
     
-    // Diagnostic
+        // Diagnostic de bien-être
     Route::get('diagnostic', [DiagnosticController::class, 'show']);
     Route::post('diagnostic', [DiagnosticController::class, 'store']);
+    
+    // Système de recommandations intelligent
+    Route::prefix('recommendations')->group(function () {
+        Route::get('personalized', [RecommendationController::class, 'getPersonalizedSuggestions']);
+        Route::get('history-based', [RecommendationController::class, 'getHistoryBasedSuggestions']);
+    });
 });
 
 // Routes publiques (sans authentification)

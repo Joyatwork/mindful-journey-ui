@@ -1,16 +1,42 @@
 // Service API de test pour le développement
-const API_BASE_URL = 'http://127.0.0.1:8081/api';
+const API_BASE_URL = '/api';
 
-// Fonction helper simplifiée pour les tests
+// Fonction pour obtenir le token CSRF
+async function getCsrfToken() {
+  try {
+    await fetch('/sanctum/csrf-cookie', {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Accept': 'application/json',
+      },
+    });
+    return true;
+  } catch (error) {
+    console.error('CSRF Error:', error);
+    return false;
+  }
+}
+
+// Fonction helper avec gestion CSRF automatique
 async function testApiRequest(endpoint: string, options: RequestInit = {}) {
   const url = `${API_BASE_URL}${endpoint}`;
   
+  // Pour les requêtes POST/PUT/PATCH/DELETE, obtenir d'abord le token CSRF
+  const method = options.method || 'GET';
+  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method.toUpperCase())) {
+    await getCsrfToken();
+  }
+  
   const config = {
+    credentials: 'include' as RequestCredentials,
+    ...options,
     headers: {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
+      'X-Requested-With': 'XMLHttpRequest',
+      ...options.headers,
     },
-    ...options,
   };
 
   try {

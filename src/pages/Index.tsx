@@ -18,6 +18,7 @@ import HealthProfessionalsList from '@/components/HealthProfessionalsList';
 import MeditationContent from '@/components/MeditationContent';
 import BreathingContent from '@/components/BreathingContent';
 import SleepRoutineContent from '@/components/SleepRoutineContent';
+import IntelligentSuggestions from '@/components/IntelligentSuggestions';
 import { 
   Heart, 
   Brain, 
@@ -32,7 +33,9 @@ import {
   User,
   Settings,
   UserCheck,
-  LogOut
+  LogOut,
+  ArrowLeft,
+  Sparkles
 } from 'lucide-react';
 
 const Index = () => {
@@ -174,6 +177,35 @@ const Index = () => {
     // Ici on pourrait ajouter des points, sauvegarder le progrès, etc.
   };
 
+  const renderSuggestions = () => (
+    <div className="space-y-6">
+      <div className="flex items-center gap-3 mb-6">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setCurrentView('dashboard')}
+          className="p-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+        <h1 className="text-2xl font-bold text-gray-900">Suggestions Personnalisées</h1>
+      </div>
+
+      <IntelligentSuggestions
+        userContext={{
+          mood: selectedMood,
+          stress: 3, // Valeur par défaut, pourrait venir du diagnostic
+          energy: 3, // Valeur par défaut, pourrait venir du diagnostic
+          diagnostic: null // Ajout du champ diagnostic
+        }}
+        onSuggestionSelect={(suggestion) => {
+          console.log('Suggestion selected:', suggestion);
+          // Ici on pourrait naviguer vers l'action suggérée
+        }}
+      />
+    </div>
+  );
+
   const renderDashboard = () => (
     <div className="space-y-6 animate-fadeIn pt-4">
       <div className="bg-wellness-gradient rounded-3xl p-6 text-white relative overflow-hidden">
@@ -231,6 +263,18 @@ const Index = () => {
           <div className="text-center">
             <Target className="h-6 w-6 mx-auto mb-1" />
             <div className="text-sm font-medium">Mes Défis</div>
+          </div>
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4">
+        <Button 
+          onClick={() => setCurrentView('suggestions')}
+          className="h-16 bg-gradient-to-br from-purple-500 to-blue-500 hover:opacity-90 text-white rounded-2xl"
+        >
+          <div className="text-center">
+            <Sparkles className="h-6 w-6 mx-auto mb-1" />
+            <div className="text-sm font-medium">Suggestions Personnalisées</div>
           </div>
         </Button>
       </div>
@@ -479,6 +523,7 @@ const Index = () => {
           {currentView === 'meditation' && renderMeditation()}
           {currentView === 'breathing' && renderBreathing()}
           {currentView === 'sleep-routine' && renderSleepRoutine()}
+          {currentView === 'suggestions' && renderSuggestions()}
         </div>
         
         {renderBottomNav()}
