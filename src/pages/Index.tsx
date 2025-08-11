@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -19,6 +19,7 @@ import MeditationContent from '@/components/MeditationContent';
 import BreathingContent from '@/components/BreathingContent';
 import SleepRoutineContent from '@/components/SleepRoutineContent';
 import IntelligentSuggestions from '@/components/IntelligentSuggestions';
+import { Toaster, toast } from "react-hot-toast";
 import { 
   Heart, 
   Brain, 
@@ -50,6 +51,7 @@ const Index = () => {
   const handleLogout = async () => {
     try {
       await logout();
+      toast.success("Déconnexion réussie !");
     } catch (error) {
       console.error('Erreur lors de la déconnexion:', error);
     }
@@ -145,6 +147,14 @@ const Index = () => {
       ]
     }
   ];
+
+  
+  useEffect(() => {
+    if (user) {
+      toast.success(`Bienvenue ${user.name} ! Comment vas-tu aujourd'hui ?`);
+    }
+  }
+), [user];
 
   const handleBookAppointment = (specialist: any) => {
     setSelectedSpecialist(specialist);
@@ -503,10 +513,11 @@ const Index = () => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={handleLogout}
+            onClick={handleLogout}  
             className="text-gray-400 hover:text-red-600 hover:bg-red-50 bg-white/70 backdrop-blur-sm"
-            title="Se déconnecter"
-          >
+            title="Se déconnecter">
+            <Toaster position="top-center"
+            reverseOrder={false} />
             <LogOut className="h-4 w-4" />
           </Button>
         </div>

@@ -8,6 +8,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { Heart, Shield, User, Mail } from 'lucide-react';
+import { Toaster, toast } from "react-hot-toast";
 
 const LoginPage = () => {
   const { login, register, loginWithGoogle, isAuthenticated, isLoading } = useAuth();
@@ -51,7 +52,8 @@ const LoginPage = () => {
       await login(loginForm.email, loginForm.password);
       showMessage('success', 'Connexion réussie !');
     } catch (error: any) {
-      showMessage('error', error.message);
+      toast.error(`La connexion à échouer, vérifiez l'identifiant ou l'email`);
+      console.error('error', error.message);
     } finally {
       setLoading(false);
     }
@@ -135,9 +137,33 @@ const LoginPage = () => {
                 Inscription
               </TabsTrigger>
             </TabsList>
-
             <TabsContent value="login" className="space-y-4">
               <form onSubmit={handleLogin} className="space-y-4">
+                <Toaster position="top-center"
+                  toastOptions={{
+                    style: {
+                      padding: '12px 12px',
+                      fontSize: '16px',
+                      borderRadius: '12px',
+                      background: '#333',
+                      color: '#fff',
+                      margin: 'auto',
+                    },
+                    success: {
+                      iconTheme: {
+                        primary: 'green',
+                        secondary: 'white',
+                      },
+                    },
+                    error: {
+                      iconTheme: {
+                        primary: 'red',
+                        secondary: 'white',
+                      },
+                    },
+                  }
+                  }
+                  reverseOrder={false} />
                 <div className="space-y-2">
                   <Label htmlFor="login-email">Email</Label>
                   <Input
@@ -164,7 +190,7 @@ const LoginPage = () => {
                   {loading ? 'Connexion...' : 'Se connecter'}
                 </Button>
               </form>
-              
+
               {/* Divider */}
               <div className="relative my-4">
                 <div className="absolute inset-0 flex items-center">
@@ -174,7 +200,7 @@ const LoginPage = () => {
                   <span className="bg-white px-2 text-muted-foreground">Ou continuer avec</span>
                 </div>
               </div>
-              
+
               {/* Google Login Button */}
               <Button
                 type="button"
@@ -238,7 +264,7 @@ const LoginPage = () => {
                   {loading ? 'Inscription...' : 'S\'inscrire'}
                 </Button>
               </form>
-              
+
               {/* Divider */}
               <div className="relative my-4">
                 <div className="absolute inset-0 flex items-center">
@@ -248,7 +274,7 @@ const LoginPage = () => {
                   <span className="bg-white px-2 text-muted-foreground">Ou continuer avec</span>
                 </div>
               </div>
-              
+
               {/* Google Login Button */}
               <Button
                 type="button"

@@ -45,6 +45,7 @@ const ProfilePage = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [showAppointments, setShowAppointments] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [ DoubleAuth, setDoubleAuth] = useState(false);
 
   const [userInfo, setUserInfo] = useState({
     name: user?.name || 'Utilisateur',
@@ -76,6 +77,19 @@ const ProfilePage = () => {
       }));
     }
   }, [user]);
+
+  const toggle2FA = async () => {
+    try {
+      if (!DoubleAuth) {
+        await fetch('/api/enable-2fa', { method: 'POST' });
+      } else {
+        await fetch('/api/disable-2fa', { method: 'POST' });
+      }
+       setDoubleAuth(prev => !prev);
+    } catch (error) {
+      console.error("Erreur lors du changement de double AUTH", error);
+    }
+  };
 
   const handleSave = async (newInfo: any) => {
     setIsUpdating(true);
@@ -366,8 +380,10 @@ const ProfilePage = () => {
               <span className="text-gray-700 dark:text-gray-300">
                 Authentification à deux facteurs
               </span>
-              <Button variant="outline" size="sm" className="border-purple-200 dark:border-purple-700 text-purple-700 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-800">
-                Activer
+              <Button onClick={toggle2FA} 
+              variant="outline" size="sm" 
+              className="border-purple-200 dark:border-purple-700 text-purple-700 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-800">
+              {DoubleAuth ? 'Desactiver' :  'Activer'} 
               </Button>
             </div>
             <Separator className="bg-gray-200 dark:bg-gray-700" />
