@@ -25,14 +25,15 @@ $candidates = [
 
 $created = 0; $skipped = 0;
 foreach ($candidates as $data) {
-    $exists = Challenge::where('type', $data['type'])->first();
-    if ($exists) { $skipped++; echo "⏭️  Existe: {$data['type']}\n"; continue; }
+    // Éviter les doublons par titre pour autoriser plusieurs défis du même type ('day')
+    $exists = Challenge::where('title', $data['title'])->first();
+    if ($exists) { $skipped++; echo "⏭️  Existe: {$data['title']}\n"; continue; }
     try {
         Challenge::create($data);
-        echo "✅ Créé: {$data['type']}\n";
+        echo "✅ Créé: {$data['title']}\n";
         $created++;
     } catch (Exception $e) {
-        echo "❌ Échec {$data['type']}: " . $e->getMessage() . "\n";
+        echo "❌ Échec {$data['title']}: " . $e->getMessage() . "\n";
     }
 }
 

@@ -180,12 +180,23 @@ const Index = () => {
     }
   };
 
-  const pickChallengeId = async () => {
+  const pickChallengeId = async (contentType?: string) => {
     try {
   const res = await testApiService.challenges.list();
   const items = res?.data || [];
-      // TODO: si plusieurs types de défis, filtrer selon contentType
-      const id = items.length > 0 ? items[0].id : null;
+      // Mapper chaque carte vers un titre précis de défi
+      const titleByType: Record<string, string> = {
+        meditation: 'Défi Quotidien: Méditation 5 min',
+        breathing: 'Défi Quotidien: Respiration 4-7-8',
+        sleep: 'Défi Hebdo: Routine de sommeil',
+      };
+      let id: number | null = null;
+      if (contentType && titleByType[contentType]) {
+        const found = items.find((c:any) => c.title === titleByType[contentType]);
+        id = found?.id ?? null;
+      } else {
+        id = items.length > 0 ? items[0].id : null;
+      }
       if (!id) throw new Error('Aucun défi disponible');
       setCurrentChallengeId(id);
       return id;
@@ -200,40 +211,46 @@ const Index = () => {
     switch (contentType) {
       case 'meditation':
         {
-          const id = currentChallengeId ?? (await pickChallengeId());
+          const id = await pickChallengeId('meditation');
           if (!id) return;
           try {
             const r = await testApiService.challenges.start(id);
             toast.success('Défi démarré');
+            await loadChallenges();
           } catch (e:any) {
             // si déjà démarré, continuer silencieusement
             console.log('Start défi:', e?.message || e);
+            try { await loadChallenges(); } catch {}
           }
         }
         setCurrentView('meditation');
         break;
       case 'breathing':
         {
-          const id = currentChallengeId ?? (await pickChallengeId());
+          const id = await pickChallengeId('breathing');
           if (!id) return;
           try {
             const r = await testApiService.challenges.start(id);
             toast.success('Défi démarré');
+            await loadChallenges();
           } catch (e:any) {
             console.log('Start défi:', e?.message || e);
+            try { await loadChallenges(); } catch {}
           }
         }
         setCurrentView('breathing');
         break;
       case 'sleep':
         {
-          const id = currentChallengeId ?? (await pickChallengeId());
+          const id = await pickChallengeId('sleep');
           if (!id) return;
           try {
             const r = await testApiService.challenges.start(id);
             toast.success('Défi démarré');
+            await loadChallenges();
           } catch (e:any) {
             console.log('Start défi:', e?.message || e);
+            try { await loadChallenges(); } catch {}
           }
         }
         setCurrentView('sleep-routine');
@@ -243,9 +260,9 @@ const Index = () => {
     }
   };
 
-  const handleChallengeComplete = async () => {
+  const handleChallengeComplete = async (contentType?: string) => {
     console.log('Challenge completed!');
-  const challengeId = currentChallengeId ?? (await pickChallengeId());
+  const challengeId = await pickChallengeId(contentType);
   if (!challengeId) return;
     try {
       await testApiService.challenges.finish(challengeId);
@@ -344,12 +361,17 @@ const Index = () => {
         
         <Button 
           onClick={() => setCurrentView('challenges')}
-          className="h-16 bg-gradient-to-br from-orange-400 to-pink-400 hover:opacity-90 text-white rounded-2xl"
+          className="h-16 bg-gradient-to-br from-orange-400 to-pink-400 hover:opacity-90 text-white rounded-2xl relative"
         >
           <div className="text-center">
             <Target className="h-6 w-6 mx-auto mb-1" />
             <div className="text-sm font-medium">Mes Défis</div>
           </div>
+          {challengeList.length > 0 && (
+            <span className="absolute top-2 right-2 bg-white text-pink-600 text-[10px] font-bold rounded-full px-2 py-0.5 shadow">
+              {challengeList.length}
+            </span>
+          )}
         </Button>
       </div>
 
@@ -461,7 +483,10 @@ const Index = () => {
   const renderChallenges = () => (
     <div className="space-y-6 animate-fadeIn pt-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Mes Défis</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-2xl font-bold">Mes Défis</h1>
+          <Badge variant="secondary" className="text-xs">{challengeList.length}</Badge>
+        </div>
         <Button variant="outline" size="sm" onClick={() => setCurrentView('dashboard')}>
           Retour
         </Button>
@@ -483,7 +508,13 @@ const Index = () => {
         ))}
         {/* Liste des défis avec statut */}
         <div className="border rounded-lg p-4 bg-white/70">
-          <h2 className="font-semibold mb-2">Mes défis (depuis la base)</h2>
+          <h2 className="font-semibold mb-1">Mes défis (depuis la base)</h2>
+          <div className="text-xs text-gray-500 mb-2">
+            Total: {challengeList.length}
+            {' '}·{' '}Terminés: {challengeList.filter(c => c.status === 'finished' || !!c.completed_at).length}
+            {' '}·{' '}En cours: {challengeList.filter(c => c.status === 'in_progress').length}
+            {' '}·{' '}Non démarrés: {challengeList.filter(c => c.status === 'not_started').length}
+          </div>
           <ul className="space-y-1 text-sm">
             {challengeList.map((c) => (
               <li key={c.id} className="flex items-center justify-between">
@@ -508,6 +539,13 @@ const Index = () => {
       loadChallenges();
     }
   }, [currentView]);
+
+  // Charger une première fois au montage (si l'utilisateur est connecté)
+  useEffect(() => {
+    if (user) {
+      loadChallenges();
+    }
+  }, [user]);
 
   const renderProgress = () => (
     <div className="pt-4">
@@ -541,21 +579,21 @@ const Index = () => {
   const renderMeditation = () => (
     <MeditationContent
       onBack={() => setCurrentView('dashboard')}
-      onComplete={handleChallengeComplete}
+  onComplete={() => handleChallengeComplete('meditation')}
     />
   );
 
   const renderBreathing = () => (
     <BreathingContent
       onBack={() => setCurrentView('dashboard')}
-      onComplete={handleChallengeComplete}
+  onComplete={() => handleChallengeComplete('breathing')}
     />
   );
 
   const renderSleepRoutine = () => (
     <SleepRoutineContent
       onBack={() => setCurrentView('dashboard')}
-      onComplete={handleChallengeComplete}
+  onComplete={() => handleChallengeComplete('sleep')}
     />
   );
 

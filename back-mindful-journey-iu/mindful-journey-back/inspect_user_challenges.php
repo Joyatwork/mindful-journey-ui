@@ -18,6 +18,20 @@ if (!$user) {
 
 echo "User: {$user->id} - {$user->name} <{$user->email}>\n";
 
+$totalChallenges = DB::table('challenges')->count();
+$userTotal = DB::table('challenge_user')->where('user_id', $user->id)->count();
+$userFinished = DB::table('challenge_user')
+    ->where('user_id', $user->id)
+    ->whereNotNull('completed_at')
+    ->count();
+$userInProgress = $userTotal - $userFinished;
+$userDistinct = DB::table('challenge_user')
+    ->where('user_id', $user->id)
+    ->distinct()
+    ->count('challenge_id');
+
+echo "Totals -> challenges_available={$totalChallenges}, user_entries={$userTotal}, finished={$userFinished}, in_progress={$userInProgress}, distinct_challenges={$userDistinct}\n";
+
 $rows = DB::table('challenge_user')
     ->join('challenges', 'challenge_user.challenge_id', '=', 'challenges.id')
     ->select(

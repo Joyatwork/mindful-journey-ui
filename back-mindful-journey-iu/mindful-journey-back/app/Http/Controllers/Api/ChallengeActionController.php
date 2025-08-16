@@ -30,10 +30,15 @@ class ChallengeActionController extends Controller
                 ], 200);
             }
 
-            // Déjà terminé
-            throw ValidationException::withMessages([
-                'challenge' => 'Défi déjà terminé.',
+            // Déjà terminé → relancer le défi (réinitialiser la complétion)
+            $user->challenges()->updateExistingPivot($challenge->id, [
+                'completed_at' => null,
+                'updated_at'   => now(),
             ]);
+            return response()->json([
+                'message' => 'Défi relancé.',
+                'status'  => 'in_progress',
+            ], 200);
         }
 
         // Attache une nouvelle participation “en cours”
