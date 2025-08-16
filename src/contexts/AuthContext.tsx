@@ -130,7 +130,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
       }
     } catch (error: any) {
-      throw new Error(error.message || 'Erreur de connexion');
+      // Rethrow original error to keep status/data for UI handling
+      throw error;
     }
   };
 

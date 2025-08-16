@@ -2,11 +2,11 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class User extends Authenticatable
 {
@@ -60,5 +60,18 @@ class User extends Authenticatable
             'health_goals' => 'array',
             'last_login_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Relation avec les défis.
+     *
+     * Un utilisateur peut participer à plusieurs défis.
+     * La table pivot est "challenge_user".
+     */
+    public function challenges(): BelongsToMany
+    {
+        return $this->belongsToMany(Challenge::class, 'challenge_user')
+            ->withPivot(['completed_at'])
+            ->withTimestamps();
     }
 }

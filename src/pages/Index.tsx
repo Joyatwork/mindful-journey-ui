@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import testApiService from '@/lib/test-api';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -166,15 +167,75 @@ const Index = () => {
     setCurrentView('specialist-profile');
   };
 
-  const handleWellnessCardAction = (contentType: string) => {
+  const [currentChallengeId, setCurrentChallengeId] = useState<number | null>(null);
+  const [challengeList, setChallengeList] = useState<Array<{id:number; title:string; description?:string; status:string; completed_at?:string|null}>>([]);
+
+  const loadChallenges = async () => {
+    try {
+      const res = await testApiService.challenges.list();
+      const items = res?.data || [];
+      setChallengeList(items);
+    } catch (e) {
+      console.warn('Impossible de charger les défis:', e);
+    }
+  };
+
+  const pickChallengeId = async () => {
+    try {
+  const res = await testApiService.challenges.list();
+  const items = res?.data || [];
+      // TODO: si plusieurs types de défis, filtrer selon contentType
+      const id = items.length > 0 ? items[0].id : null;
+      if (!id) throw new Error('Aucun défi disponible');
+      setCurrentChallengeId(id);
+      return id;
+    } catch (e) {
+      console.error('Impossible de récupérer un défi:', e);
+      toast.error("Aucun défi disponible");
+      return null;
+    }
+  };
+
+  const handleWellnessCardAction = async (contentType: string) => {
     switch (contentType) {
       case 'meditation':
+        {
+          const id = currentChallengeId ?? (await pickChallengeId());
+          if (!id) return;
+          try {
+            const r = await testApiService.challenges.start(id);
+            toast.success('Défi démarré');
+          } catch (e:any) {
+            // si déjà démarré, continuer silencieusement
+            console.log('Start défi:', e?.message || e);
+          }
+        }
         setCurrentView('meditation');
         break;
       case 'breathing':
+        {
+          const id = currentChallengeId ?? (await pickChallengeId());
+          if (!id) return;
+          try {
+            const r = await testApiService.challenges.start(id);
+            toast.success('Défi démarré');
+          } catch (e:any) {
+            console.log('Start défi:', e?.message || e);
+          }
+        }
         setCurrentView('breathing');
         break;
       case 'sleep':
+        {
+          const id = currentChallengeId ?? (await pickChallengeId());
+          if (!id) return;
+          try {
+            const r = await testApiService.challenges.start(id);
+            toast.success('Défi démarré');
+          } catch (e:any) {
+            console.log('Start défi:', e?.message || e);
+          }
+        }
         setCurrentView('sleep-routine');
         break;
       default:
@@ -182,9 +243,24 @@ const Index = () => {
     }
   };
 
-  const handleChallengeComplete = () => {
+  const handleChallengeComplete = async () => {
     console.log('Challenge completed!');
-    // Ici on pourrait ajouter des points, sauvegarder le progrès, etc.
+  const challengeId = currentChallengeId ?? (await pickChallengeId());
+  if (!challengeId) return;
+    try {
+      await testApiService.challenges.finish(challengeId);
+      toast.success('Défi enregistré dans la base !');
+      // Recharger la liste des défis pour mettre à jour les statuts
+      try {
+  await loadChallenges();
+      } catch (e) {
+        console.warn('Impossible de recharger la liste des défis:', e);
+      }
+    } catch (err: any) {
+      const msg = err?.message || "Erreur lors de l'enregistrement du défi";
+      toast.error(msg);
+      console.error(err);
+    }
   };
 
   const renderSuggestions = () => (
@@ -405,9 +481,33 @@ const Index = () => {
             actionLabel="Je le fais !"
           />
         ))}
+        {/* Liste des défis avec statut */}
+        <div className="border rounded-lg p-4 bg-white/70">
+          <h2 className="font-semibold mb-2">Mes défis (depuis la base)</h2>
+          <ul className="space-y-1 text-sm">
+            {challengeList.map((c) => (
+              <li key={c.id} className="flex items-center justify-between">
+                <span>{c.title}</span>
+                <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100">
+                  {c.status}{c.completed_at ? ` • ${new Date(c.completed_at).toLocaleString()}` : ''}
+                </span>
+              </li>
+            ))}
+            {challengeList.length === 0 && (
+              <li className="text-gray-500 text-sm">Aucun défi pour l’instant</li>
+            )}
+          </ul>
+        </div>
       </div>
     </div>
   );
+
+  // Charger la liste quand on ouvre l’onglet Défis
+  useEffect(() => {
+    if (currentView === 'challenges') {
+      loadChallenges();
+    }
+  }, [currentView]);
 
   const renderProgress = () => (
     <div className="pt-4">

@@ -52,8 +52,21 @@ const LoginPage = () => {
       await login(loginForm.email, loginForm.password);
       showMessage('success', 'Connexion réussie !');
     } catch (error: any) {
-      toast.error(`La connexion à échouer, vérifiez l'identifiant ou l'email`);
-      console.error('error', error.message);
+      // Utilise le message enrichi de testApiRequest (status, data)
+      let msg = error?.message || `La connexion a échoué`;
+      if (error?.status === 422 && error?.data) {
+        if (typeof error.data.message === 'string') {
+          msg = error.data.message;
+        } else if (error.data.errors) {
+          const firstKey = Object.keys(error.data.errors)[0];
+          const firstVal = error.data.errors[firstKey];
+          if (Array.isArray(firstVal) && firstVal.length > 0) {
+            msg = firstVal[0];
+          }
+        }
+      }
+      toast.error(msg);
+      console.error('error', error);
     } finally {
       setLoading(false);
     }
