@@ -18,6 +18,7 @@ import AuthTest from "./pages/AuthTest";
 import DatabaseViewer from "./pages/DatabaseViewer";
 import MoodPage from "./pages/MoodPage";
 import MeditationPage from "./pages/MeditationPage";
+import MeditationDemo from "./pages/MeditationDemo";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -65,6 +66,8 @@ const App = () => (
                   <MeditationPage />
                 </ProtectedRoute>
               } />
+              {/* Unprotected demo route for quick testing */}
+              <Route path="/meditation-demo" element={<MeditationDemo />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

@@ -1,6 +1,12 @@
 // Service API de test pour le développement
 const API_BASE_URL = '/api';
 
+// Lit un cookie par nom
+function getCookie(name: string) {
+  const match = document.cookie.match(new RegExp('(?:^|; )' + name.replace(/[.$?*|{}()\[\]\\\/\+^]/g, '\\$&') + '=([^;]*)'));
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
 // Fonction pour obtenir le token CSRF
 async function getCsrfToken() {
   try {
@@ -23,31 +29,45 @@ async function testApiRequest(endpoint: string, options: RequestInit = {}) {
   const url = `${API_BASE_URL}${endpoint}`;
   
   // Pour les requêtes POST/PUT/PATCH/DELETE, obtenir d'abord le token CSRF
-  const method = options.method || 'GET';
-  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method.toUpperCase())) {
+  const incomingMethod = options.method || 'GET';
+  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(incomingMethod.toString().toUpperCase())) {
     await getCsrfToken();
   }
   
-  const config = {
-    credentials: 'include' as RequestCredentials,
+  const headers = new Headers({
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    'X-Requested-With': 'XMLHttpRequest',
+  });
+  if (options.headers) {
+    const extra = new Headers(options.headers as HeadersInit);
+    extra.forEach((v, k) => headers.set(k, v));
+  }
+
+  const config: RequestInit = {
+    credentials: 'include',
     ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      'X-Requested-With': 'XMLHttpRequest',
-      ...options.headers,
-    },
+    headers,
   };
 
   // Injecter automatiquement le token Bearer si disponible et non fourni
   try {
     const savedToken = localStorage.getItem('auth_token');
     const hasAuthHeader = !!(config.headers as any)['Authorization'];
-    if (savedToken && !hasAuthHeader) {
-      (config.headers as any)['Authorization'] = `Bearer ${savedToken}`;
+    if (savedToken && config.headers instanceof Headers && !hasAuthHeader) {
+      config.headers.set('Authorization', `Bearer ${savedToken}`);
     }
   } catch (_) {
     // localStorage non accessible (p.ex. SSR) : ignorer
+  }
+
+  // CSRF header for state-changing requests
+  const normalizedMethod = (config.method || 'GET').toString().toUpperCase();
+  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(normalizedMethod)) {
+    const xsrf = getCookie('XSRF-TOKEN');
+    if (xsrf && config.headers instanceof Headers) {
+      config.headers.set('X-XSRF-TOKEN', xsrf);
+    }
   }
 
   try {

@@ -1,7 +1,7 @@
 // Configuration de base pour l'API Laravel
 const API_BASE_URL = '/api';
 
-// Fonction pour obtenir le token CSRF (Laravel Sanctum)
+// Récupère le token CSRF (Laravel Sanctum) et le place en cookie (XSRF-TOKEN)
 const getCsrfToken = async () => {
   try {
     const csrfUrl = '/sanctum/csrf-cookie';
@@ -28,6 +28,26 @@ const getCsrfToken = async () => {
   }
 };
 
+// Lit un cookie par nom
+function getCookie(name: string) {
+  const match = document.cookie.match(new RegExp('(?:^|; )' + name.replace(/[.$?*|{}()\[\]\\\/\+^]/g, '\\$&') + '=([^;]*)'));
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+// Normalise un HeadersInit en instance Headers
+function normalizeHeaders(h?: HeadersInit): Headers {
+  const headers = new Headers();
+  if (!h) return headers;
+  if (h instanceof Headers) {
+    h.forEach((v, k) => headers.set(k, v));
+  } else if (Array.isArray(h)) {
+    for (const [k, v] of h) headers.set(k, v);
+  } else {
+    Object.entries(h).forEach(([k, v]) => headers.set(k, String(v)));
+  }
+  return headers;
+}
+
 // Configuration par défaut pour fetch
 const defaultOptions = {
   headers: {
@@ -50,16 +70,33 @@ async function apiRequest(endpoint: string, options: RequestInit = {}) {
   // Récupérer le token d'authentification
   const token = localStorage.getItem('auth_token');
   
-  // Pour l'authentification Bearer, pas besoin de CSRF
-  const config = {
+  // Construire la config de base avec Headers normalisé
+  const headers = normalizeHeaders(defaultOptions.headers as HeadersInit);
+  if (token) headers.set('Authorization', `Bearer ${token}`);
+  if (options.headers) {
+    const extra = normalizeHeaders(options.headers);
+    extra.forEach((v, k) => headers.set(k, v));
+  }
+
+  const config: RequestInit = {
     ...defaultOptions,
     ...options,
-    headers: {
-      ...defaultOptions.headers,
-      ...(token && { 'Authorization': `Bearer ${token}` }),
-      ...options.headers,
-    },
+    headers,
   };
+
+  // Pour les requêtes avec effet de bord, assurer le CSRF (Sanctum)
+  const method = (config.method || 'GET').toString().toUpperCase();
+  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
+    try {
+      await getCsrfToken();
+      const xsrf = getCookie('XSRF-TOKEN');
+      if (xsrf && config.headers instanceof Headers) {
+        config.headers.set('X-XSRF-TOKEN', xsrf);
+      }
+    } catch (e) {
+      console.warn('CSRF bootstrap failed, continuing:', e);
+    }
+  }
 
   try {
     console.log('📡 Sending request...');

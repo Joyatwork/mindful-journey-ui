@@ -1,3 +1,29 @@
+// --- DEV GUARD: désactive le SW en développement sur localhost:8080 pour éviter les soucis de HMR/WebSocket ---
+const DEV_DISABLE = (() => {
+  try {
+    const { hostname, port } = self.location;
+    return (hostname === 'localhost' || hostname === '127.0.0.1') && port === '8080';
+  } catch (_) {
+    return false;
+  }
+})();
+
+if (DEV_DISABLE) {
+  // Forcer une désinscription propre et recharger les clients
+  self.addEventListener('install', (event) => {
+    self.skipWaiting();
+  });
+  self.addEventListener('activate', (event) => {
+    event.waitUntil((async () => {
+      try { await self.registration.unregister(); } catch (_) {}
+      try {
+        const clientsArr = await self.clients.matchAll({ type: 'window' });
+        clientsArr.forEach((client) => client.navigate(client.url));
+      } catch (_) {}
+    })());
+  });
+  // Ne pas intercepter fetch en dev pour laisser passer le HMR
+} else {
 
 const CACHE_NAME = 'mindful-journey-v2';
 const urlsToCache = [
@@ -97,3 +123,5 @@ self.addEventListener('notificationclick', (event) => {
     clients.openWindow('/')
   );
 });
+
+} // fin else DEV_DISABLE
