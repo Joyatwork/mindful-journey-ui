@@ -7,6 +7,7 @@ use App\Models\MoodEntry;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Log;
 
 class MoodController extends Controller
 {
@@ -74,19 +75,30 @@ class MoodController extends Controller
             'emotions.*' => 'string|max:50',
         ]);
 
+        // Forcer le format de la date à YYYY-MM-DD
+        if (isset($validated['date'])) {
+            $validated['date'] = date('Y-m-d', strtotime($validated['date']));
+        }
+
         try {
+            // Fallback: s'assurer que activities et emotions sont bien des arrays
+            if (isset($validated['activities']) && !is_array($validated['activities'])) {
+                $validated['activities'] = (array) $validated['activities'];
+            }
+            if (isset($validated['emotions']) && !is_array($validated['emotions'])) {
+                $validated['emotions'] = (array) $validated['emotions'];
+            }
+
             // Vérifier si une entrée existe déjà pour cette date
             $existingEntry = MoodEntry::where('user_id', $user->id)
-                ->where('date', $validated['date'])
+                ->whereDate('date', $validated['date'])
                 ->first();
 
             if ($existingEntry) {
-                // Mettre à jour l'entrée existante
                 $existingEntry->update($validated);
                 $entry = $existingEntry;
                 $message = 'Entrée d\'humeur mise à jour avec succès';
             } else {
-                // Créer une nouvelle entrée
                 $entry = MoodEntry::create([
                     'user_id' => $user->id,
                     ...$validated
@@ -101,6 +113,10 @@ class MoodController extends Controller
             ], 201);
 
         } catch (\Exception $e) {
+            Log::error('Erreur lors de l\'enregistrement MoodEntry: ' . $e->getMessage(), [
+                'exception' => $e,
+                'validated' => $validated
+            ]);
             return response()->json([
                 'success' => false,
                 'message' => 'Erreur lors de l\'enregistrement: ' . $e->getMessage()

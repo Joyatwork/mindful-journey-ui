@@ -14,7 +14,9 @@ use App\Http\Controllers\Api\{
     DatabaseController,
     MoodController,
     MeditationController,
-    RecommendationController
+    RecommendationController,
+    ChallengeController,
+    ChallengeActionController
 };
 
 /*
@@ -28,21 +30,19 @@ use App\Http\Controllers\Api\{
 |
 */
 
-// Routes d'authentification
-Route::prefix('auth')->group(function () {
-    Route::post('register', [AuthController::class, 'register']);
-    Route::post('login', [AuthController::class, 'login']);
-    Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
-    Route::get('user', [AuthController::class, 'user'])->middleware('auth:sanctum');
-    Route::put('profile', [AuthController::class, 'updateProfile'])->middleware('auth:sanctum');
-    
-    // Routes Google OAuth
-    Route::get('google', [GoogleAuthController::class, 'redirectToGoogle']);
-    Route::get('google/callback', [GoogleAuthController::class, 'handleGoogleCallback']);
-    Route::post('google/login', [GoogleAuthController::class, 'loginWithGoogle']);
+// ---------------------------------------------------------------------
+// Routes publiques (déclarées AVANT les routes dynamiques similaires)
+// ---------------------------------------------------------------------
+
+// Important : définir avant "specialists/{specialist}" pour éviter la capture
+Route::get('specialists/public', [SpecialistController::class, 'publicIndex']);
+
+// Route de test simple
+Route::get('health', function () {
+    return response()->json(['status' => 'API is working', 'timestamp' => now()]);
 });
 
-// Test d'authentification simple
+// Test d'authentification simple (public)
 Route::post('test/login', function (Request $request) {
     return response()->json([
         'success' => true,
@@ -51,113 +51,7 @@ Route::post('test/login', function (Request $request) {
     ]);
 });
 
-// Routes pour visualiser la base de données
-Route::prefix('test')->group(function () {
-    Route::get('database-stats', [DatabaseController::class, 'getStats']);
-    Route::post('create-test-users', [DatabaseController::class, 'createTestUser']);
-});
-
-// Routes protégées par authentification
-Route::middleware('auth:sanctum')->group(function () {
-    
-    // Profil utilisateur
-    Route::get('profile', [ProfileController::class, 'show']);
-    Route::put('profile', [ProfileController::class, 'update']);
-    
-    // Rendez-vous
-    Route::apiResource('appointments', AppointmentController::class);
-    Route::put('appointments/{appointment}/cancel', [AppointmentController::class, 'cancel']);
-    
-    // Spécialistes de santé
-    Route::get('specialists', [SpecialistController::class, 'index']);
-    Route::get('specialists/{specialist}', [SpecialistController::class, 'show']);
-    Route::get('specialists/search', [SpecialistController::class, 'search']);
-    
-    // Données de santé
-    Route::prefix('health-data')->group(function () {
-        Route::get('mood', [HealthDataController::class, 'getMoodData']);
-        Route::post('mood', [HealthDataController::class, 'saveMoodData']);
-        Route::get('progress', [HealthDataController::class, 'getProgressData']);
-    });
-    
-    // Activités wellness
-    Route::prefix('wellness')->group(function () {
-        Route::get('activities', [WellnessController::class, 'getActivities']);
-        Route::post('activities/log', [WellnessController::class, 'logActivity']);
-        Route::get('progress', [WellnessController::class, 'getProgress']);
-    });
-    
-    // Suivi de l'humeur quotidienne
-    Route::prefix('mood')->group(function () {
-        Route::get('/', [MoodController::class, 'index']);
-        Route::post('/', [MoodController::class, 'store']);
-        Route::get('/today', [MoodController::class, 'today']);
-        Route::get('/stats', [MoodController::class, 'quickStats']);
-        Route::get('/{id}', [MoodController::class, 'show']);
-    });
-    
-    // Méditations guidées
-    Route::prefix('meditation')->group(function () {
-        Route::get('/', [MeditationController::class, 'index']);
-        Route::post('/start-session', [MeditationController::class, 'startSession']);
-        Route::post('/complete-session/{sessionId}', [MeditationController::class, 'completeSession']);
-        Route::get('/history', [MeditationController::class, 'history']);
-        Route::get('/stats', [MeditationController::class, 'stats']);
-        Route::post('/toggle-favorite/{sessionId}', [MeditationController::class, 'toggleFavorite']);
-    });
-    
-        // Diagnostic de bien-être
-    Route::get('diagnostic', [DiagnosticController::class, 'show']);
-    Route::post('diagnostic', [DiagnosticController::class, 'store']);
-    
-    // Système de recommandations intelligent
-    Route::prefix('recommendations')->group(function () {
-        Route::get('personalized', [RecommendationController::class, 'getPersonalizedSuggestions']);
-        Route::get('history-based', [RecommendationController::class, 'getHistoryBasedSuggestions']);
-    });
-});
-
-// Routes publiques (sans authentification)
-Route::get('specialists/public', [SpecialistController::class, 'publicIndex']);
-
-// Route de test simple
-Route::get('health', function () {
-    return response()->json(['status' => 'API is working', 'timestamp' => now()]);
-});
-
-// Route de test pour les spécialistes
-Route::get('test/specialists', function () {
-    return response()->json([
-        'data' => [
-            [
-                'id' => '1',
-                'name' => 'Dr. Marie Dubois',
-                'specialty' => 'Psychologue clinicienne',
-                'rating' => 4.9,
-                'experience' => '12 ans',
-                'price' => '80€',
-                'availability' => 'Disponible cette semaine',
-                'consultationType' => 'both',
-                'description' => 'Spécialisée dans la gestion du stress et de l\'anxiété',
-                'location' => 'Paris 8ème'
-            ],
-            [
-                'id' => '2',
-                'name' => 'Dr. Pierre Martin',
-                'specialty' => 'Médecin généraliste',
-                'rating' => 4.7,
-                'experience' => '15 ans',
-                'price' => '50€',
-                'availability' => 'Disponible demain',
-                'consultationType' => 'both',
-                'description' => 'Expert en médecine préventive et troubles du sommeil',
-                'location' => 'Lyon 2ème'
-            ]
-        ]
-    ]);
-});
-
-// Routes de test publiques pour le développement
+// Routes publiques de test (dev)
 Route::prefix('test')->group(function () {
     Route::get('appointments', function () {
         return response()->json([
@@ -173,7 +67,7 @@ Route::prefix('test')->group(function () {
             ]
         ]);
     });
-    
+
     Route::get('mood', function () {
         return response()->json([
             'data' => [
@@ -190,10 +84,102 @@ Route::prefix('test')->group(function () {
     Route::put('profile/{userId}', function (Request $request, $userId) {
         $data = $request->all();
         return response()->json([
-            'message' => 'Test de mise à jour reçu',
-            'user_id' => $userId,
+            'message'   => 'Test de mise à jour reçu',
+            'user_id'   => $userId,
             'received_data' => $data,
             'timestamp' => now()
         ]);
     });
+});
+
+// ---------------------------------------------------------------------
+// Auth (publiques + protégées)
+// ---------------------------------------------------------------------
+
+// Routes d'authentification
+Route::prefix('auth')->group(function () {
+    Route::post('register', [AuthController::class, 'register']);
+    Route::post('login', [AuthController::class, 'login']);
+    Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
+    Route::get('user', [AuthController::class, 'user'])->middleware('auth:sanctum');
+    Route::put('profile', [AuthController::class, 'updateProfile'])->middleware('auth:sanctum');
+
+    // Routes Google OAuth
+    Route::get('google', [GoogleAuthController::class, 'redirectToGoogle']);
+    Route::get('google/callback', [GoogleAuthController::class, 'handleGoogleCallback']);
+    Route::post('google/login', [GoogleAuthController::class, 'loginWithGoogle']);
+});
+
+// Routes pour visualiser la base de données (publiques de test)
+Route::prefix('test')->group(function () {
+    Route::get('database-stats', [DatabaseController::class, 'getStats']);
+    Route::post('create-test-users', [DatabaseController::class, 'createTestUser']);
+});
+
+// ---------------------------------------------------------------------
+// Routes protégées par authentification (Sanctum)
+// ---------------------------------------------------------------------
+Route::middleware('auth:sanctum')->group(function () {
+
+    // Profil utilisateur
+    Route::get('profile', [ProfileController::class, 'show']);
+    Route::put('profile', [ProfileController::class, 'update']);
+
+    // Rendez-vous
+    Route::apiResource('appointments', AppointmentController::class);
+    Route::put('appointments/{appointment}/cancel', [AppointmentController::class, 'cancel']);
+
+    // Spécialistes de santé
+    // IMPORTANT : mettre "search" AVANT "{specialist}" pour éviter la capture par la route dynamique
+    Route::get('specialists', [SpecialistController::class, 'index']);
+    Route::get('specialists/search', [SpecialistController::class, 'search']);
+    Route::get('specialists/{specialist}', [SpecialistController::class, 'show']);
+
+    // Données de santé
+    Route::prefix('health-data')->group(function () {
+        Route::get('mood', [HealthDataController::class, 'getMoodData']);
+        Route::post('mood', [HealthDataController::class, 'saveMoodData']);
+        Route::get('progress', [HealthDataController::class, 'getProgressData']);
+    });
+
+    // Activités wellness
+    Route::prefix('wellness')->group(function () {
+        Route::get('activities', [WellnessController::class, 'getActivities']);
+        Route::post('activities/log', [WellnessController::class, 'logActivity']);
+        Route::get('progress', [WellnessController::class, 'getProgress']);
+    });
+
+    // Suivi de l'humeur quotidienne
+    Route::prefix('mood')->group(function () {
+        Route::get('/', [MoodController::class, 'index']);
+        Route::post('/', [MoodController::class, 'store']);
+        Route::get('/today', [MoodController::class, 'today']);
+        Route::get('/stats', [MoodController::class, 'quickStats']);
+        Route::get('/{id}', [MoodController::class, 'show']);
+    });
+
+    // Méditations guidées
+    Route::prefix('meditation')->group(function () {
+        Route::get('/', [MeditationController::class, 'index']);
+        Route::post('/start-session', [MeditationController::class, 'startSession']);
+        Route::post('/complete-session/{sessionId}', [MeditationController::class, 'completeSession']);
+        Route::get('/history', [MeditationController::class, 'history']);
+        Route::get('/stats', [MeditationController::class, 'stats']);
+        Route::post('/toggle-favorite/{sessionId}', [MeditationController::class, 'toggleFavorite']);
+    });
+
+    // Diagnostic de bien-être
+    Route::get('diagnostic', [DiagnosticController::class, 'show']);
+    Route::post('diagnostic', [DiagnosticController::class, 'store']);
+
+    // Système de recommandations intelligent
+    Route::prefix('recommendations')->group(function () {
+        Route::get('personalized', [RecommendationController::class, 'getPersonalizedSuggestions']);
+        Route::get('history-based', [RecommendationController::class, 'getHistoryBasedSuggestions']);
+    });
+
+    // --- Défis (Challenges) ---
+    Route::get('challenges', [ChallengeController::class, 'index']);
+    Route::post('challenges/{challenge}/start', [ChallengeActionController::class, 'start']);
+    Route::post('challenges/{challenge}/finish', [ChallengeActionController::class, 'finish']);
 });

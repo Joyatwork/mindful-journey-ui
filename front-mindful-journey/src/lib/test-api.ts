@@ -39,13 +39,52 @@ async function testApiRequest(endpoint: string, options: RequestInit = {}) {
     },
   };
 
+  // Injecter automatiquement le token Bearer si disponible et non fourni
+  try {
+    const savedToken = localStorage.getItem('auth_token');
+    const hasAuthHeader = !!(config.headers as any)['Authorization'];
+    if (savedToken && !hasAuthHeader) {
+      (config.headers as any)['Authorization'] = `Bearer ${savedToken}`;
+    }
+  } catch (_) {
+    // localStorage non accessible (p.ex. SSR) : ignorer
+  }
+
   try {
     const response = await fetch(url, config);
-    
+
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      // Tenter d'extraire un message d'erreur utile depuis la réponse JSON (Laravel)
+      let data: any = null;
+      try {
+        data = await response.json();
+      } catch (_) {
+        // ignore parse error
+      }
+
+      // Construire un message pertinent
+      let message = `HTTP error! status: ${response.status}`;
+      if (data) {
+        if (typeof data.message === 'string' && data.message.trim().length > 0) {
+          message = data.message;
+        } else if (data.errors && typeof data.errors === 'object') {
+          // Prendre le premier message de validation
+          const firstKey = Object.keys(data.errors)[0];
+          const firstVal = data.errors[firstKey];
+          if (Array.isArray(firstVal) && firstVal.length > 0) {
+            message = firstVal[0];
+          }
+        }
+      }
+
+      const err: any = new Error(message);
+      err.status = response.status;
+      err.data = data;
+      // Fournir un objet "response" minimal pour compatibilité avec les appels existants
+      err.response = { status: response.status, data };
+      throw err;
     }
-    
+
     return await response.json();
   } catch (error) {
     console.error('API Error:', error);
@@ -55,6 +94,21 @@ async function testApiRequest(endpoint: string, options: RequestInit = {}) {
 
 // Service API de test
 const testApiService = {
+  challenges: {
+  list: () => testApiRequest('/challenges'),
+    start: (challengeId: number) => testApiRequest(`/challenges/${challengeId}/start`, {
+      method: 'POST'
+    }),
+    finish: (challengeId: number) => testApiRequest(`/challenges/${challengeId}/finish`, {
+      method: 'POST'
+    }),
+  },
+  userChallenges: {
+    store: (data: { challenge_id: number }) => testApiRequest('/user/challenges', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    }),
+  },
   // Test de santé de l'API
   health: {
     check: () => testApiRequest('/health')
