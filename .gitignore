@@ -1,0 +1,53 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors/IDE
+.vscode/
+.idea/
+*.iml
+
+# Env files
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Node / Frontend
+node_modules/
+.dist/
+dist/
+.vite/
+.cache/
+coverage/
+build/
+.out/
+.next/
+.svelte-kit/
+.turbo/
+.parcel-cache/
+
+# Bun
+.bun/
+# keep lockfile
+# bun.lockb should be committed
+
+# Vite/React
+public/build/
+
+# Laravel backend common ignores (any nested backend folder)
+**/vendor/
+**/storage/
+**/public/storage/
+bootstrap/cache/*.php
+
+# Misc
+*.local
+*.swp
+*.swo
