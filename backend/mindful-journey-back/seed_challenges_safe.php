@@ -18,9 +18,9 @@ try {
 }
 
 $candidates = [
-    ['title' => 'Défi Quotidien: Méditation 5 min', 'description' => 'Pratique une courte méditation aujourd\'hui.', 'type' => 'day'],
-    ['title' => 'Défi Quotidien: Respiration 4-7-8', 'description' => 'Séance de respiration anti-stress.', 'type' => 'day'],
-    ['title' => 'Défi Hebdo: Routine de sommeil', 'description' => 'Améliore ta routine du soir cette semaine.', 'type' => 'week'],
+    ['title' => 'Défi Quotidien: Méditation 5 min', 'description' => 'Pratique une courte méditation aujourd\'hui.'],
+    ['title' => 'Défi Quotidien: Respiration 4-7-8', 'description' => 'Séance de respiration anti-stress.'],
+    ['title' => 'Défi Hebdo: Routine de sommeil', 'description' => 'Améliore ta routine du soir cette semaine.'],
 ];
 
 $created = 0; $skipped = 0;
@@ -29,7 +29,12 @@ foreach ($candidates as $data) {
     $exists = Challenge::where('title', $data['title'])->first();
     if ($exists) { $skipped++; echo "⏭️  Existe: {$data['title']}\n"; continue; }
     try {
-        Challenge::create($data);
+        // La colonne 'type' peut ne pas exister selon vos migrations locales
+        // Insérer uniquement les champs sûrs
+        Challenge::create([
+            'title' => $data['title'],
+            'description' => $data['description'] ?? null,
+        ]);
         echo "✅ Créé: {$data['title']}\n";
         $created++;
     } catch (Exception $e) {
