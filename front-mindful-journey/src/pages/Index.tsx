@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import testApiService from '@/lib/test-api';
+import apiService from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -49,6 +50,7 @@ const Index = () => {
   const [challengeFilters, setChallengeFilters] = useState<string[]>([]);
   const [diagnosticStep, setDiagnosticStep] = useState(1);
   const [diagnosticAnswers, setDiagnosticAnswers] = useState<Record<string, any>>({});
+  const [savedDiagnostic, setSavedDiagnostic] = useState<any>(null);
   const [selectedSpecialist, setSelectedSpecialist] = useState<any>(null);
 
   const handleLogout = async () => {
@@ -158,6 +160,20 @@ const Index = () => {
     }
   }
 ), [user];
+
+  // Charger le diagnostic sauvegardé pour le réutiliser dans les suggestions
+  useEffect(() => {
+    const loadSavedDiagnostic = async () => {
+      if (!user) return;
+      try {
+        const res = await apiService.diagnostic.get();
+        setSavedDiagnostic(res?.data ?? null);
+      } catch (_) {
+        // pas de diagnostic sauvegardé ou non disponible
+      }
+    };
+    loadSavedDiagnostic();
+  }, [user]);
 
   const handleBookAppointment = (specialist: any) => {
     setSelectedSpecialist(specialist);
@@ -301,7 +317,7 @@ const Index = () => {
           mood: selectedMood,
           stress: 3, // Valeur par défaut, pourrait venir du diagnostic
           energy: 3, // Valeur par défaut, pourrait venir du diagnostic
-          diagnostic: null // Ajout du champ diagnostic
+          diagnostic: savedDiagnostic // Diagnostic sauvegardé si dispo
         }}
         onSuggestionSelect={(suggestion) => {
           console.log('Suggestion selected:', suggestion);
@@ -453,12 +469,31 @@ const Index = () => {
     const currentQuestion = diagnosticQuestions[diagnosticStep - 1];
     const currentAnswer = diagnosticAnswers[currentQuestion?.id];
 
-    const handleNext = () => {
+    const handleNext = async () => {
       if (diagnosticStep < diagnosticQuestions.length) {
         setDiagnosticStep(diagnosticStep + 1);
       } else {
         console.log('Diagnostic completed:', diagnosticAnswers);
-        setCurrentView('dashboard');
+        // Sauvegarder le diagnostic côté backend (protégé Sanctum)
+        try {
+          await apiService.diagnostic.save({
+            stress_level: Number(diagnosticAnswers.stress_level) || 5,
+            energy_level: Number(diagnosticAnswers.energy_level) || 5,
+            work_pressure: String(diagnosticAnswers.work_pressure || 'Non précisé'),
+            answers: diagnosticAnswers,
+          });
+          // Recharger le diagnostic sauvegardé
+          try {
+            const res = await apiService.diagnostic.get();
+            setSavedDiagnostic(res?.data ?? null);
+          } catch (_) {}
+          toast.success('Diagnostic sauvegardé');
+        } catch (e: any) {
+          console.error('Erreur sauvegarde diagnostic:', e);
+          toast.error(e?.message || 'Erreur lors de la sauvegarde');
+        } finally {
+          setCurrentView('dashboard');
+        }
       }
     };
 

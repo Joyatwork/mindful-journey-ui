@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use App\Models\Diagnostic;
 
 class DiagnosticController extends Controller
 {
@@ -13,20 +14,8 @@ class DiagnosticController extends Controller
      */
     public function show(): JsonResponse
     {
-        // Données mockées du diagnostic
-        $diagnostic = [
-            'id' => 1,
-            'stress_level' => 6,
-            'energy_level' => 4,
-            'work_pressure' => 'Souvent, je ressens une pression constante',
-            'completed_at' => '2024-08-01',
-            'recommendations' => [
-                'Méditation quotidienne recommandée',
-                'Exercices de respiration en cas de stress',
-                'Consultation avec un spécialiste suggérée'
-            ]
-        ];
-
+        $user = request()->user();
+        $diagnostic = $user ? Diagnostic::where('user_id', $user->id)->latest('completed_at')->first() : null;
         return response()->json([
             'success' => true,
             'data' => $diagnostic
@@ -44,17 +33,20 @@ class DiagnosticController extends Controller
             'work_pressure' => 'required|string',
             'answers' => 'nullable|array'
         ]);
-
-        $diagnostic = array_merge($validated, [
-            'id' => time(),
-            'user_id' => $request->user() ? $request->user()->id : null,
-            'completed_at' => now()
+        $user = $request->user();
+        $record = Diagnostic::create([
+            'user_id' => $user ? $user->id : null,
+            'stress_level' => $validated['stress_level'],
+            'energy_level' => $validated['energy_level'],
+            'work_pressure' => $validated['work_pressure'],
+            'answers' => $validated['answers'] ?? null,
+            'completed_at' => now(),
         ]);
 
         return response()->json([
             'success' => true,
             'message' => 'Diagnostic sauvegardé avec succès',
-            'data' => $diagnostic
+            'data' => $record
         ], 201);
     }
 }
