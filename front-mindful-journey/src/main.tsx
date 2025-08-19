@@ -5,8 +5,8 @@ import './index.css'
 
 createRoot(document.getElementById("root")!).render(<App />);
 
-// Enregistrer le service worker pour PWA avec gestion d'erreurs améliorée
-if ('serviceWorker' in navigator) {
+// Enregistrer le service worker uniquement en production pour éviter les soucis de cache en dev
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js', {
       scope: '/'
@@ -47,4 +47,20 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('offline', () => {
     console.log('Application hors ligne');
   });
+}
+else {
+  console.log('SW désactivé en développement');
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations()
+      .then((regs) => {
+        if (regs.length) console.log(`Désinscription de ${regs.length} Service Worker(s) en dev...`);
+        regs.forEach((r) => r.unregister());
+      })
+      .catch(() => {});
+  }
+  if ('caches' in window) {
+    caches.keys()
+      .then((keys) => Promise.all(keys.map((k) => caches.delete(k))))
+      .catch(() => {});
+  }
 }

@@ -1,24 +1,54 @@
+<<<<<<< HEAD
+=======
+# Node / JS
+node_modules/
+**/node_modules/
+dist/
+build/
+.cache/
+.vite/
+.nuxt/
+.next/
+
 # Logs
-logs
 *.log
+logs/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
-lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
+# Env files
+.env
+.env.*
+**/.env
+**/.env.*
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
+# Editor/OS
 .DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+.idea/
+.vscode/
+Thumbs.db
+
+# TypeScript
+*.tsbuildinfo
+
+# Coverage
+coverage/
+
+# Laravel / PHP backend
+vendor/
+**/vendor/
+storage/
+**/storage/
+bootstrap/cache/
+**/bootstrap/cache/
+public/storage
+
+# Build artifacts
+public/build/
+**/public/build/
+
+# Bun
+.bun/
+>>>>>>> 69e89066 (Merge origin/main into ali2: resolve path renames (backend/front split) and keep challenges backend additions)

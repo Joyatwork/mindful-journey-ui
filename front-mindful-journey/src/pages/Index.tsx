@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import testApiService from '@/lib/test-api';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -41,6 +42,7 @@ import {
 } from 'lucide-react';
 
 const Index = () => {
+  const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [currentView, setCurrentView] = useState('dashboard');
   const [selectedMood, setSelectedMood] = useState<number>();
@@ -383,6 +385,15 @@ const Index = () => {
           <div className="text-center">
             <Sparkles className="h-6 w-6 mx-auto mb-1" />
             <div className="text-sm font-medium">Suggestions Personnalisées</div>
+          </div>
+        </Button>
+        <Button 
+          onClick={() => navigate('/meditation-demo')}
+          className="h-16 bg-gradient-to-br from-indigo-600 to-purple-600 hover:opacity-90 text-white rounded-2xl"
+        >
+          <div className="text-center">
+            <Brain className="h-6 w-6 mx-auto mb-1" />
+            <div className="text-sm font-medium">Démo Méditation (TTS/MP3)</div>
           </div>
         </Button>
       </div>

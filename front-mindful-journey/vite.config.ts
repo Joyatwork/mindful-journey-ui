@@ -9,10 +9,6 @@ export default defineConfig(({ mode }) => ({
     host: "localhost",
     port: 8080,
     strictPort: true,
-    hmr: {
-      host: "localhost",
-      port: 8080,
-    },
     proxy: {
       '/api': {
         target: 'http://localhost:8081',
