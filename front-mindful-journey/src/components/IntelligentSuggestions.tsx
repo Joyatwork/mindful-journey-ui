@@ -31,9 +31,22 @@ interface Suggestion {
   action_steps?: string[];
 }
 
+interface HealthProfessional {
+  id?: string;
+  name: string;
+  specialty: string;
+  rating: number;
+  experience: string;
+  price: string | number;
+  availability: string;
+  consultationType?: 'video' | 'inPerson' | 'both';
+  image?: string;
+  reason?: string;
+}
+
 interface SuggestionGroup {
   challenges: Suggestion[];
-  practitioners: any[];
+  practitioners: HealthProfessional[];
   content: Suggestion[];
   immediate_actions: Suggestion[];
 }
@@ -56,6 +69,15 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+
+  // Diagnostic positif ? (stress ≤ 2, mood ≥ 4, energy ≥ 3)
+  const isPositive = (() => {
+    const s = userContext?.stress;
+    const m = userContext?.mood;
+    const e = userContext?.energy;
+    if (s == null || m == null || e == null) return false;
+    return s <= 2 && m >= 4 && e >= 3;
+  })();
 
   const fetchSuggestions = async () => {
     setLoading(true);
@@ -206,7 +228,20 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
     );
   };
 
+  const openProfile = (p: HealthProfessional) => {
+    // Fire a DOM event that Index.tsx can catch to navigate to profile/booking
+    const evt = new CustomEvent('openSpecialistProfile', { detail: p });
+    window.dispatchEvent(evt);
+  };
+
+  const bookPractitioner = (p: HealthProfessional) => {
+    const evt = new CustomEvent('bookSpecialist', { detail: p });
+    window.dispatchEvent(evt);
+  };
+
   const renderPractitioners = () => {
+    // Masquer totalement les praticiens si le diagnostic est positif
+    if (isPositive) return null;
     if (!suggestions?.practitioners?.length) return null;
 
     return (
@@ -219,7 +254,7 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
         </CardHeader>
         <CardContent className="space-y-4">
           {suggestions.practitioners.map((practitioner, index) => (
-            <div key={index} className="border rounded-lg p-4">
+            <div key={index} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors cursor-pointer" onClick={() => openProfile(practitioner)}>
               <div className="flex items-start justify-between mb-2">
                 <div>
                   <h4 className="font-medium">{practitioner.name}</h4>
@@ -236,11 +271,16 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
               <p className="text-sm text-blue-600 mb-2">{practitioner.reason}</p>
               <div className="flex items-center justify-between">
                 <div className="text-sm text-gray-500">
-                  {practitioner.availability} • {practitioner.price}€
+                  {practitioner.availability} • {typeof practitioner.price === 'number' ? `${practitioner.price}€` : practitioner.price}
                 </div>
-                <Button size="sm" variant="outline">
-                  Consulter
-                </Button>
+                <div className="flex gap-2">
+                  <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); openProfile(practitioner); }}>
+                    Consulter
+                  </Button>
+                  <Button size="sm" className="bg-wellness-gradient text-white" onClick={(e) => { e.stopPropagation(); bookPractitioner(practitioner); }}>
+                    Prendre RDV
+                  </Button>
+                </div>
               </div>
             </div>
           ))}

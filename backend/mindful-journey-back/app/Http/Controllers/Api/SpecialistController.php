@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use App\Models\Specialist;
 
 class SpecialistController extends Controller
 {
@@ -13,87 +14,48 @@ class SpecialistController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        // Données mockées des spécialistes
-        $specialists = [
-            [
-                'id' => '1',
-                'name' => 'Dr. Marie Dubois',
-                'specialty' => 'Psychologue clinicienne',
-                'rating' => 4.9,
-                'experience' => '12 ans',
-                'price' => '80€',
-                'availability' => 'Disponible cette semaine',
-                'consultationType' => 'both',
-                'description' => 'Spécialisée dans la gestion du stress et de l\'anxiété',
-                'location' => 'Paris 8ème',
-                'image' => null,
-                'education' => ['Doctorat en Psychologie - Sorbonne', 'Master en Thérapies Cognitives'],
-                'languages' => ['Français', 'Anglais'],
-                'reviewCount' => 127
-            ],
-            [
-                'id' => '2',
-                'name' => 'Dr. Pierre Martin',
-                'specialty' => 'Médecin généraliste',
-                'rating' => 4.7,
-                'experience' => '15 ans',
-                'price' => '50€',
-                'availability' => 'Disponible demain',
-                'consultationType' => 'both',
-                'description' => 'Expert en médecine préventive et troubles du sommeil',
-                'location' => 'Lyon 2ème',
-                'image' => null,
-                'education' => ['Doctorat en Médecine - Université Lyon 1'],
-                'languages' => ['Français'],
-                'reviewCount' => 89
-            ],
-            [
-                'id' => '3',
-                'name' => 'Dr. Sophie Laurent',
-                'specialty' => 'Psychiatre',
-                'rating' => 4.8,
-                'experience' => '10 ans',
-                'price' => '120€',
-                'availability' => 'Disponible dans 3 jours',
-                'consultationType' => 'video',
-                'description' => 'Spécialisée en thérapies comportementales et cognitives',
-                'location' => 'Consultation en ligne',
-                'image' => null,
-                'education' => ['Spécialisation en Psychiatrie - CHU Pitié-Salpêtrière'],
-                'languages' => ['Français', 'Anglais', 'Espagnol'],
-                'reviewCount' => 156
-            ]
-        ];
+        $query = Specialist::query();
 
-        // Appliquer les filtres si fournis
-        $specialty = $request->get('specialty');
-        $consultationType = $request->get('consultationType');
-        $search = $request->get('search');
-
-        if ($specialty && $specialty !== 'all') {
-            $specialists = array_filter($specialists, function($specialist) use ($specialty) {
-                return $specialist['specialty'] === $specialty;
+        if ($request->filled('specialty') && $request->specialty !== 'all') {
+            $query->where('specialty', $request->specialty);
+        }
+        if ($request->filled('consultationType') && $request->consultationType !== 'all') {
+            $type = $request->consultationType;
+            if ($type !== 'both') {
+                $query->whereIn('consultation_type', [$type, 'both']);
+            }
+        }
+        if ($request->filled('search')) {
+            $s = $request->search;
+            $query->where(function ($q) use ($s) {
+                $q->where('name', 'like', "%$s%")
+                  ->orWhere('specialty', 'like', "%$s%")
+                  ->orWhere('description', 'like', "%$s%");
             });
         }
 
-        if ($consultationType && $consultationType !== 'all') {
-            $specialists = array_filter($specialists, function($specialist) use ($consultationType) {
-                return $specialist['consultationType'] === $consultationType || 
-                       $specialist['consultationType'] === 'both';
-            });
-        }
-
-        if ($search) {
-            $specialists = array_filter($specialists, function($specialist) use ($search) {
-                return stripos($specialist['name'], $search) !== false ||
-                       stripos($specialist['specialty'], $search) !== false ||
-                       stripos($specialist['description'], $search) !== false;
-            });
-        }
+        $specialists = $query->orderBy('rating', 'desc')->get()->map(function (Specialist $s) {
+            return [
+                'id' => (string) $s->id,
+                'name' => $s->name,
+                'specialty' => $s->specialty,
+                'rating' => (float) $s->rating,
+                'experience' => $s->experience_years . ' ans',
+                'price' => intval($s->price_cents / 100) . '€',
+                'availability' => $s->availability,
+                'consultationType' => $s->consultation_type,
+                'description' => $s->description,
+                'location' => $s->location,
+                'image' => $s->image_url,
+                'education' => $s->education,
+                'languages' => $s->languages,
+                'reviewCount' => $s->review_count,
+            ];
+        });
 
         return response()->json([
             'success' => true,
-            'data' => array_values($specialists)
+            'data' => $specialists,
         ]);
     }
 
@@ -102,28 +64,24 @@ class SpecialistController extends Controller
      */
     public function show(string $id): JsonResponse
     {
-        // Simuler la récupération d'un spécialiste par ID
+        $s = Specialist::findOrFail($id);
         $specialist = [
-            'id' => $id,
-            'name' => 'Dr. Marie Dubois',
-            'specialty' => 'Psychologue clinicienne',
-            'rating' => 4.9,
-            'experience' => '12 ans',
-            'price' => '80€',
-            'availability' => 'Disponible cette semaine',
-            'consultationType' => 'both',
-            'description' => 'Spécialisée dans la gestion du stress et de l\'anxiété avec plus de 12 ans d\'expérience.',
-            'location' => 'Paris 8ème',
-            'image' => null,
-            'education' => [
-                'Doctorat en Psychologie - Université Sorbonne',
-                'Master en Thérapies Cognitives et Comportementales',
-                'Certification en Mindfulness - Institut Mindful Schools'
-            ],
-            'languages' => ['Français', 'Anglais'],
-            'reviewCount' => 127,
-            'nextAvailable' => '2024-08-15',
-            'reason' => 'Recommandée pour la gestion du stress et de l\'anxiété'
+            'id' => (string) $s->id,
+            'name' => $s->name,
+            'specialty' => $s->specialty,
+            'rating' => (float) $s->rating,
+            'experience' => $s->experience_years . ' ans',
+            'price' => intval($s->price_cents / 100) . '€',
+            'availability' => $s->availability,
+            'consultationType' => $s->consultation_type,
+            'description' => $s->description,
+            'location' => $s->location,
+            'image' => $s->image_url,
+            'education' => $s->education,
+            'languages' => $s->languages,
+            'reviewCount' => $s->review_count,
+            'nextAvailable' => null,
+            'reason' => null,
         ];
 
         return response()->json([
@@ -146,18 +104,35 @@ class SpecialistController extends Controller
             ]);
         }
 
-        // Simuler une recherche
-        $allSpecialists = $this->index($request)->getData()->data;
-        
-        $results = array_filter($allSpecialists, function($specialist) use ($query) {
-            return stripos($specialist->name, $query) !== false ||
-                   stripos($specialist->specialty, $query) !== false ||
-                   stripos($specialist->description, $query) !== false;
+        $s = Specialist::query()
+            ->where('name', 'like', "%$query%")
+            ->orWhere('specialty', 'like', "%$query%")
+            ->orWhere('description', 'like', "%$query%")
+            ->orderBy('rating', 'desc')
+            ->get();
+
+        $results = $s->map(function (Specialist $sp) {
+            return [
+                'id' => (string) $sp->id,
+                'name' => $sp->name,
+                'specialty' => $sp->specialty,
+                'rating' => (float) $sp->rating,
+                'experience' => $sp->experience_years . ' ans',
+                'price' => intval($sp->price_cents / 100) . '€',
+                'availability' => $sp->availability,
+                'consultationType' => $sp->consultation_type,
+                'description' => $sp->description,
+                'location' => $sp->location,
+                'image' => $sp->image_url,
+                'education' => $sp->education,
+                'languages' => $sp->languages,
+                'reviewCount' => $sp->review_count,
+            ];
         });
 
         return response()->json([
             'success' => true,
-            'data' => array_values($results),
+            'data' => $results,
             'query' => $query
         ]);
     }

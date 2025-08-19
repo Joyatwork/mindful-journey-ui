@@ -22,7 +22,9 @@ import MeditationContent from '@/components/MeditationContent';
 import BreathingContent from '@/components/BreathingContent';
 import SleepRoutineContent from '@/components/SleepRoutineContent';
 import IntelligentSuggestions from '@/components/IntelligentSuggestions';
+import AppointmentManagement from '@/components/AppointmentManagement';
 import { Toaster, toast } from "react-hot-toast";
+import { useAppointments } from '@/hooks/useApi';
 import { 
   Heart, 
   Brain, 
@@ -45,6 +47,7 @@ import {
 const Index = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const { appointments, isLoading: apptsLoading } = useAppointments();
   const [currentView, setCurrentView] = useState('dashboard');
   const [selectedMood, setSelectedMood] = useState<number>();
   const [challengeFilters, setChallengeFilters] = useState<string[]>([]);
@@ -62,7 +65,7 @@ const Index = () => {
     }
   };
 
-  const progressData = [
+  const initialProgressData = [
     { date: 'Lun', mood: 3, stress: 4, energy: 3, sleep: 4 },
     { date: 'Mar', mood: 4, stress: 3, energy: 4, sleep: 3 },
     { date: 'Mer', mood: 3, stress: 5, energy: 2, sleep: 4 },
@@ -71,6 +74,55 @@ const Index = () => {
     { date: 'Sam', mood: 4, stress: 3, energy: 4, sleep: 5 },
     { date: 'Dim', mood: 4, stress: 2, energy: 4, sleep: 4 },
   ];
+  const [progressData, setProgressData] = useState(initialProgressData);
+
+  // Helpers: transformer le diagnostic en scores (1..5)
+  const clamp = (n:number, min:number, max:number) => Math.max(min, Math.min(max, n));
+  const toFiveScale = (val:number) => clamp(Math.round(val / 2), 1, 5);
+  const sleepQualityToScore = (txt?: string) => {
+    if (!txt) return 3;
+    const t = txt.toLowerCase();
+    if (t.includes('excellent')) return 5;
+    if (t.includes('bon')) return 4;
+    if (t.includes('moyen')) return 3;
+    if (t.includes('difficile')) return 2;
+    if (t.includes('très mauvais') || t.includes('tres mauvais') || t.includes('insomnie')) return 1;
+    return 3;
+  };
+  const moodEmojiToScore = (emoji?: string) => {
+    if (!emoji) return undefined;
+    // Mapping simple
+    const map: Record<string, number> = {
+      '😞': 1, '☹️': 2, '😐': 3, '🙂': 4, '😊': 4, '😄': 5, '😁': 5, '😀': 5
+    };
+    return map[emoji] ?? undefined;
+  };
+
+  // Quand un diagnostic est sauvegardé, injecter un point "Aujourd'hui" dans les graphiques
+  useEffect(() => {
+    if (!savedDiagnostic) return;
+    const stress = Number(savedDiagnostic.stress_level) || 5;
+    const energy = Number(savedDiagnostic.energy_level) || 5;
+    const energyScore = toFiveScale(energy);
+    let moodScore = moodEmojiToScore(savedDiagnostic.answers?.mood_emoji);
+    if (moodScore === undefined) {
+      // approx: plus le stress est élevé, plus la note d'humeur est basse
+      moodScore = clamp(6 - toFiveScale(stress), 1, 5);
+    }
+    const sleepScore = sleepQualityToScore(savedDiagnostic.answers?.sleep_quality);
+
+    const todayPoint = {
+      date: "Aujourd'hui",
+      mood: moodScore,
+      stress: toFiveScale(stress),
+      energy: energyScore,
+      sleep: sleepScore,
+    };
+    setProgressData(prev => {
+      const filtered = prev.filter(p => p.date !== "Aujourd'hui");
+      return [...filtered, todayPoint];
+    });
+  }, [savedDiagnostic]);
 
   const wellnessCards = [
     {
@@ -174,6 +226,24 @@ const Index = () => {
     };
     loadSavedDiagnostic();
   }, [user]);
+
+  // Ecoute des événements en provenance de IntelligentSuggestions (ouvrir profil / réserver)
+  useEffect(() => {
+    const onOpenProfile = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail) handleViewProfile(detail);
+    };
+    const onBook = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail) handleBookAppointment(detail);
+    };
+    window.addEventListener('openSpecialistProfile', onOpenProfile as EventListener);
+    window.addEventListener('bookSpecialist', onBook as EventListener);
+    return () => {
+      window.removeEventListener('openSpecialistProfile', onOpenProfile as EventListener);
+      window.removeEventListener('bookSpecialist', onBook as EventListener);
+    };
+  }, []);
 
   const handleBookAppointment = (specialist: any) => {
     setSelectedSpecialist(specialist);
@@ -298,7 +368,16 @@ const Index = () => {
     }
   };
 
-  const renderSuggestions = () => (
+  const renderSuggestions = () => {
+    // Construire le contexte à partir du dernier diagnostic sauvegardé
+    const computedStress = savedDiagnostic ? toFiveScale(Number(savedDiagnostic.stress_level) || 3) : undefined;
+    const computedEnergy = savedDiagnostic ? toFiveScale(Number(savedDiagnostic.energy_level) || 3) : undefined;
+    let computedMood = savedDiagnostic ? moodEmojiToScore(savedDiagnostic.answers?.mood_emoji) : undefined;
+    if (computedMood === undefined && computedStress !== undefined) {
+      computedMood = clamp(6 - computedStress, 1, 5);
+    }
+
+    return (
     <div className="space-y-6">
       <div className="flex items-center gap-3 mb-6">
         <Button
@@ -314,9 +393,9 @@ const Index = () => {
 
       <IntelligentSuggestions
         userContext={{
-          mood: selectedMood,
-          stress: 3, // Valeur par défaut, pourrait venir du diagnostic
-          energy: 3, // Valeur par défaut, pourrait venir du diagnostic
+          mood: computedMood ?? selectedMood,
+          stress: computedStress ?? 3,
+          energy: computedEnergy ?? 3,
           diagnostic: savedDiagnostic // Diagnostic sauvegardé si dispo
         }}
         onSuggestionSelect={(suggestion) => {
@@ -325,7 +404,7 @@ const Index = () => {
         }}
       />
     </div>
-  );
+  ); };
 
   const renderDashboard = () => (
     <div className="space-y-6 animate-fadeIn pt-4">
@@ -404,6 +483,15 @@ const Index = () => {
           </div>
         </Button>
         <Button 
+          onClick={() => setCurrentView('appointments')}
+          className="h-16 bg-gradient-to-br from-green-500 to-emerald-600 hover:opacity-90 text-white rounded-2xl"
+        >
+          <div className="text-center">
+            <Calendar className="h-6 w-6 mx-auto mb-1" />
+            <div className="text-sm font-medium">Mes rendez-vous</div>
+          </div>
+        </Button>
+        <Button 
           onClick={() => navigate('/meditation-demo')}
           className="h-16 bg-gradient-to-br from-indigo-600 to-purple-600 hover:opacity-90 text-white rounded-2xl"
         >
@@ -427,24 +515,100 @@ const Index = () => {
         />
       </div>
 
-      <HealthSpecialistSuggestions
-        selectedMood={selectedMood}
-        diagnosticAnswers={diagnosticAnswers}
-        onBookAppointment={handleBookAppointment}
-        onViewProfile={handleViewProfile}
-      />
-
-      <div className="w-full">
-        <Button 
-          onClick={() => setCurrentView('professionals')}
-          className="w-full h-16 bg-gradient-to-br from-teal-400 to-blue-500 hover:opacity-90 text-white rounded-2xl"
-        >
-          <div className="text-center">
-            <UserCheck className="h-6 w-6 mx-auto mb-1" />
-            <div className="text-sm font-medium">Tous les spécialistes</div>
+      {/* Résumé du dernier auto-diagnostic */}
+      {savedDiagnostic && (
+        <Card className="p-4 bg-white/80">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="font-semibold">Votre état (auto‑diagnostic)</h3>
+            <Badge variant="secondary">{new Date(savedDiagnostic.completed_at ?? savedDiagnostic.updated_at ?? Date.now()).toLocaleString()}</Badge>
           </div>
-        </Button>
-      </div>
+          <div className="grid grid-cols-1 gap-3 text-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-gray-600">Stress</span>
+              <span className="font-medium">{savedDiagnostic.stress_level}/10</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-gray-600">Énergie</span>
+              <span className="font-medium">{savedDiagnostic.energy_level}/10</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-gray-600">Pression au travail</span>
+              <span className="font-medium text-right">{savedDiagnostic.work_pressure}</span>
+            </div>
+            {savedDiagnostic.answers?.sleep_quality && (
+              <div className="flex items-center justify-between">
+                <span className="text-gray-600">Sommeil</span>
+                <span className="font-medium text-right">{savedDiagnostic.answers.sleep_quality}</span>
+              </div>
+            )}
+            {savedDiagnostic.answers?.mood_emoji && (
+              <div className="flex items-center justify-between">
+                <span className="text-gray-600">Humeur</span>
+                <span className="font-medium text-right">{savedDiagnostic.answers.mood_emoji}</span>
+              </div>
+            )}
+          </div>
+        </Card>
+      )}
+
+      {(() => {
+  const hasAppointments = (appointments?.length ?? 0) > 0;
+        // Déterminer si résultats positifs: stress bas (<=2/5), humeur haute (>=4/5), énergie ok (>=3/5)
+        const computedStress = savedDiagnostic ? toFiveScale(Number(savedDiagnostic.stress_level) || 3) : undefined;
+        const computedEnergy = savedDiagnostic ? toFiveScale(Number(savedDiagnostic.energy_level) || 3) : undefined;
+        let computedMood = savedDiagnostic ? moodEmojiToScore(savedDiagnostic.answers?.mood_emoji) : undefined;
+        if (computedMood === undefined && computedStress !== undefined) {
+          computedMood = clamp(6 - computedStress, 1, 5);
+        }
+        // fallback à l'humeur choisie si pas de diagnostic sauvegardé
+        if (computedMood === undefined && selectedMood !== undefined) computedMood = selectedMood;
+
+        const isPositive = (computedStress !== undefined && computedEnergy !== undefined && computedMood !== undefined)
+          ? (computedStress <= 2 && computedMood >= 4 && computedEnergy >= 3)
+          : false; // si inconnu, on affiche par défaut
+  // Masquer aussi les praticiens si l'utilisateur n'a aucun rendez-vous
+  if (!hasAppointments) return null;
+  if (isPositive) return null;
+
+        return (
+          <HealthSpecialistSuggestions
+            selectedMood={selectedMood}
+            diagnosticAnswers={diagnosticAnswers}
+            onBookAppointment={handleBookAppointment}
+            onViewProfile={handleViewProfile}
+          />
+        );
+      })()}
+
+      {(() => {
+        // Masquer l'accès aux spécialistes si résultats positifs
+        const computedStress = savedDiagnostic ? toFiveScale(Number(savedDiagnostic.stress_level) || 3) : undefined;
+        const computedEnergy = savedDiagnostic ? toFiveScale(Number(savedDiagnostic.energy_level) || 3) : undefined;
+        let computedMood = savedDiagnostic ? moodEmojiToScore(savedDiagnostic.answers?.mood_emoji) : undefined;
+        if (computedMood === undefined && computedStress !== undefined) {
+          computedMood = clamp(6 - computedStress, 1, 5);
+        }
+        if (computedMood === undefined && selectedMood !== undefined) computedMood = selectedMood;
+        const isPositive = (computedStress !== undefined && computedEnergy !== undefined && computedMood !== undefined)
+          ? (computedStress <= 2 && computedMood >= 4 && computedEnergy >= 3)
+          : false;
+
+        if (isPositive) return null;
+
+        return (
+          <div className="w-full">
+            <Button 
+              onClick={() => setCurrentView('professionals')}
+              className="w-full h-16 bg-gradient-to-br from-teal-400 to-blue-500 hover:opacity-90 text-white rounded-2xl"
+            >
+              <div className="text-center">
+                <UserCheck className="h-6 w-6 mx-auto mb-1" />
+                <div className="text-sm font-medium">Tous les spécialistes</div>
+              </div>
+            </Button>
+          </div>
+        );
+      })()}
 
       <div>
         <div className="flex items-center justify-between mb-4">
@@ -462,6 +626,23 @@ const Index = () => {
           ))}
         </div>
       </div>
+    </div>
+  );
+
+  const renderAppointments = () => (
+    <div className="space-y-4">
+      <div className="flex items-center space-x-2 mb-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setCurrentView('dashboard')}
+          className="p-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+        <h1 className="text-2xl font-bold text-gray-900">Mes rendez-vous</h1>
+      </div>
+      <AppointmentManagement onClose={() => setCurrentView('dashboard')} />
     </div>
   );
 
@@ -492,7 +673,8 @@ const Index = () => {
           console.error('Erreur sauvegarde diagnostic:', e);
           toast.error(e?.message || 'Erreur lors de la sauvegarde');
         } finally {
-          setCurrentView('dashboard');
+          // Aller voir les recommandations basées sur le diagnostic
+          setCurrentView('suggestions');
         }
       }
     };
@@ -593,19 +775,74 @@ const Index = () => {
     }
   }, [user]);
 
+  // Désactiver totalement l'accès à "Tous les spécialistes" si diagnostic positif
+  useEffect(() => {
+    const computedStress = savedDiagnostic ? toFiveScale(Number(savedDiagnostic.stress_level) || 3) : undefined;
+    const computedEnergy = savedDiagnostic ? toFiveScale(Number(savedDiagnostic.energy_level) || 3) : undefined;
+    let computedMood = savedDiagnostic ? moodEmojiToScore(savedDiagnostic.answers?.mood_emoji) : undefined;
+    if (computedMood === undefined && computedStress !== undefined) {
+      computedMood = clamp(6 - computedStress, 1, 5);
+    }
+    if (computedMood === undefined && selectedMood !== undefined) computedMood = selectedMood;
+    const isPositive = (computedStress !== undefined && computedEnergy !== undefined && computedMood !== undefined)
+      ? (computedStress <= 2 && computedMood >= 4 && computedEnergy >= 3)
+      : false;
+
+    if (isPositive && currentView === 'professionals') {
+      setCurrentView('dashboard');
+    }
+  }, [currentView, savedDiagnostic, selectedMood]);
+
   const renderProgress = () => (
     <div className="pt-4">
       <ProgressPage onBack={() => setCurrentView('dashboard')} />
     </div>
   );
 
-  const renderProfessionals = () => (
-    <HealthProfessionalsList
-      onBack={() => setCurrentView('dashboard')}
-      onBookAppointment={handleBookAppointment}
-      onViewProfile={handleViewProfile}
-    />
-  );
+  const renderProfessionals = () => {
+    // Masquer la page "Tous les spécialistes" si résultats positifs
+    const computedStress = savedDiagnostic ? toFiveScale(Number(savedDiagnostic.stress_level) || 3) : undefined;
+    const computedEnergy = savedDiagnostic ? toFiveScale(Number(savedDiagnostic.energy_level) || 3) : undefined;
+    let computedMood = savedDiagnostic ? moodEmojiToScore(savedDiagnostic.answers?.mood_emoji) : undefined;
+    if (computedMood === undefined && computedStress !== undefined) {
+      computedMood = clamp(6 - computedStress, 1, 5);
+    }
+    if (computedMood === undefined && selectedMood !== undefined) computedMood = selectedMood;
+    const isPositive = (computedStress !== undefined && computedEnergy !== undefined && computedMood !== undefined)
+      ? (computedStress <= 2 && computedMood >= 4 && computedEnergy >= 3)
+      : false;
+
+    if (isPositive) {
+      return (
+        <div className="space-y-6 animate-fadeIn">
+          <div className="flex items-center justify-between">
+            <Button 
+              variant="ghost" 
+              onClick={() => setCurrentView('dashboard')}
+              className="flex items-center space-x-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span>Retour</span>
+            </Button>
+            <h1 className="text-2xl font-bold">Spécialistes de santé</h1>
+            <div></div>
+          </div>
+          <Card className="p-6 bg-white/80 text-center">
+            <h2 className="text-lg font-semibold mb-2">Pas nécessaire pour le moment</h2>
+            <p className="text-gray-600">Vos derniers résultats sont positifs. Aucun spécialiste n'est affiché.</p>
+          </Card>
+        </div>
+      );
+    }
+
+    return (
+      <HealthProfessionalsList
+        onBack={() => setCurrentView('dashboard')}
+        onBookAppointment={handleBookAppointment}
+        onViewProfile={handleViewProfile}
+      />
+    );
+  };
 
   const renderSpecialistProfile = () => (
     <SpecialistProfile
@@ -715,6 +952,7 @@ const Index = () => {
           {currentView === 'professionals' && renderProfessionals()}
           {currentView === 'specialist-profile' && renderSpecialistProfile()}
           {currentView === 'booking' && renderBooking()}
+          {currentView === 'appointments' && renderAppointments()}
           {currentView === 'meditation' && renderMeditation()}
           {currentView === 'breathing' && renderBreathing()}
           {currentView === 'sleep-routine' && renderSleepRoutine()}

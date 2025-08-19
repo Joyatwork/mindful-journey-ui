@@ -84,7 +84,7 @@ export const useAppointments = () => {
   });
 
   return {
-    appointments: appointmentsQuery.data || [],
+  appointments: (appointmentsQuery.data as any)?.data ?? appointmentsQuery.data ?? [],
     isLoading: appointmentsQuery.isLoading,
     error: appointmentsQuery.error,
     createAppointment: createAppointmentMutation.mutate,
@@ -104,7 +104,7 @@ export const useSpecialists = (filters?: any) => {
   });
 
   return {
-    specialists: specialistsQuery.data || [],
+  specialists: (specialistsQuery.data as any)?.data ?? specialistsQuery.data ?? [],
     isLoading: specialistsQuery.isLoading,
     error: specialistsQuery.error,
     refetch: specialistsQuery.refetch,

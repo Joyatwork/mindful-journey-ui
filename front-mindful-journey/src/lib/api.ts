@@ -201,7 +201,8 @@ export const apiService = {
   specialists: {
     getAll: (filters?: any) => {
       const queryParams = filters ? new URLSearchParams(filters).toString() : '';
-      return apiRequest(`/specialists${queryParams ? `?${queryParams}` : ''}`);
+      // Utiliser l'endpoint public pour la liste afin d'éviter une 401 si non connecté
+      return apiRequest(`/specialists/public${queryParams ? `?${queryParams}` : ''}`);
     },
     
     getById: (id: string) => apiRequest(`/specialists/${id}`),

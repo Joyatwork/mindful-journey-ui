@@ -181,9 +181,19 @@ class RecommendationController extends Controller
         $practitioners = [];
         $stress = $context['stress'];
         $mood = $context['mood'];
+        $energy = $context['energy'];
 
-        if ($stress >= 4 || $mood <= 2) {
+        // Ne proposer des praticiens que si les résultats sont "négatifs"
+        // Définition simple: stress élevé OU humeur basse OU énergie basse
+        // À l'inverse, si stress faible ET bonne humeur ET énergie correcte, on ne propose pas de praticien
+        $isPositive = ($stress <= 2) && ($mood >= 4) && ($energy >= 3);
+        if ($isPositive) {
+            return [];
+        }
+
+    if ($stress >= 4 || $mood <= 2) {
             $practitioners[] = [
+        'id' => 'psy-1',
                 'type' => 'psychologist',
                 'name' => 'Dr. Sarah Martin',
                 'specialty' => 'Thérapie cognitivo-comportementale',
@@ -191,6 +201,7 @@ class RecommendationController extends Controller
                 'experience' => '12 ans',
                 'availability' => 'Disponible cette semaine',
                 'price' => 80,
+        'consultationType' => 'both',
                 'reason' => 'Recommandé pour la gestion du stress et de l\'anxiété',
                 'urgency' => $stress >= 4 ? 'high' : 'medium',
                 'icon' => '👩‍⚕️',
@@ -200,6 +211,7 @@ class RecommendationController extends Controller
 
         if ($mood <= 2) {
             $practitioners[] = [
+        'id' => 'psychiatrist-1',
                 'type' => 'psychiatrist',
                 'name' => 'Dr. Michel Dubois',
                 'specialty' => 'Psychiatrie et troubles de l\'humeur',
@@ -207,6 +219,7 @@ class RecommendationController extends Controller
                 'experience' => '15 ans',
                 'availability' => 'Disponible demain',
                 'price' => 120,
+        'consultationType' => 'video',
                 'reason' => 'Spécialiste des troubles de l\'humeur et dépression',
                 'urgency' => 'high',
                 'icon' => '👨‍⚕️',
@@ -214,15 +227,17 @@ class RecommendationController extends Controller
             ];
         }
 
-        if ($context['energy'] <= 2) {
+    if ($energy <= 2) {
             $practitioners[] = [
+                'id' => 'coach-1',
                 'type' => 'wellness_coach',
                 'name' => 'Emma Thompson',
                 'specialty' => 'Coach en bien-être et énergie',
                 'rating' => 4.7,
                 'experience' => '8 ans',
                 'availability' => 'Disponible aujourd\'hui',
-                'price' => 60,
+        'price' => 60,
+                'consultationType' => 'both',
                 'reason' => 'Expertise en gestion de l\'énergie et motivation',
                 'urgency' => 'medium',
                 'icon' => '💪',

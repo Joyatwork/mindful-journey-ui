@@ -1,11 +1,12 @@
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useSpecialists } from '@/hooks/useApi';
 import { 
   Search,
   Filter,
@@ -47,108 +48,35 @@ const HealthProfessionalsList = ({
   const [selectedSpecialty, setSelectedSpecialty] = useState('all');
   const [selectedConsultationType, setSelectedConsultationType] = useState('all');
   const [sortBy, setSortBy] = useState<'rating' | 'price' | 'experience'>('rating');
+  // Récupération depuis la base via l'API
+  const filters = {
+    search: searchTerm || undefined,
+    specialty: selectedSpecialty !== 'all' ? selectedSpecialty : undefined,
+    consultationType: selectedConsultationType !== 'all' ? selectedConsultationType : undefined,
+  } as const;
 
-  const allProfessionals: HealthProfessional[] = [
-    {
-      id: '1',
-      name: 'Dr. Marie Dubois',
-      specialty: 'Psychologue clinicienne',
-      rating: 4.9,
-      experience: '12 ans',
-      price: '80€',
-      availability: 'Disponible cette semaine',
-      consultationType: 'both',
-      description: 'Spécialisée dans la gestion du stress et de l\'anxiété',
-      location: 'Paris 8ème'
-    },
-    {
-      id: '2',
-      name: 'Dr. Pierre Martin',
-      specialty: 'Médecin généraliste',
-      rating: 4.7,
-      experience: '15 ans',
-      price: '50€',
-      availability: 'Disponible demain',
-      consultationType: 'both',
-      description: 'Expert en médecine préventive et troubles du sommeil',
-      location: 'Lyon 2ème'
-    },
-    {
-      id: '3',
-      name: 'Dr. Sophie Laurent',
-      specialty: 'Psychiatre',
-      rating: 4.8,
-      experience: '10 ans',
-      price: '120€',
-      availability: 'Disponible dans 3 jours',
-      consultationType: 'video',
-      description: 'Spécialisée en thérapies comportementales et cognitives',
-      location: 'Consultation en ligne'
-    },
-    {
-      id: '4',
-      name: 'Dr. Jean Moreau',
-      specialty: 'Coach bien-être',
-      rating: 4.6,
-      experience: '8 ans',
-      price: '60€',
-      availability: 'Disponible cette semaine',
-      consultationType: 'both',
-      description: 'Accompagnement personnalisé pour le développement personnel',
-      location: 'Marseille 1er'
-    },
-    {
-      id: '5',
-      name: 'Dr. Anne Rousseau',
-      specialty: 'Nutritionniste',
-      rating: 4.8,
-      experience: '11 ans',
-      price: '70€',
-      availability: 'Disponible lundi prochain',
-      consultationType: 'inPerson',
-      description: 'Spécialisée en nutrition thérapeutique et bien-être',
-      location: 'Toulouse Centre'
-    },
-    {
-      id: '6',
-      name: 'Dr. Marc Durand',
-      specialty: 'Thérapeute',
-      rating: 4.5,
-      experience: '9 ans',
-      price: '75€',
-      availability: 'Disponible cette semaine',
-      consultationType: 'video',
-      description: 'Thérapie individuelle et de couple, gestion des émotions',
-      location: 'Consultation en ligne'
-    }
-  ];
+  const { specialists, isLoading, error } = useSpecialists(filters);
 
-  const specialties = Array.from(new Set(allProfessionals.map(p => p.specialty)));
+  const specialties = useMemo(
+    () => Array.from(new Set((specialists as any[]).map((p: any) => p.specialty))).filter(Boolean),
+    [specialists]
+  );
 
-  const filteredProfessionals = allProfessionals
-    .filter(professional => {
-      const matchesSearch = professional.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           professional.specialty.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           professional.description.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesSpecialty = selectedSpecialty === 'all' || professional.specialty === selectedSpecialty;
-      const matchesConsultationType = selectedConsultationType === 'all' || 
-                                    professional.consultationType === selectedConsultationType ||
-                                    (selectedConsultationType === 'both' && professional.consultationType === 'both');
-      
-      return matchesSearch && matchesSpecialty && matchesConsultationType;
-    })
-    .sort((a, b) => {
+  const filteredProfessionals: HealthProfessional[] = useMemo(() => {
+    const list = (specialists as any[]) as HealthProfessional[];
+    return [...(list || [])].sort((a, b) => {
       switch (sortBy) {
         case 'rating':
-          return b.rating - a.rating;
+          return (b.rating || 0) - (a.rating || 0);
         case 'price':
-          return parseInt(a.price) - parseInt(b.price);
+          return parseInt((a.price || '0').toString()) - parseInt((b.price || '0').toString());
         case 'experience':
-          return parseInt(b.experience) - parseInt(a.experience);
+          return parseInt((b.experience || '0').toString()) - parseInt((a.experience || '0').toString());
         default:
           return 0;
       }
     });
+  }, [specialists, sortBy]);
 
   return (
     <div className="space-y-6 animate-fadeIn">
@@ -219,6 +147,18 @@ const HealthProfessionalsList = ({
         </div>
       </Card>
 
+      {/* Loading / Error */}
+      {isLoading && (
+        <Card className="p-4 glass-card border-0 shadow-lg">
+          <p>Chargement des spécialistes…</p>
+        </Card>
+      )}
+      {error && !isLoading && (
+        <Card className="p-4 glass-card border-0 shadow-lg">
+          <p className="text-red-500">Impossible de charger les spécialistes.</p>
+        </Card>
+      )}
+
       {/* Results */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
@@ -226,6 +166,12 @@ const HealthProfessionalsList = ({
             {filteredProfessionals.length} spécialiste{filteredProfessionals.length > 1 ? 's' : ''} trouvé{filteredProfessionals.length > 1 ? 's' : ''}
           </p>
         </div>
+
+        {!isLoading && filteredProfessionals.length === 0 && (
+          <Card className="p-6 glass-card border-0 shadow-lg">
+            <p className="text-muted-foreground">Aucun spécialiste trouvé dans la base.</p>
+          </Card>
+        )}
 
         {filteredProfessionals.map((professional) => (
           <Card 

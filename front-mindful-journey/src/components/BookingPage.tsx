@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { ArrowLeft, Calendar, Clock, Video, MapPin, Phone, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import apiService from '@/lib/api';
 
 interface HealthSpecialist {
   id: string;
@@ -29,37 +30,34 @@ const BookingPage = ({ specialist, onBack, onBookingConfirmed }: BookingPageProp
   const [notes, setNotes] = useState('');
   const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    const newBooking = {
-      id: Date.now().toString(),
-      specialistName: specialist?.name || '',
-      specialty: specialist?.specialty || '',
-      date: selectedDate,
-      time: selectedTime,
-      type: consultationType as 'video' | 'inPerson' | 'phone',
-      status: 'confirmed' as const,
-      price: specialist?.price || '',
-      notes
-    };
+    if (!specialist) return;
 
-    // Sauvegarder dans localStorage
-    const existingBookings = JSON.parse(localStorage.getItem('userBookings') || '[]');
-    const updatedBookings = [...existingBookings, newBooking];
-    localStorage.setItem('userBookings', JSON.stringify(updatedBookings));
+    try {
+      await apiService.appointments.create({
+        specialistId: specialist.id,
+        date: selectedDate,
+        time: selectedTime,
+        type: consultationType,
+        notes,
+      });
 
-    // Appeler la callback si fournie
-    if (onBookingConfirmed) {
-      onBookingConfirmed(newBooking);
+      toast({
+        title: 'Réservation confirmée',
+        description: `Votre rendez-vous avec ${specialist?.name} est confirmé pour le ${new Date(selectedDate).toLocaleDateString()} à ${selectedTime}.`,
+      });
+
+      if (onBookingConfirmed) {
+        onBookingConfirmed({ specialistId: specialist.id, date: selectedDate, time: selectedTime });
+      }
+      onBack();
+    } catch (err: any) {
+      toast({
+        title: 'Impossible de réserver',
+        description: err?.message || "Conflit d'horaire ou erreur serveur.",
+      });
     }
-
-    toast({
-      title: "Réservation confirmée",
-      description: `Votre rendez-vous avec ${specialist?.name} est confirmé pour le ${new Date(selectedDate).toLocaleDateString()} à ${selectedTime}.`,
-    });
-
-    onBack();
   };
 
   const availableTimes = [
