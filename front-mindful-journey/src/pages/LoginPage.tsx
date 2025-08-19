@@ -8,10 +8,11 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { Heart, Shield, User, Mail } from 'lucide-react';
-import { Toaster, toast } from "react-hot-toast";
+import { useToast } from "@/hooks/use-toast";
 
 const LoginPage = () => {
   const { login, register, loginWithGoogle, isAuthenticated, isLoading } = useAuth();
+  const { toast } = useToast();
   const location = useLocation();
   const from = location.state?.from?.pathname || '/';
 
@@ -65,7 +66,7 @@ const LoginPage = () => {
           }
         }
       }
-      toast.error(msg);
+  toast({ title: msg, variant: "destructive" });
       console.error('error', error);
     } finally {
       setLoading(false);
@@ -152,31 +153,6 @@ const LoginPage = () => {
             </TabsList>
             <TabsContent value="login" className="space-y-4">
               <form onSubmit={handleLogin} className="space-y-4">
-                <Toaster position="top-center"
-                  toastOptions={{
-                    style: {
-                      padding: '12px 12px',
-                      fontSize: '16px',
-                      borderRadius: '12px',
-                      background: '#333',
-                      color: '#fff',
-                      margin: 'auto',
-                    },
-                    success: {
-                      iconTheme: {
-                        primary: 'green',
-                        secondary: 'white',
-                      },
-                    },
-                    error: {
-                      iconTheme: {
-                        primary: 'red',
-                        secondary: 'white',
-                      },
-                    },
-                  }
-                  }
-                  reverseOrder={false} />
                 <div className="space-y-2">
                   <Label htmlFor="login-email">Email</Label>
                   <Input

@@ -79,6 +79,12 @@ const AppointmentManagement = ({ onClose }: AppointmentManagementProps) => {
       title: "Rendez-vous annulé",
       description: "Votre rendez-vous a été annulé avec succès.",
     });
+    window.dispatchEvent(new CustomEvent('bellNotification', {
+      detail: {
+        title: 'Rendez-vous annulé',
+        description: 'Votre rendez-vous a été annulé.'
+      }
+    }));
   };
 
   const handleDeleteAppointment = (appointmentId: string) => {
@@ -89,6 +95,12 @@ const AppointmentManagement = ({ onClose }: AppointmentManagementProps) => {
       title: "Rendez-vous supprimé",
       description: "Le rendez-vous a été supprimé définitivement.",
     });
+    window.dispatchEvent(new CustomEvent('bellNotification', {
+      detail: {
+        title: 'Rendez-vous supprimé',
+        description: 'Le rendez-vous a été supprimé.'
+      }
+    }));
   };
 
   const handleEditAppointment = (appointment: Appointment) => {
@@ -113,6 +125,12 @@ const AppointmentManagement = ({ onClose }: AppointmentManagementProps) => {
       title: "Rendez-vous modifié",
       description: "Votre rendez-vous a été modifié avec succès.",
     });
+    window.dispatchEvent(new CustomEvent('bellNotification', {
+      detail: {
+        title: 'Rendez-vous modifié',
+        description: `Nouveau créneau: ${new Date(updatedAppointment.date).toLocaleDateString()} ${updatedAppointment.time}`
+      }
+    }));
   };
 
   const availableTimes = [

@@ -3,6 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import testApiService from '@/lib/test-api';
 import apiService from '@/lib/api';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
@@ -23,7 +31,7 @@ import BreathingContent from '@/components/BreathingContent';
 import SleepRoutineContent from '@/components/SleepRoutineContent';
 import IntelligentSuggestions from '@/components/IntelligentSuggestions';
 import AppointmentManagement from '@/components/AppointmentManagement';
-import { Toaster, toast } from "react-hot-toast";
+import { useToast } from "@/hooks/use-toast";
 import { useAppointments } from '@/hooks/useApi';
 import { 
   Heart, 
@@ -53,13 +61,70 @@ const Index = () => {
   const [challengeFilters, setChallengeFilters] = useState<string[]>([]);
   const [diagnosticStep, setDiagnosticStep] = useState(1);
   const [diagnosticAnswers, setDiagnosticAnswers] = useState<Record<string, any>>({});
+  const { toast } = useToast();
+  type NotificationItem = {
+    id: string;
+    title: string;
+    description?: string;
+    createdAt: string; // ISO string
+    read?: boolean;
+  };
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const notifStorageKey = React.useMemo(() => (user?.id ? `notifications:${user.id}` : null), [user?.id]);
+  const unreadCount = notifications.filter(n => !n.read).length;
+
+  const addNotification = (n: Omit<NotificationItem, 'id' | 'createdAt'>) => {
+    const item: NotificationItem = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      createdAt: new Date().toISOString(),
+      read: false,
+      ...n,
+    };
+    setNotifications(prev => [item, ...prev]);
+  };
+
+  const markAllAsRead = () => setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  const clearNotifications = () => setNotifications([]);
+
+  // Écouter les notifications envoyées depuis d'autres composants (ex: annulation/modification)
+  useEffect(() => {
+    const onBellNotify = (e: Event) => {
+      const anyEvt = e as CustomEvent;
+      const d = anyEvt?.detail as Partial<NotificationItem> | undefined;
+      if (d && d.title) {
+        addNotification({ title: d.title, description: d.description });
+      }
+    };
+    window.addEventListener('bellNotification', onBellNotify as EventListener);
+    return () => window.removeEventListener('bellNotification', onBellNotify as EventListener);
+  }, []);
+
+  // Charger les notifications persistées à la connexion / changement d'utilisateur
+  useEffect(() => {
+    if (!notifStorageKey) return;
+    try {
+      const raw = localStorage.getItem(notifStorageKey);
+      if (raw) {
+        const parsed = JSON.parse(raw) as NotificationItem[];
+        if (Array.isArray(parsed)) setNotifications(parsed);
+      }
+    } catch {}
+  }, [notifStorageKey]);
+
+  // Sauvegarder à chaque modification
+  useEffect(() => {
+    if (!notifStorageKey) return;
+    try {
+      localStorage.setItem(notifStorageKey, JSON.stringify(notifications));
+    } catch {}
+  }, [notifications, notifStorageKey]);
   const [savedDiagnostic, setSavedDiagnostic] = useState<any>(null);
   const [selectedSpecialist, setSelectedSpecialist] = useState<any>(null);
 
   const handleLogout = async () => {
     try {
       await logout();
-      toast.success("Déconnexion réussie !");
+  toast({ title: "Déconnexion réussie" });
     } catch (error) {
       console.error('Erreur lors de la déconnexion:', error);
     }
@@ -208,10 +273,9 @@ const Index = () => {
   
   useEffect(() => {
     if (user) {
-      toast.success(`Bienvenue ${user.name} ! Comment vas-tu aujourd'hui ?`);
+      toast({ title: `Bienvenue ${user.name} !`, description: "Comment vas-tu aujourd'hui ?" });
     }
-  }
-), [user];
+  }, [user]);
 
   // Charger le diagnostic sauvegardé pour le réutiliser dans les suggestions
   useEffect(() => {
@@ -290,7 +354,7 @@ const Index = () => {
       return id;
     } catch (e) {
       console.error('Impossible de récupérer un défi:', e);
-      toast.error("Aucun défi disponible");
+  toast({ title: "Aucun défi disponible", variant: "destructive" });
       return null;
     }
   };
@@ -303,7 +367,7 @@ const Index = () => {
           if (!id) return;
           try {
             const r = await testApiService.challenges.start(id);
-            toast.success('Défi démarré');
+            toast({ title: 'Défi démarré' });
             await loadChallenges();
           } catch (e:any) {
             // si déjà démarré, continuer silencieusement
@@ -319,7 +383,7 @@ const Index = () => {
           if (!id) return;
           try {
             const r = await testApiService.challenges.start(id);
-            toast.success('Défi démarré');
+            toast({ title: 'Défi démarré' });
             await loadChallenges();
           } catch (e:any) {
             console.log('Start défi:', e?.message || e);
@@ -334,7 +398,7 @@ const Index = () => {
           if (!id) return;
           try {
             const r = await testApiService.challenges.start(id);
-            toast.success('Défi démarré');
+            toast({ title: 'Défi démarré' });
             await loadChallenges();
           } catch (e:any) {
             console.log('Start défi:', e?.message || e);
@@ -354,7 +418,7 @@ const Index = () => {
   if (!challengeId) return;
     try {
       await testApiService.challenges.finish(challengeId);
-      toast.success('Défi enregistré dans la base !');
+  toast({ title: 'Défi enregistré dans la base' });
       // Recharger la liste des défis pour mettre à jour les statuts
       try {
   await loadChallenges();
@@ -363,7 +427,7 @@ const Index = () => {
       }
     } catch (err: any) {
       const msg = err?.message || "Erreur lors de l'enregistrement du défi";
-      toast.error(msg);
+  toast({ title: msg, variant: 'destructive' });
       console.error(err);
     }
   };
@@ -416,9 +480,42 @@ const Index = () => {
               <p className="text-white/90">Comment vous sentez-vous aujourd'hui ?</p>
             </div>
             <div className="flex space-x-2">
-              <Button variant="ghost" size="icon" className="text-white hover:bg-white/20">
-                <Bell className="h-5 w-5" />
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="text-white hover:bg-white/20 relative">
+                    <Bell className="h-5 w-5" />
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-4 h-4 flex items-center justify-center px-[3px] shadow">
+                        {unreadCount}
+                      </span>
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-80">
+                  <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {notifications.length === 0 ? (
+                    <div className="p-3 text-sm text-gray-500">Aucune notification</div>
+                  ) : (
+                    notifications.map((n) => (
+                      <DropdownMenuItem key={n.id} className="flex flex-col items-start whitespace-normal h-auto py-2">
+                        <div className="flex w-full justify-between">
+                          <span className={`font-medium ${n.read ? 'text-gray-600' : ''}`}>{n.title}</span>
+                          <span className="text-xs text-gray-400">{new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                        </div>
+                        {n.description && (
+                          <span className="text-sm text-gray-600">{n.description}</span>
+                        )}
+                      </DropdownMenuItem>
+                    ))
+                  )}
+                  <DropdownMenuSeparator />
+                  <div className="flex justify-between px-2 py-1">
+                    <Button variant="ghost" size="sm" onClick={markAllAsRead}>Tout marquer comme lu</Button>
+                    <Button variant="ghost" size="sm" onClick={clearNotifications}>Vider</Button>
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Button variant="ghost" size="icon" className="text-white hover:bg-white/20">
                 <Settings className="h-5 w-5" />
               </Button>
@@ -491,15 +588,7 @@ const Index = () => {
             <div className="text-sm font-medium">Mes rendez-vous</div>
           </div>
         </Button>
-        <Button 
-          onClick={() => navigate('/meditation-demo')}
-          className="h-16 bg-gradient-to-br from-indigo-600 to-purple-600 hover:opacity-90 text-white rounded-2xl"
-        >
-          <div className="text-center">
-            <Brain className="h-6 w-6 mx-auto mb-1" />
-            <div className="text-sm font-medium">Démo Méditation (TTS/MP3)</div>
-          </div>
-        </Button>
+  {/* Bouton Démo Méditation retiré */}
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -668,10 +757,10 @@ const Index = () => {
             const res = await apiService.diagnostic.get();
             setSavedDiagnostic(res?.data ?? null);
           } catch (_) {}
-          toast.success('Diagnostic sauvegardé');
+          toast({ title: 'Diagnostic sauvegardé' });
         } catch (e: any) {
           console.error('Erreur sauvegarde diagnostic:', e);
-          toast.error(e?.message || 'Erreur lors de la sauvegarde');
+          toast({ title: e?.message || 'Erreur lors de la sauvegarde', variant: 'destructive' });
         } finally {
           // Aller voir les recommandations basées sur le diagnostic
           setCurrentView('suggestions');
@@ -856,6 +945,12 @@ const Index = () => {
     <BookingPage
       specialist={selectedSpecialist}
       onBack={() => setCurrentView('dashboard')}
+      onBookingConfirmed={(b) => {
+        addNotification({
+          title: 'Rendez-vous confirmé',
+          description: `${selectedSpecialist?.name ?? 'Spécialiste'} — ${b?.date} à ${b?.time}`,
+        });
+      }}
     />
   );
 
@@ -937,8 +1032,6 @@ const Index = () => {
             onClick={handleLogout}  
             className="text-gray-400 hover:text-red-600 hover:bg-red-50 bg-white/70 backdrop-blur-sm"
             title="Se déconnecter">
-            <Toaster position="top-center"
-            reverseOrder={false} />
             <LogOut className="h-4 w-4" />
           </Button>
         </div>
