@@ -11,11 +11,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            
-              $table->unsignedBigInteger('role_id')->nullable()->after('id');
-        $table->foreign('role_id')->references('id')->on('roles');
-        });
+        // Add column if missing
+        if (!Schema::hasColumn('users', 'role_id')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->unsignedBigInteger('role_id')->nullable()->after('id');
+            });
+        }
+
+        // Attach FK only if roles table already exists (MySQL order-safe)
+        if (Schema::hasTable('roles')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->foreign('role_id')->references('id')->on('roles');
+            });
+        }
     }
 
     /**
@@ -24,7 +32,11 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            //
+            if (Schema::hasColumn('users', 'role_id')) {
+                // Drop FK if exists then column
+                try { $table->dropForeign(['role_id']); } catch (\Throwable $e) {}
+                $table->dropColumn('role_id');
+            }
         });
     }
 };
