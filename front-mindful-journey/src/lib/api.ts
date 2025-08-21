@@ -110,8 +110,11 @@ async function apiRequest(endpoint: string, options: RequestInit = {}) {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('❌ Error response:', errorText);
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      let errorData: any = null;
+      try { errorData = JSON.parse(errorText); } catch {}
+      console.error('❌ Error response:', errorData ?? errorText);
+      const message = (errorData && (errorData.message || errorData.error)) || `HTTP ${response.status}: ${response.statusText}`;
+      throw new ApiError(message, response.status, errorData ?? errorText);
     }
 
     const data = await response.json();

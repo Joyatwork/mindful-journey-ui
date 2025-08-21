@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Specialist;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -178,74 +179,80 @@ class RecommendationController extends Controller
      */
     private function generatePractitionerRecommendations(array $context): array
     {
-        $practitioners = [];
         $stress = $context['stress'];
         $mood = $context['mood'];
         $energy = $context['energy'];
 
-        // Ne proposer des praticiens que si les résultats sont "négatifs"
-        // Définition simple: stress élevé OU humeur basse OU énergie basse
-        // À l'inverse, si stress faible ET bonne humeur ET énergie correcte, on ne propose pas de praticien
+        // Ne proposer des praticiens que si les résultats sont « positifs » = faux
         $isPositive = ($stress <= 2) && ($mood >= 4) && ($energy >= 3);
         if ($isPositive) {
             return [];
         }
 
-    if ($stress >= 4 || $mood <= 2) {
-            $practitioners[] = [
-        'id' => 'psy-1',
-                'type' => 'psychologist',
-                'name' => 'Dr. Sarah Martin',
-                'specialty' => 'Thérapie cognitivo-comportementale',
-                'rating' => 4.9,
-                'experience' => '12 ans',
-                'availability' => 'Disponible cette semaine',
-                'price' => 80,
-        'consultationType' => 'both',
-                'reason' => 'Recommandé pour la gestion du stress et de l\'anxiété',
-                'urgency' => $stress >= 4 ? 'high' : 'medium',
-                'icon' => '👩‍⚕️',
-                'score' => 90
-            ];
+        // Construire une requête vers la table specialists pour retourner de VRAIS IDs
+        $query = Specialist::query();
+
+        // Filtrage simple selon le contexte
+        if ($stress >= 4 || $mood <= 2) {
+            $query->where(function ($q) {
+                $q->where('specialty', 'like', '%Psychologue%')
+                  ->orWhere('specialty', 'like', '%Psychiatre%');
+            });
+        } elseif ($energy <= 2) {
+            $query->where(function ($q) {
+                $q->where('specialty', 'like', '%généraliste%')
+                  ->orWhere('specialty', 'like', '%Généraliste%');
+            });
         }
 
-        if ($mood <= 2) {
-            $practitioners[] = [
-        'id' => 'psychiatrist-1',
-                'type' => 'psychiatrist',
-                'name' => 'Dr. Michel Dubois',
-                'specialty' => 'Psychiatrie et troubles de l\'humeur',
-                'rating' => 4.8,
-                'experience' => '15 ans',
-                'availability' => 'Disponible demain',
-                'price' => 120,
-        'consultationType' => 'video',
-                'reason' => 'Spécialiste des troubles de l\'humeur et dépression',
-                'urgency' => 'high',
-                'icon' => '👨‍⚕️',
-                'score' => 95
-            ];
+        $list = $query->orderBy('rating', 'desc')->take(3)->get();
+
+        // Fallback: si aucun résultat filtré, prendre les mieux notés
+        if ($list->isEmpty()) {
+            $list = Specialist::query()->orderBy('rating', 'desc')->take(3)->get();
         }
 
-    if ($energy <= 2) {
-            $practitioners[] = [
-                'id' => 'coach-1',
-                'type' => 'wellness_coach',
-                'name' => 'Emma Thompson',
-                'specialty' => 'Coach en bien-être et énergie',
-                'rating' => 4.7,
-                'experience' => '8 ans',
-                'availability' => 'Disponible aujourd\'hui',
-        'price' => 60,
-                'consultationType' => 'both',
-                'reason' => 'Expertise en gestion de l\'énergie et motivation',
-                'urgency' => 'medium',
-                'icon' => '💪',
-                'score' => 75
+        $urgency = ($stress >= 4 || $mood <= 2) ? 'high' : (($energy <= 2) ? 'medium' : 'low');
+
+        $practitioners = $list->map(function (Specialist $s) use ($context, $urgency) {
+            return [
+                'id' => (string) $s->id,
+                'type' => 'specialist',
+                'name' => $s->name,
+                'specialty' => $s->specialty,
+                'rating' => (float) $s->rating,
+                'experience' => $s->experience_years . ' ans',
+                'availability' => $s->availability,
+                // Prix en euros (nombre) – l'UI accepte string|number
+                'price' => intval($s->price_cents / 100),
+                'consultationType' => $s->consultation_type,
+                'reason' => $this->buildPractitionerReason($s, $context),
+                'urgency' => $urgency,
+                'icon' => '�‍⚕️',
+                // Score simple basé sur la note
+                'score' => min(100, intval(($s->rating / 5) * 100)),
             ];
-        }
+        })->values()->all();
 
         return array_slice($practitioners, 0, 2); // Maximum 2 praticiens
+    }
+
+    private function buildPractitionerReason(Specialist $s, array $context): string
+    {
+        $parts = [];
+        $spec = mb_strtolower($s->specialty);
+        if (str_contains($spec, 'psychologue') || str_contains($spec, 'psychiatre')) {
+            if (($context['stress'] ?? 0) >= 4) $parts[] = 'gestion du stress';
+            if (($context['mood'] ?? 3) <= 2) $parts[] = 'troubles de l’humeur';
+        } elseif (str_contains($spec, 'généraliste')) {
+            if (($context['energy'] ?? 3) <= 2) $parts[] = 'fatigue/énergie';
+            if (($context['stress'] ?? 0) >= 3) $parts[] = 'sommeil/stress';
+        }
+
+        if (empty($parts)) {
+            return 'Recommandé selon votre profil récent';
+        }
+        return 'Recommandé pour: ' . implode(', ', $parts);
     }
 
     /**

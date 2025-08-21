@@ -61,6 +61,7 @@ const Index = () => {
   const [challengeFilters, setChallengeFilters] = useState<string[]>([]);
   const [diagnosticStep, setDiagnosticStep] = useState(1);
   const [diagnosticAnswers, setDiagnosticAnswers] = useState<Record<string, any>>({});
+  const [showPostDiagnosticSuggestions, setShowPostDiagnosticSuggestions] = useState(false);
   const { toast } = useToast();
   type NotificationItem = {
     id: string;
@@ -221,6 +222,53 @@ const Index = () => {
       contentType: "sleep"
     }
   ];
+
+  // Lancer une action depuis les suggestions personnalisées
+  const handleSuggestionAction = async (s: any) => {
+    const rawType = (s?.type || s?.category || '').toString().toLowerCase();
+    const title = (s?.title || '').toString();
+    const titleLc = title.toLowerCase();
+
+    // Navigation vers contenus dédiés
+    if (rawType.includes('breath') || titleLc.includes('respir')) {
+      setCurrentView('breathing');
+      toast({ title: 'Exercice de respiration démarré' });
+      return;
+    }
+    if (rawType.includes('medit') || titleLc.includes('méditation') || titleLc.includes('meditation') || rawType.includes('mindfulness')) {
+      setCurrentView('meditation');
+      toast({ title: 'Méditation démarrée' });
+      return;
+    }
+    if (rawType.includes('sleep') || titleLc.includes('sommeil')) {
+      setCurrentView('sleep-routine');
+      toast({ title: 'Routine sommeil ouverte' });
+      return;
+    }
+
+    // Micro-mouvements / étirements rapides → enregistrer une petite activité
+    if (
+      rawType.includes('move') || rawType.includes('mouvement') ||
+      titleLc.includes('micro') || titleLc.includes('mouvement') || titleLc.includes('étirement') || titleLc.includes('etirement')
+    ) {
+      try {
+        await apiService.wellness.logActivity({
+          activity_id: 999, // identifiant générique pour action rapide
+          duration: 2,      // minutes
+          completion_rate: 100,
+          notes: `Action immédiate: ${title}`,
+        });
+        toast({ title: 'Activité enregistrée', description: title || 'Micro‑mouvement' });
+        window.dispatchEvent(new CustomEvent('bellNotification', { detail: { title: 'Activité complétée', description: title || 'Micro‑mouvement' } }));
+      } catch (_) {
+        toast({ title: 'Action lancée', description: title || 'Micro‑mouvement' });
+      }
+      return;
+    }
+
+    // Par défaut: simple confirmation
+    toast({ title: 'Action lancée', description: title || 'Suggestion' });
+  };
 
   const diagnosticQuestions = [
     {
@@ -457,21 +505,48 @@ const Index = () => {
 
       <IntelligentSuggestions
         userContext={{
-          mood: computedMood ?? selectedMood,
+          mood: selectedMood ?? computedMood,
           stress: computedStress ?? 3,
           energy: computedEnergy ?? 3,
           diagnostic: savedDiagnostic // Diagnostic sauvegardé si dispo
         }}
-        onSuggestionSelect={(suggestion) => {
-          console.log('Suggestion selected:', suggestion);
-          // Ici on pourrait naviguer vers l'action suggérée
-        }}
+        onSuggestionSelect={handleSuggestionAction}
       />
     </div>
   ); };
 
   const renderDashboard = () => (
     <div className="space-y-6 animate-fadeIn pt-4">
+      {(() => {
+        // Contexte pour les suggestions basées sur le dernier diagnostic
+        const computedStress = savedDiagnostic ? toFiveScale(Number(savedDiagnostic.stress_level) || 3) : undefined;
+        const computedEnergy = savedDiagnostic ? toFiveScale(Number(savedDiagnostic.energy_level) || 3) : undefined;
+        let computedMood = savedDiagnostic ? moodEmojiToScore(savedDiagnostic.answers?.mood_emoji) : undefined;
+        if (computedMood === undefined && computedStress !== undefined) {
+          computedMood = clamp(6 - computedStress, 1, 5);
+        }
+
+        return (
+          showPostDiagnosticSuggestions && (
+            <div className="rounded-2xl border bg-white/80 p-4">
+              <div className="flex items-center justify-between mb-2">
+                <h2 className="text-lg font-semibold">Actions recommandées pour vous</h2>
+                <Button variant="ghost" size="sm" onClick={() => setShowPostDiagnosticSuggestions(false)}>Masquer</Button>
+              </div>
+              <IntelligentSuggestions
+                userContext={{
+                  mood: selectedMood ?? computedMood,
+                  stress: computedStress ?? 3,
+                  energy: computedEnergy ?? 3,
+                  diagnostic: savedDiagnostic,
+                }}
+                onSuggestionSelect={handleSuggestionAction}
+              />
+            </div>
+          )
+        );
+      })()}
+
       <div className="bg-wellness-gradient rounded-3xl p-6 text-white relative overflow-hidden">
         <div className="relative z-10">
           <div className="flex items-center justify-between mb-4">
@@ -755,14 +830,43 @@ const Index = () => {
           // Recharger le diagnostic sauvegardé
           try {
             const res = await apiService.diagnostic.get();
-            setSavedDiagnostic(res?.data ?? null);
+            const sd = res?.data ?? null;
+            setSavedDiagnostic(sd);
+            // Décider de la redirection selon le résultat
+            const computedStress = sd ? toFiveScale(Number(sd.stress_level) || 3) : undefined;
+            const computedEnergy = sd ? toFiveScale(Number(sd.energy_level) || 3) : undefined;
+            let computedMood = sd ? moodEmojiToScore(sd.answers?.mood_emoji) : undefined;
+            if (computedMood === undefined && computedStress !== undefined) {
+              computedMood = clamp(6 - computedStress, 1, 5);
+            }
+            const isPositive = (computedStress !== undefined && computedEnergy !== undefined && computedMood !== undefined)
+              ? (computedStress <= 2 && computedMood >= 4 && computedEnergy >= 3)
+              : false;
+            // Rediriger vers la page "Suggestions" dans tous les cas
+            setShowPostDiagnosticSuggestions(false);
+            setCurrentView('suggestions');
+            toast({ title: 'Diagnostic sauvegardé', description: 'Voici vos suggestions personnalisées.' });
           } catch (_) {}
-          toast({ title: 'Diagnostic sauvegardé' });
+          if (!savedDiagnostic) {
+            // Fallback: si on n'a pas pu recharger, décider avec les réponses locales
+            const stress10 = Number(diagnosticAnswers.stress_level) || 5;
+            const energy10 = Number(diagnosticAnswers.energy_level) || 5;
+            const stress5 = toFiveScale(stress10);
+            const energy5 = toFiveScale(energy10);
+            let mood5: number | undefined = undefined;
+            // Si on n'a pas un emoji exploitable, approx via le stress
+            if (mood5 === undefined) mood5 = clamp(6 - stress5, 1, 5);
+            const isPositiveLocal = (stress5 <= 2 && (mood5 ?? 3) >= 4 && energy5 >= 3);
+            // Fallback: redirection vers "Suggestions" également
+            setShowPostDiagnosticSuggestions(false);
+            setCurrentView('suggestions');
+            toast({ title: 'Diagnostic sauvegardé', description: 'Voici vos suggestions personnalisées.' });
+          }
         } catch (e: any) {
           console.error('Erreur sauvegarde diagnostic:', e);
           toast({ title: e?.message || 'Erreur lors de la sauvegarde', variant: 'destructive' });
-        } finally {
-          // Aller voir les recommandations basées sur le diagnostic
+          // En cas d'erreur, rester sur les suggestions pour guider l’utilisateur
+          setShowPostDiagnosticSuggestions(false);
           setCurrentView('suggestions');
         }
       }

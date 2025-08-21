@@ -102,7 +102,8 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
 
   useEffect(() => {
     fetchSuggestions();
-  }, [userContext]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userContext?.mood, userContext?.stress, userContext?.energy]);
 
   const getPriorityColor = (priority?: string) => {
     switch (priority) {
@@ -141,22 +142,22 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
         <CardContent className="space-y-3">
           {suggestions.immediate_actions.map((action, index) => (
             <div key={index} className="bg-white p-4 rounded-lg border border-red-200">
-              <div className="flex items-start justify-between mb-2">
-                <div className="flex items-center gap-2">
+              <div className="flex items-start justify-between mb-2 gap-2 min-w-0">
+                <div className="flex items-center gap-2 min-w-0">
                   {renderEmoji(action.icon)}
-                  <h4 className="font-medium text-red-800">{action.title}</h4>
+                  <h4 className="font-medium text-red-800 line-clamp-1 break-anywhere">{action.title}</h4>
                 </div>
                 <Badge className={getPriorityColor(action.priority)}>
                   {action.priority}
                 </Badge>
               </div>
-              <p className="text-sm text-gray-600 mb-3">{action.description}</p>
+              <p className="text-sm text-gray-600 mb-3 line-clamp-2 break-anywhere">{action.description}</p>
               {action.action_steps && (
                 <div className="space-y-1">
                   <p className="text-xs font-medium text-gray-700">Étapes :</p>
                   <ol className="text-xs text-gray-600 space-y-1">
                     {action.action_steps.map((step, stepIndex) => (
-                      <li key={stepIndex} className="flex items-start gap-2">
+                      <li key={stepIndex} className="flex items-start gap-2 break-anywhere">
                         <span className="text-red-500 font-bold">{stepIndex + 1}.</span>
                         {step}
                       </li>
@@ -191,36 +192,37 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
         </CardHeader>
         <CardContent className="space-y-4">
           {suggestions.challenges.map((challenge, index) => (
-            <div key={index} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
-              <div className="flex items-start justify-between mb-2">
-                <div className="flex items-center gap-2">
+            <div key={index} className="bg-white p-4 rounded-lg border">
+              <div className="flex items-start justify-between mb-2 gap-2 min-w-0">
+                <div className="flex items-center gap-2 min-w-0">
                   {renderEmoji(challenge.icon)}
-                  <h4 className="font-medium">{challenge.title}</h4>
+                  <h4 className="font-medium line-clamp-1 break-anywhere">{challenge.title}</h4>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm">{getDifficultyIcon(challenge.difficulty)}</span>
-                  <Badge variant="outline">{challenge.duration}</Badge>
-                </div>
-              </div>
-              <p className="text-sm text-gray-600 mb-3">{challenge.description}</p>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col items-end gap-1 shrink-0">
+                  <Badge variant="outline">{getDifficultyIcon(challenge.difficulty)} {challenge.duration}</Badge>
                   <Badge variant="secondary">{challenge.category}</Badge>
                   {challenge.score && (
-                    <div className="flex items-center gap-1 text-xs text-gray-500">
-                      <Star className="h-3 w-3" />
-                      {challenge.score}% match
-                    </div>
+                    <div className="flex items-center gap-1 text-xs text-gray-500"><Star className="h-3 w-3" />{challenge.score}% match</div>
                   )}
                 </div>
-                <Button 
-                  size="sm" 
-                  variant="outline"
-                  onClick={() => onSuggestionSelect?.(challenge)}
-                >
-                  Commencer
-                </Button>
               </div>
+              <p className="text-sm text-gray-600 line-clamp-2 break-anywhere">{challenge.description}</p>
+              {challenge.action_steps && (
+                <div className="mt-2 space-y-1">
+                  <p className="text-xs font-medium text-gray-700">Étapes :</p>
+                  <ol className="text-xs text-gray-600 space-y-1">
+                    {challenge.action_steps.map((step, i) => (
+                      <li key={i} className="flex items-start gap-2 break-anywhere">
+                        <span className="text-orange-500 font-bold">{i + 1}.</span>
+                        {step}
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              )}
+              <Button size="sm" className="mt-3 w-full" variant="outline" onClick={() => onSuggestionSelect?.(challenge)}>
+                Commencer
+              </Button>
             </div>
           ))}
         </CardContent>
@@ -302,36 +304,30 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
         </CardHeader>
         <CardContent className="space-y-4">
           {suggestions.content.map((content, index) => (
-            <div key={index} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
-              <div className="flex items-start justify-between mb-2">
-                <div className="flex items-center gap-2">
+            <div key={index} className="bg-white p-4 rounded-lg border">
+              <div className="flex items-start justify-between mb-2 gap-2 min-w-0">
+                <div className="flex items-center gap-2 min-w-0">
                   {renderEmoji(content.icon)}
-                  <h4 className="font-medium">{content.title}</h4>
+                  <h4 className="font-medium line-clamp-1 break-anywhere">{content.title}</h4>
                 </div>
-                <Badge variant="outline">{content.duration}</Badge>
-              </div>
-              <p className="text-sm text-gray-600 mb-3">{content.description}</p>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col items-end gap-1 shrink-0">
+                  <Badge variant="outline">{content.duration}</Badge>
                   <Badge variant="secondary">{content.category}</Badge>
-                  {content.tags && (
-                    <div className="flex gap-1">
-                      {content.tags.slice(0, 2).map((tag, tagIndex) => (
-                        <span key={tagIndex} className="text-xs bg-gray-100 px-2 py-1 rounded">
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  )}
                 </div>
-                <Button 
-                  size="sm" 
-                  variant="outline"
-                  onClick={() => onSuggestionSelect?.(content)}
-                >
-                  Regarder
-                </Button>
               </div>
+              <p className="text-sm text-gray-600 line-clamp-2 break-anywhere">{content.description}</p>
+              {content.tags && (
+                <div className="mt-2 flex gap-1 flex-wrap">
+                  {content.tags.slice(0, 3).map((tag, tagIndex) => (
+                    <span key={tagIndex} className="text-xs bg-gray-100 px-2 py-1 rounded line-clamp-1 break-anywhere">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+              <Button size="sm" variant="outline" className="mt-3 w-full" onClick={() => onSuggestionSelect?.(content)}>
+                Regarder
+              </Button>
             </div>
           ))}
         </CardContent>
@@ -389,8 +385,8 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
       {/* Actions immédiates (priorité haute) */}
       {renderImmediateActions()}
 
-      {/* Grid des autres suggestions */}
-      <div className="grid gap-6 md:grid-cols-2">
+      {/* Sections empilées pour meilleure lisibilité */}
+      <div className="space-y-6">
         {renderChallenges()}
         {renderContent()}
       </div>

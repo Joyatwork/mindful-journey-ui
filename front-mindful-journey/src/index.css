@@ -2,6 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Utilities: simple line-clamp without plugin */
+.line-clamp-1 { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+.line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.line-clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* Avoid long words breaking layouts */
+.break-anywhere { overflow-wrap: anywhere; word-break: break-word; }
+
 /* Wellness-focused color palette with soothing gradients */
 
 @layer base {
