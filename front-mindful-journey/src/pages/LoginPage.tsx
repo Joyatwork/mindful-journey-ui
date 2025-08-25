@@ -11,7 +11,7 @@ import { Heart, Shield, User, Mail } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 
 const LoginPage = () => {
-  const { login, register, loginWithGoogle, isAuthenticated, isLoading } = useAuth();
+  const { login, register, forgotPassword, resetPassword, loginWithGoogle, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
   const location = useLocation();
   const from = location.state?.from?.pathname || '/';
@@ -31,6 +31,10 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
+  const [showForgot, setShowForgot] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [resetMode, setResetMode] = useState(false); // when user clicks link with token (future integration)
+  const [resetData, setResetData] = useState({ token: '', email: '', password: '', password_confirmation: '' });
 
   // Rediriger si déjà connecté
   if (isAuthenticated) {
@@ -69,6 +73,53 @@ const LoginPage = () => {
       }
   toast({ title: msg, variant: "destructive" });
       console.error('error', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForgot = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!forgotEmail) {
+      showMessage('error', 'Veuillez entrer votre email');
+      return;
+    }
+    setLoading(true);
+    try {
+      await forgotPassword(forgotEmail);
+      showMessage('success', 'Si un compte existe, un lien a été envoyé.');
+      setShowForgot(false);
+    } catch (err: any) {
+      showMessage('error', err.message || 'Erreur envoi email');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resetData.email || !resetData.token || !resetData.password || !resetData.password_confirmation) {
+      showMessage('error', 'Champs manquants');
+      return;
+    }
+    if (resetData.password !== resetData.password_confirmation) {
+      showMessage('error', 'Les mots de passe ne correspondent pas');
+      return;
+    }
+    setLoading(true);
+    try {
+      await resetPassword({
+        email: resetData.email,
+        token: resetData.token,
+        password: resetData.password,
+        password_confirmation: resetData.password_confirmation
+      });
+      showMessage('success', 'Mot de passe réinitialisé. Connectez-vous.');
+      setResetMode(false);
+      setActiveTab('login');
+      setLoginForm(prev => ({ ...prev, email: resetData.email }));
+    } catch (err: any) {
+      showMessage('error', err.message || 'Erreur réinitialisation');
     } finally {
       setLoading(false);
     }
@@ -187,6 +238,11 @@ const LoginPage = () => {
                     onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
                     required
                   />
+                  <div className="text-right mt-1">
+                    <button type="button" onClick={() => { setShowForgot(true); setForgotEmail(loginForm.email); }} className="text-xs text-indigo-600 hover:underline">
+                      Mot de passe oublié ?
+                    </button>
+                  </div>
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? 'Connexion...' : 'Se connecter'}
@@ -292,6 +348,45 @@ const LoginPage = () => {
           </Tabs>
         </CardContent>
       </Card>
+      {showForgot && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6 space-y-4">
+            <h2 className="text-lg font-semibold">Réinitialiser le mot de passe</h2>
+            {!resetMode && (
+              <form onSubmit={handleForgot} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="forgot-email">Email</Label>
+                  <Input
+                    id="forgot-email"
+                    type="email"
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    placeholder="votre@email.com"
+                    required
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button type="button" variant="outline" className="flex-1" onClick={() => setShowForgot(false)}>Annuler</Button>
+                  <Button type="submit" className="flex-1" disabled={loading}>{loading ? 'Envoi...' : 'Envoyer le lien'}</Button>
+                </div>
+                <p className="text-xs text-gray-500">Vous recevrez un email avec un lien si le compte existe.</p>
+              </form>
+            )}
+            {resetMode && (
+              <form onSubmit={handleReset} className="space-y-3">
+                <Input placeholder="Token" value={resetData.token} onChange={(e) => setResetData({ ...resetData, token: e.target.value })} />
+                <Input placeholder="Email" type="email" value={resetData.email} onChange={(e) => setResetData({ ...resetData, email: e.target.value })} />
+                <Input placeholder="Nouveau mot de passe" type="password" value={resetData.password} onChange={(e) => setResetData({ ...resetData, password: e.target.value })} />
+                <Input placeholder="Confirmer" type="password" value={resetData.password_confirmation} onChange={(e) => setResetData({ ...resetData, password_confirmation: e.target.value })} />
+                <div className="flex gap-2">
+                  <Button type="button" variant="outline" className="flex-1" onClick={() => setShowForgot(false)}>Annuler</Button>
+                  <Button type="submit" className="flex-1" disabled={loading}>{loading ? 'Validation...' : 'Réinitialiser'}</Button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

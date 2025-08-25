@@ -160,6 +160,14 @@ const testApiService = {
       method: 'POST',
       body: JSON.stringify(credentials)
     }),
+    forgotPassword: (email: string) => testApiRequest('/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email })
+    }),
+    resetPassword: (data: { email: string; token: string; password: string; password_confirmation: string }) => testApiRequest('/reset-password', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    }),
     logout: (token: string) => testApiRequest('/auth/logout', {
       method: 'POST',
       headers: {

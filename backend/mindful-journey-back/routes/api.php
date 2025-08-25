@@ -110,6 +110,12 @@ Route::prefix('auth')->group(function () {
     Route::post('google/login', [GoogleAuthController::class, 'loginWithGoogle']);
 });
 
+// Mot de passe oublié / réinitialisation (API JSON)
+use App\Http\Controllers\Auth\PasswordResetLinkController;
+use App\Http\Controllers\Auth\NewPasswordController;
+Route::post('forgot-password', [PasswordResetLinkController::class, 'store']);
+Route::post('reset-password', [NewPasswordController::class, 'store']);
+
 // Routes pour visualiser la base de données (publiques de test)
 Route::prefix('test')->group(function () {
     Route::get('database-stats', [DatabaseController::class, 'getStats']);

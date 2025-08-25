@@ -22,6 +22,8 @@ interface AuthContextType {
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string, password_confirmation: string) => Promise<void>;
+  forgotPassword: (email: string) => Promise<void>;
+  resetPassword: (data: { email: string; token: string; password: string; password_confirmation: string }) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
   handleGoogleCallback: (token: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -155,6 +157,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       throw new Error(error.message || 'Erreur d\'inscription');
     }
   };
+  
+  const forgotPassword = async (email: string) => {
+    try {
+      await testApiService.auth.forgotPassword(email);
+    } catch (e: any) {
+      throw new Error(e?.message || 'Erreur envoi lien de réinitialisation');
+    }
+  };
+  
+  const resetPassword = async (data: { email: string; token: string; password: string; password_confirmation: string }) => {
+    try {
+      await testApiService.auth.resetPassword(data);
+    } catch (e: any) {
+      throw new Error(e?.message || 'Erreur réinitialisation mot de passe');
+    }
+  };
 
   const logout = async () => {
     try {
@@ -272,6 +290,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isAuthenticated,
     login,
     register,
+  forgotPassword,
+  resetPassword,
     loginWithGoogle,
     handleGoogleCallback,
     logout,

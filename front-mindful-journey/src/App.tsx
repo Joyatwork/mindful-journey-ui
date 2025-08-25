@@ -19,6 +19,7 @@ import MoodPage from "./pages/MoodPage";
 import MeditationPage from "./pages/MeditationPage";
 import MeditationDemo from "./pages/MeditationDemo";
 import NotFound from "./pages/NotFound";
+import ResetPasswordPage from "@/pages/ResetPasswordPage";
 
 const queryClient = new QueryClient();
 
@@ -33,6 +34,7 @@ const App = () => (
             <Routes>
               <Route path="/login" element={<LoginPage />} />
               <Route path="/auth/google/callback" element={<GoogleCallback />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
               <Route path="/" element={
                 <ProtectedRoute>
                   <Index />
