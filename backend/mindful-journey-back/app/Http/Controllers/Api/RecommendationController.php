@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Specialist;
+use App\Models\MoodEntry;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -24,8 +25,29 @@ class RecommendationController extends Controller
                 return response()->json(['message' => 'Utilisateur non authentifié'], 401);
             }
 
-            // Récupérer les paramètres de contexte
-            $currentMood = $request->get('mood', 3); // 1-5 échelle
+            // Récupérer l'humeur courante : priorité au paramètre, sinon dernière entrée en base
+            $moodFromRequest = $request->get('mood');
+            $moodSource = 'request';
+            if ($moodFromRequest === null) {
+                $latestMood = MoodEntry::where('user_id', $user->id)
+                    ->orderByDesc('entry_date')
+                    ->value('mood_level');
+                if ($latestMood !== null) {
+                    // Normaliser si l'échelle stockée est 1-10 (ramener à 1-5 arrondi)
+                    if ($latestMood > 5) {
+                        $normalized = max(1, min(5, (int) round($latestMood / 2)));
+                        $currentMood = $normalized;
+                    } else {
+                        $currentMood = (int) $latestMood;
+                    }
+                    $moodSource = 'latest_entry';
+                } else {
+                    $currentMood = 3; // neutre par défaut
+                    $moodSource = 'default';
+                }
+            } else {
+                $currentMood = (int) $moodFromRequest;
+            }
             $stressLevel = $request->get('stress', 3); // 1-5 échelle
             $energyLevel = $request->get('energy', 3); // 1-5 échelle
             $timeOfDay = $request->get('time_of_day', date('H')); // Heure actuelle
@@ -44,6 +66,8 @@ class RecommendationController extends Controller
                 'suggestions' => $suggestions,
                 'user_context' => [
                     'mood' => $currentMood,
+                    'mood_label' => $this->labelMood($currentMood),
+                    'mood_source' => $moodSource,
                     'stress' => $stressLevel,
                     'energy' => $energyLevel,
                     'time_of_day' => $timeOfDay
@@ -99,6 +123,20 @@ class RecommendationController extends Controller
                 'icon' => '😊',
                 'category' => 'Humeur',
                 'score' => 95
+            ];
+        }
+        // Humeur très positive : proposer un défi de consolidation / progression
+        if ($mood >= 4) {
+            $challenges[] = [
+                'type' => 'progression',
+                'title' => 'Défi progression bien-être',
+                'description' => 'Capitaliser sur votre bonne humeur avec une action d\'impact',
+                'duration' => '10 min',
+                'difficulty' => 'moyen',
+                'priority' => 'medium',
+                'icon' => '🚀',
+                'category' => 'Croissance',
+                'score' => 70
             ];
         }
 
@@ -295,6 +333,20 @@ class RecommendationController extends Controller
                 'score' => 85
             ];
         }
+        // Contenu de consolidation si humeur élevée
+        if ($mood >= 4) {
+            $content[] = [
+                'type' => 'optimisation',
+                'title' => 'Optimiser votre bonne dynamique',
+                'description' => 'Plan court pour maintenir énergie et focus sur la journée',
+                'duration' => '7 min',
+                'category' => 'Performance sereine',
+                'difficulty' => 'moyen',
+                'icon' => '🔥',
+                'tags' => ['performance', 'focus', 'maintien'],
+                'score' => 75
+            ];
+        }
 
         // Contenu basé sur l'énergie
         if ($energy <= 2) {
@@ -458,5 +510,19 @@ class RecommendationController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Libellé lisible pour une valeur d'humeur 1-5
+     */
+    private function labelMood(int $mood): string
+    {
+        return match (true) {
+            $mood <= 1 => 'très bas',
+            $mood === 2 => 'bas',
+            $mood === 3 => 'neutre',
+            $mood === 4 => 'bon',
+            $mood >= 5 => 'excellent',
+        };
     }
 }
