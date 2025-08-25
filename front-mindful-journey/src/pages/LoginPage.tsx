@@ -30,6 +30,7 @@ const LoginPage = () => {
 
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
 
   // Rediriger si déjà connecté
   if (isAuthenticated) {
@@ -90,7 +91,19 @@ const LoginPage = () => {
       await register(registerForm.name, registerForm.email, registerForm.password, registerForm.password_confirmation);
       showMessage('success', 'Inscription réussie !');
     } catch (error: any) {
-      showMessage('error', error.message);
+      // Détecter un email déjà utilisé (souvent 409 ou 422 avec message spécifique)
+      const rawMsg = error?.message || '';
+      if (/existe déjà|already been taken|already exists/i.test(rawMsg)) {
+        showMessage('error', 'Vous avez déjà un compte. Redirection vers la connexion...');
+        // Basculer vers l'onglet connexion après un court délai
+        setTimeout(() => {
+          setActiveTab('login');
+          // Pré-remplir l'email dans le formulaire de connexion
+          setLoginForm(prev => ({ ...prev, email: registerForm.email }));
+        }, 1200);
+      } else {
+        showMessage('error', rawMsg || 'Erreur lors de l\'inscription');
+      }
     } finally {
       setLoading(false);
     }
@@ -140,7 +153,7 @@ const LoginPage = () => {
             </Alert>
           )}
 
-          <Tabs defaultValue="login" className="w-full">
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'login' | 'register')} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="login" className="flex items-center gap-2">
                 <Shield className="h-4 w-4" />
