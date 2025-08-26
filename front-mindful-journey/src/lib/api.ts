@@ -220,6 +220,8 @@ export const apiService = {
       return apiRequest(`/mood${queryParams}`);
     },
     
+    getTodayMood: () => apiRequest('/mood/today'),
+    
     saveMoodData: (moodData: any) =>
       apiRequest('/mood', {
         method: 'POST',

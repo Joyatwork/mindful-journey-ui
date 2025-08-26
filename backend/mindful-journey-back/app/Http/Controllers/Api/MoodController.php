@@ -69,6 +69,7 @@ class MoodController extends Controller
             'stress_level' => 'nullable|integer|between:1,10',
             'sleep_quality' => 'nullable|integer|between:1,10',
             'notes' => 'nullable|string|max:1000',
+            'details' => 'nullable|string|max:2000',
             'activities' => 'nullable|array',
             'activities.*' => 'string|max:100',
             'emotions' => 'nullable|array',

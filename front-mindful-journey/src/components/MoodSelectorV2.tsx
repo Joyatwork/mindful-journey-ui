@@ -54,6 +54,30 @@ const MoodSelectorV2: React.FC<MoodSelectorV2Props> = ({
   const [detailError, setDetailError] = useState('');
   const [lastDetailSavedAt, setLastDetailSavedAt] = useState<string | null>(null);
 
+  // Prefill today's existing entry details
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const today = await apiService.healthData.getTodayMood?.();
+        if (mounted && today?.entry) {
+          const e = today.entry as any;
+            if (e.details) {
+              setDetailValue(e.details);
+              setLastDetailSavedAt(new Date().toISOString());
+            }
+            if (e.mood_level && !internalValue) {
+              setInternalValue(e.mood_level);
+              lastSavedRef.current = e.mood_level;
+            }
+        }
+      } catch (err) {
+        // silent
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
+
   // sync from outside
   useEffect(() => { setInternalValue(value); }, [value]);
 
@@ -75,6 +99,7 @@ const MoodSelectorV2: React.FC<MoodSelectorV2Props> = ({
         stress_level: 3,
         sleep_quality: null,
         notes: null,
+  details: detailValue || null,
         activities: [],
         emotions: []
       };
@@ -101,7 +126,8 @@ const MoodSelectorV2: React.FC<MoodSelectorV2Props> = ({
         energy_level: 5,
         stress_level: 3,
         sleep_quality: null,
-        notes: detailValue || null,
+  notes: null, // legacy
+  details: detailValue || null,
         activities: [],
         emotions: []
       };

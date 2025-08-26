@@ -15,6 +15,7 @@ class MoodEntry extends Model
         'stress_level',
         'sleep_quality',
         'notes',
+    'details',
         'date',
         'activities',
         'emotions'

@@ -41,7 +41,7 @@ const App = () => (
               {/* Onboarding / dashboard gating */}
               <Route path="/" element={
                 <ProtectedRoute>
-                  <WelcomeIntro />
+                  <Index />
                 </ProtectedRoute>
               } />
               <Route path="/welcome" element={
