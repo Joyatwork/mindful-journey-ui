@@ -20,6 +20,9 @@ import MeditationPage from "./pages/MeditationPage";
 import MeditationDemo from "./pages/MeditationDemo";
 import NotFound from "./pages/NotFound";
 import ResetPasswordPage from "@/pages/ResetPasswordPage";
+import WelcomeIntro from "@/pages/WelcomeIntro";
+import MoodCheckPage from "@/pages/MoodCheckPage";
+import MoodEncouragementPage from "@/pages/MoodEncouragementPage";
 
 const queryClient = new QueryClient();
 
@@ -35,7 +38,28 @@ const App = () => (
               <Route path="/login" element={<LoginPage />} />
               <Route path="/auth/google/callback" element={<GoogleCallback />} />
               <Route path="/reset-password" element={<ResetPasswordPage />} />
+              {/* Onboarding / dashboard gating */}
               <Route path="/" element={
+                <ProtectedRoute>
+                  <WelcomeIntro />
+                </ProtectedRoute>
+              } />
+              <Route path="/welcome" element={
+                <ProtectedRoute>
+                  <WelcomeIntro />
+                </ProtectedRoute>
+              } />
+              <Route path="/mood-check" element={
+                <ProtectedRoute>
+                  <MoodCheckPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/mood-encouragement" element={
+                <ProtectedRoute>
+                  <MoodEncouragementPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/dashboard" element={
                 <ProtectedRoute>
                   <Index />
                 </ProtectedRoute>

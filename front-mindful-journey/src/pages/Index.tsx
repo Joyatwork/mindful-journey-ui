@@ -15,7 +15,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import MoodSelector from '@/components/MoodSelector';
+// import MoodSelector from '@/components/MoodSelector'; // Ancien sélecteur d'humeur déplacé vers la page mood-check
 import WellnessCard from '@/components/WellnessCard';
 import ProgressChart from '@/components/ProgressChart';
 import ProgressPage from '@/components/ProgressPage';
@@ -57,7 +57,7 @@ const Index = () => {
   const { user, logout } = useAuth();
   const { appointments, isLoading: apptsLoading } = useAppointments();
   const [currentView, setCurrentView] = useState('dashboard');
-  const [selectedMood, setSelectedMood] = useState<number>();
+  const [selectedMood, setSelectedMood] = useState<number>(); // Conservé pour suggestions
   const [challengeFilters, setChallengeFilters] = useState<string[]>([]);
   const [diagnosticStep, setDiagnosticStep] = useState(1);
   const [diagnosticAnswers, setDiagnosticAnswers] = useState<Record<string, any>>({});
@@ -552,7 +552,7 @@ const Index = () => {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h1 className="text-2xl font-bold mb-1">Bonjour {user?.name || 'Utilisateur'} ! 👋</h1>
-              <p className="text-white/90">Comment vous sentez-vous aujourd'hui ?</p>
+              <p className="text-white/90">Prenons un instant pour votre bien-être aujourd'hui.</p>
             </div>
             <div className="flex space-x-2">
               <DropdownMenu>
@@ -612,10 +612,41 @@ const Index = () => {
         <div className="absolute bottom-0 right-8 w-20 h-20 bg-white/5 rounded-full" />
       </div>
 
-      <MoodSelector 
-        selectedMood={selectedMood}
-        onMoodSelect={setSelectedMood}
-      />
+      {/* Carte d'accueil onboarding (remplace l'ancien sélecteur d'humeur sur le dashboard) */}
+      <Card className="p-6 rounded-2xl bg-gradient-to-br from-emerald-50 via-white to-teal-50 border border-emerald-100 shadow-sm">
+        <div className="flex flex-col gap-5">
+          <div className="space-y-2">
+            <h3 className="text-xl font-semibold flex items-center gap-2 text-emerald-800">
+              <Sparkles className="h-5 w-5 text-emerald-500" />
+              Prenons un instant pour vous
+            </h3>
+            <p className="text-sm text-emerald-800/80 max-w-2xl leading-relaxed">
+              Avant de continuer, dites-nous comment vous vous sentez aujourd'hui. Cela nous permettra d'adapter
+              immédiatement votre expérience et vos recommandations de bien‑être.
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
+            <Button
+              className="flex-1 bg-emerald-600 hover:bg-emerald-700"
+              onClick={() => {
+                sessionStorage.setItem('welcome_completed', '1');
+                navigate('/mood-check');
+              }}
+            >
+              Oui je commence
+            </Button>
+            <Button
+              variant="outline"
+              className="flex-1 border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+              onClick={() => {
+                sessionStorage.setItem('welcome_deferred', '1');
+              }}
+            >
+              Rappelle-moi plus tard
+            </Button>
+          </div>
+        </div>
+      </Card>
 
       <div className="grid grid-cols-2 gap-4">
         <Button 
