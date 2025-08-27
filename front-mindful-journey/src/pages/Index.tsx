@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import testApiService from '@/lib/test-api';
 import apiService from '@/lib/api';
 import { Button } from '@/components/ui/button';
@@ -53,6 +53,7 @@ import {
 } from 'lucide-react';
 
 const Index = () => {
+  const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { appointments, isLoading: apptsLoading } = useAppointments();
@@ -269,6 +270,19 @@ const Index = () => {
     // Par défaut: simple confirmation
     toast({ title: 'Action lancée', description: title || 'Suggestion' });
   };
+
+  // Consommer une suggestion passée via navigation state (depuis MoodEncouragementPage)
+  useEffect(() => {
+    const state: any = location.state;
+    if (state?.autoSuggestion) {
+      const suggestion = state.autoSuggestion;
+      // Exécuter la logique existante
+      handleSuggestionAction(suggestion);
+      // Nettoyer l'état pour éviter répétition en back bouton
+      navigate('.', { replace: true, state: {} });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.state]);
 
   const diagnosticQuestions = [
     {
@@ -508,9 +522,11 @@ const Index = () => {
           mood: selectedMood ?? computedMood,
           stress: computedStress ?? 3,
           energy: computedEnergy ?? 3,
-          diagnostic: savedDiagnostic // Diagnostic sauvegardé si dispo
+          diagnostic: savedDiagnostic
         }}
         onSuggestionSelect={handleSuggestionAction}
+        onPractitionerOpen={(p) => handleViewProfile(p)}
+        onPractitionerBook={(p) => handleBookAppointment(p)}
       />
     </div>
   ); };
@@ -541,6 +557,8 @@ const Index = () => {
                   diagnostic: savedDiagnostic,
                 }}
                 onSuggestionSelect={handleSuggestionAction}
+                onPractitionerOpen={(p) => handleViewProfile(p)}
+                onPractitionerBook={(p) => handleBookAppointment(p)}
               />
             </div>
           )

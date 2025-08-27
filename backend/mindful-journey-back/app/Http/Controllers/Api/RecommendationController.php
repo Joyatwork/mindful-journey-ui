@@ -29,8 +29,9 @@ class RecommendationController extends Controller
             $moodFromRequest = $request->get('mood');
             $moodSource = 'request';
             if ($moodFromRequest === null) {
+                // Utiliser la colonne correcte 'date' (et non 'entry_date')
                 $latestMood = MoodEntry::where('user_id', $user->id)
-                    ->orderByDesc('entry_date')
+                    ->orderByDesc('date')
                     ->value('mood_level');
                 if ($latestMood !== null) {
                     // Normaliser si l'échelle stockée est 1-10 (ramener à 1-5 arrondi)

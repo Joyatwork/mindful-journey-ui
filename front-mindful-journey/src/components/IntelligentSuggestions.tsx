@@ -59,11 +59,15 @@ interface IntelligentSuggestionsProps {
     diagnostic?: any;
   };
   onSuggestionSelect?: (suggestion: Suggestion) => void;
+  onPractitionerOpen?: (p: HealthProfessional) => void;
+  onPractitionerBook?: (p: HealthProfessional) => void;
 }
 
 const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
   userContext,
-  onSuggestionSelect
+  onSuggestionSelect,
+  onPractitionerOpen,
+  onPractitionerBook
 }) => {
   const [suggestions, setSuggestions] = useState<SuggestionGroup | null>(null);
   const [loading, setLoading] = useState(false);
@@ -231,12 +235,13 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
   };
 
   const openProfile = (p: HealthProfessional) => {
-    // Fire a DOM event that Index.tsx can catch to navigate to profile/booking
+    if (onPractitionerOpen) return onPractitionerOpen(p);
     const evt = new CustomEvent('openSpecialistProfile', { detail: p });
     window.dispatchEvent(evt);
   };
 
   const bookPractitioner = (p: HealthProfessional) => {
+    if (onPractitionerBook) return onPractitionerBook(p);
     const evt = new CustomEvent('bookSpecialist', { detail: p });
     window.dispatchEvent(evt);
   };
