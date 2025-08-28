@@ -6,6 +6,7 @@ import { Sparkles, ArrowLeft, Heart, Lightbulb, Anchor } from 'lucide-react';
 import IntelligentSuggestions from '@/components/IntelligentSuggestions';
 import PractitionerBookingInline from '@/components/PractitionerBookingInline';
 import apiService from '@/lib/api';
+import MobilePageShell from '@/components/MobilePageShell';
 import { useToast } from '@/hooks/use-toast';
 
 interface LocationState {
@@ -147,98 +148,100 @@ const MoodEncouragementPage: React.FC = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50 flex flex-col">
-      <div className="w-full max-w-5xl mx-auto flex-1 p-4 md:p-10 space-y-8">
+    <MobilePageShell gradient="emerald">
+      <div className="space-y-6">
         <div className="flex items-center gap-3">
           <Button size="icon" variant="ghost" onClick={() => navigate(-1)} className="shrink-0">
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-emerald-800 flex items-center gap-2">
+          <h1 className="text-2xl font-bold tracking-tight text-emerald-800 flex items-center gap-2">
             <Sparkles className="h-6 w-6 text-emerald-500" />
             Votre soutien personnalisé
           </h1>
         </div>
-
-        <div className="flex flex-col gap-6">
-          <Card className="p-6 space-y-4 bg-white/90 backdrop-blur-sm border-emerald-100 shadow-md">
-            {encouragement ? (
-              <>
-                <div className="space-y-2">
-                  <h2 className="text-xl font-semibold flex items-center gap-2 text-emerald-800">
-                    {moodValue && <span className="text-2xl" aria-hidden>{['','😔','😐','🙂','😊','😁'][moodValue]}</span>}
-                    {encouragement.title}
-                  </h2>
-                  <p className="text-sm text-emerald-900/80 leading-relaxed">
-                    {encouragement.message}
+        <Card className="p-6 space-y-4 bg-white/90 backdrop-blur-sm border-emerald-100 shadow-md">
+          {encouragement ? (
+            <>
+              <div className="space-y-2">
+                <h2 className="text-xl font-semibold flex items-center gap-2 text-emerald-800">
+                  {moodValue && <span className="text-2xl" aria-hidden>{['','😔','😐','🙂','😊','😁'][moodValue]}</span>}
+                  {encouragement.title}
+                </h2>
+                <p className="text-sm text-emerald-900/80 leading-relaxed">
+                  {encouragement.message}
+                </p>
+              </div>
+              {notesValue && (
+                <div className="rounded-lg border border-emerald-100 bg-emerald-50/40 p-4">
+                  <p className="text-[11px] uppercase tracking-wider font-medium text-emerald-600 mb-1 flex items-center gap-1">
+                    <Anchor className="h-3 w-3" />Votre note
                   </p>
-                </div>
-                {notesValue && (
-                  <div className="rounded-lg border border-emerald-100 bg-emerald-50/40 p-4">
-                    <p className="text-[11px] uppercase tracking-wider font-medium text-emerald-600 mb-1 flex items-center gap-1">
-                      <Anchor className="h-3 w-3" />Votre note
-                    </p>
-                    <p className="text-sm text-emerald-800 whitespace-pre-line">{notesValue}</p>
-                  </div>
-                )}
-                {/* Boutons déplacés en bas de page */}
-              </>
-            ) : (
-              <p className="text-sm text-emerald-800">
-                {loadingMood ? 'Chargement de votre humeur...' : ''}
-              </p>
-            )}
-          </Card>
-          <Card className="p-6 flex flex-col bg-white/90 backdrop-blur-sm border-emerald-100 shadow-md">
-            <h3 className="text-sm font-semibold text-emerald-800 flex items-center gap-2 mb-4">
-              <Lightbulb className="h-4 w-4 text-emerald-500" /> Recommandations personnalisées
-            </h3>
-            <div className="flex-1 overflow-visible">
-              <IntelligentSuggestions
-                userContext={{ mood: moodValue, stress: moodValue ? 6 - moodValue : 3, energy: moodValue || 3 }}
-                onSuggestionSelect={forwardSuggestion}
-                onPractitionerOpen={openPractitionerProfile}
-                onPractitionerBook={openPractitionerBooking}
-              />
-              {selectedPractitioner && practitionerMode && (
-                <div className="mt-6 border rounded-xl p-5 bg-white/80 backdrop-blur-sm shadow-sm animate-fadeIn">
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <h4 className="text-lg font-semibold text-emerald-800">{selectedPractitioner.name}</h4>
-                      <p className="text-sm text-emerald-700">{selectedPractitioner.specialty}</p>
-                      {practitionerMode === 'profile' && selectedPractitioner.reason && (
-                        <p className="mt-2 text-sm text-emerald-600/80 whitespace-pre-line">{selectedPractitioner.reason}</p>
-                      )}
-                    </div>
-                    <button onClick={closePractitionerPanel} className="text-xs text-emerald-600 hover:underline">Fermer</button>
-                  </div>
-                  {practitionerMode === 'profile' && (
-                    <div className="space-y-2 text-sm">
-                      <p><span className="font-medium">Expérience:</span> {selectedPractitioner.experience}</p>
-                      <p><span className="font-medium">Disponibilités:</span> {selectedPractitioner.availability}</p>
-                      <p><span className="font-medium">Tarif:</span> {typeof selectedPractitioner.price === 'number' ? `${selectedPractitioner.price}€` : selectedPractitioner.price}</p>
-                      <div className="pt-2 flex gap-3">
-                        <button onClick={() => openPractitionerBooking(selectedPractitioner)} className="px-4 py-2 text-xs rounded-md bg-emerald-600 text-white hover:bg-emerald-700">Prendre RDV</button>
-                        <button onClick={closePractitionerPanel} className="px-4 py-2 text-xs rounded-md bg-emerald-50 text-emerald-700 hover:bg-emerald-100">Retour</button>
-                      </div>
-                    </div>
-                  )}
-                  {practitionerMode === 'booking' && (
-                    <PractitionerBookingInline practitioner={selectedPractitioner} onCancel={closePractitionerPanel} onBack={() => setPractitionerMode('profile')} />
-                  )}
+                  <p className="text-sm text-emerald-800 whitespace-pre-line">{notesValue}</p>
                 </div>
               )}
-            </div>
-            <div className="mt-4 text-[11px] text-emerald-600 flex items-center gap-1">
-              <Heart className="h-3 w-3" /> Générées selon votre état actuel.
-            </div>
-            <div className="mt-6 flex flex-col sm:flex-row gap-3">
-              <Button className="bg-emerald-600 hover:bg-emerald-700 flex-1" onClick={() => navigate('/dashboard')}>Aller au tableau de bord</Button>
-              <Button variant="outline" className="flex-1 border-emerald-300 text-emerald-700 hover:bg-emerald-50" onClick={() => navigate('/mood-check')}>Revenir modifier</Button>
-            </div>
-          </Card>
-        </div>
+            </>
+          ) : (
+            <p className="text-sm text-emerald-800">
+              {loadingMood ? 'Chargement de votre humeur...' : ''}
+            </p>
+          )}
+        </Card>
+        <Card className="p-6 flex flex-col bg-white/90 backdrop-blur-sm border-emerald-100 shadow-md">
+          <h3 className="text-sm font-semibold text-emerald-800 flex items-center gap-2 mb-4">
+            <Lightbulb className="h-4 w-4 text-emerald-500" /> Recommandations personnalisées
+          </h3>
+          <div className="flex-1 overflow-visible">
+            <IntelligentSuggestions
+              userContext={{
+                mood: moodValue,
+                // Si humeur positive (>=4), forcer des valeurs stress/energy qui déclenchent isPositive dans IntelligentSuggestions pour masquer praticiens
+                stress: moodValue && moodValue >= 4 ? 1 : (moodValue ? 6 - moodValue : 3),
+                energy: moodValue && moodValue >= 4 ? 4 : (moodValue || 3)
+              }}
+              onSuggestionSelect={forwardSuggestion}
+              // Ne pas fournir les callbacks praticiens si mood positif: empêche même les clics potentiels
+              onPractitionerOpen={moodValue && moodValue >= 4 ? undefined : openPractitionerProfile}
+              onPractitionerBook={moodValue && moodValue >= 4 ? undefined : openPractitionerBooking}
+            />
+            {(! (moodValue && moodValue >= 4) && selectedPractitioner && practitionerMode) && (
+              <div className="mt-6 border rounded-xl p-5 bg-white/80 backdrop-blur-sm shadow-sm animate-fadeIn">
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <h4 className="text-lg font-semibold text-emerald-800">{selectedPractitioner.name}</h4>
+                    <p className="text-sm text-emerald-700">{selectedPractitioner.specialty}</p>
+                    {practitionerMode === 'profile' && selectedPractitioner.reason && (
+                      <p className="mt-2 text-sm text-emerald-600/80 whitespace-pre-line">{selectedPractitioner.reason}</p>
+                    )}
+                  </div>
+                  <button onClick={closePractitionerPanel} className="text-xs text-emerald-600 hover:underline">Fermer</button>
+                </div>
+                {practitionerMode === 'profile' && (
+                  <div className="space-y-2 text-sm">
+                    <p><span className="font-medium">Expérience:</span> {selectedPractitioner.experience}</p>
+                    <p><span className="font-medium">Disponibilités:</span> {selectedPractitioner.availability}</p>
+                    <p><span className="font-medium">Tarif:</span> {typeof selectedPractitioner.price === 'number' ? `${selectedPractitioner.price}€` : selectedPractitioner.price}</p>
+                    <div className="pt-2 flex gap-3">
+                      <button onClick={() => openPractitionerBooking(selectedPractitioner)} className="px-4 py-2 text-xs rounded-md bg-emerald-600 text-white hover:bg-emerald-700">Prendre RDV</button>
+                      <button onClick={closePractitionerPanel} className="px-4 py-2 text-xs rounded-md bg-emerald-50 text-emerald-700 hover:bg-emerald-100">Retour</button>
+                    </div>
+                  </div>
+                )}
+                {practitionerMode === 'booking' && (
+                  <PractitionerBookingInline practitioner={selectedPractitioner} onCancel={closePractitionerPanel} onBack={() => setPractitionerMode('profile')} />
+                )}
+              </div>
+            )}
+          </div>
+          <div className="mt-4 text-[11px] text-emerald-600 flex items-center gap-1">
+            <Heart className="h-3 w-3" /> Générées selon votre état actuel.
+          </div>
+          <div className="mt-6 flex flex-col sm:flex-row gap-3">
+            <Button className="bg-emerald-600 hover:bg-emerald-700 flex-1" onClick={() => navigate('/dashboard')}>Aller au tableau de bord</Button>
+            <Button variant="outline" className="flex-1 border-emerald-300 text-emerald-700 hover:bg-emerald-50" onClick={() => navigate('/mood-check')}>Revenir modifier</Button>
+          </div>
+        </Card>
       </div>
-    </div>
+    </MobilePageShell>
   );
 };
 

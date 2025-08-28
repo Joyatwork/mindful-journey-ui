@@ -23,6 +23,16 @@ import ResetPasswordPage from "@/pages/ResetPasswordPage";
 import WelcomeIntro from "@/pages/WelcomeIntro";
 import MoodCheckPage from "@/pages/MoodCheckPage";
 import MoodEncouragementPage from "@/pages/MoodEncouragementPage";
+import PositiveMoodCelebratePage from "@/pages/PositiveMoodCelebratePage";
+import PositiveMoodMotivationPage from "@/pages/PositiveMoodMotivationPage";
+import PositiveMoodReflectionPage from "@/pages/PositiveMoodReflectionPage";
+import PositiveMoodAffirmationsPage from "@/pages/PositiveMoodAffirmationsPage";
+import PositiveMoodHappinessPromptPage from "@/pages/PositiveMoodHappinessPromptPage";
+import NegativeMoodIntroPage from "@/pages/NegativeMoodIntroPage";
+import NegativeMoodFactorsPage from "@/pages/NegativeMoodFactorsPage";
+import NegativeMoodDetailsPage from "@/pages/NegativeMoodDetailsPage";
+import NegativeMoodSupportMessagesPage from "@/pages/NegativeMoodSupportMessagesPage";
+import NegativeMoodInspirationPromptPage from "@/pages/NegativeMoodInspirationPromptPage";
 
 const queryClient = new QueryClient();
 
@@ -52,6 +62,56 @@ const App = () => (
               <Route path="/mood-check" element={
                 <ProtectedRoute>
                   <MoodCheckPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/mood-positive" element={
+                <ProtectedRoute>
+                  <PositiveMoodCelebratePage />
+                </ProtectedRoute>
+              } />
+              <Route path="/mood-positive-motivation" element={
+                <ProtectedRoute>
+                  <PositiveMoodMotivationPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/mood-positive-reflection" element={
+                <ProtectedRoute>
+                  <PositiveMoodReflectionPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/mood-positive-affirmations" element={
+                <ProtectedRoute>
+                  <PositiveMoodAffirmationsPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/mood-positive-happiness" element={
+                <ProtectedRoute>
+                  <PositiveMoodHappinessPromptPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/mood-negative" element={
+                <ProtectedRoute>
+                  <NegativeMoodIntroPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/mood-negative-factors" element={
+                <ProtectedRoute>
+                  <NegativeMoodFactorsPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/mood-negative-details" element={
+                <ProtectedRoute>
+                  <NegativeMoodDetailsPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/mood-negative-support" element={
+                <ProtectedRoute>
+                  <NegativeMoodSupportMessagesPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/mood-negative-inspiration" element={
+                <ProtectedRoute>
+                  <NegativeMoodInspirationPromptPage />
                 </ProtectedRoute>
               } />
               <Route path="/mood-encouragement" element={

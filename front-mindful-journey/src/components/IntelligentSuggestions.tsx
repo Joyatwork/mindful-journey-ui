@@ -247,8 +247,9 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
   };
 
   const renderPractitioners = () => {
-    // Masquer totalement les praticiens si le diagnostic est positif
-    if (isPositive) return null;
+    // Masquer complètement la section si humeur positive (>=4)
+    const moodPositive = (userContext?.mood || 0) >= 4;
+    if (moodPositive) return null;
     if (!suggestions?.practitioners?.length) return null;
 
     return (
