@@ -11,7 +11,7 @@ import { Heart, Shield, User, Mail } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 
 const LoginPage = () => {
-  const { login, register, forgotPassword, resetPassword, loginWithGoogle, isAuthenticated, isLoading } = useAuth();
+  const { login, verifyOtp, twoFactorPending, register, forgotPassword, resetPassword, loginWithGoogle, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
   const location = useLocation();
   const from = location.state?.from?.pathname || '/';
@@ -20,6 +20,9 @@ const LoginPage = () => {
     email: '',
     password: ''
   });
+  const [otpCode, setOtpCode] = useState('');
+  const [otpError, setOtpError] = useState<string | null>(null);
+  const [otpSuccess, setOtpSuccess] = useState(false);
 
   const [registerForm, setRegisterForm] = useState({
     name: '',
@@ -55,8 +58,12 @@ const LoginPage = () => {
 
     setLoading(true);
     try {
-      await login(loginForm.email, loginForm.password);
-      showMessage('success', 'Connexion réussie !');
+      const result = await login(loginForm.email, loginForm.password);
+      if (result.twoFactor) {
+        showMessage('success', 'Code envoyé par email');
+      } else {
+        showMessage('success', 'Connexion réussie !');
+      }
     } catch (error: any) {
       // Utilise le message enrichi de testApiRequest (status, data)
       let msg = error?.message || `La connexion a échoué`;
@@ -73,6 +80,26 @@ const LoginPage = () => {
       }
   toast({ title: msg, variant: "destructive" });
       console.error('error', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setOtpError(null);
+    if (otpCode.length !== 5) {
+      setOtpError('Code à 5 chiffres requis');
+      return;
+    }
+    try {
+      setLoading(true);
+      await verifyOtp(otpCode);
+      setOtpSuccess(true);
+      showMessage('success', 'Vérification réussie');
+    } catch (err: any) {
+      const msg = err?.message || 'Code invalide';
+      setOtpError(msg);
     } finally {
       setLoading(false);
     }
@@ -216,6 +243,7 @@ const LoginPage = () => {
               </TabsTrigger>
             </TabsList>
             <TabsContent value="login" className="space-y-4">
+              {!twoFactorPending && (
               <form onSubmit={handleLogin} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="login-email">Email</Label>
@@ -248,28 +276,57 @@ const LoginPage = () => {
                   {loading ? 'Connexion...' : 'Se connecter'}
                 </Button>
               </form>
+              )}
 
-              {/* Divider */}
-              <div className="relative my-4">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-white px-2 text-muted-foreground">Ou continuer avec</span>
-                </div>
-              </div>
+              {twoFactorPending && !otpSuccess && (
+                <form onSubmit={handleVerifyOtp} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Code de vérification</Label>
+                    <Input
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      maxLength={5}
+                      placeholder="12345"
+                      value={otpCode}
+                      onChange={(e) => setOtpCode(e.target.value.replace(/[^0-9]/g, '').slice(0,5))}
+                      className="tracking-widest text-center text-lg"
+                      autoFocus
+                    />
+                    {otpError && <p className="text-xs text-red-600">{otpError}</p>}
+                    {twoFactorPending && (
+                      <p className="text-xs text-gray-500">Code envoyé à {twoFactorPending.email}. Expire dans 10 min.</p>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    <Button type="submit" className="flex-1" disabled={loading}>{loading ? 'Vérification...' : 'Valider'}</Button>
+                    <Button type="button" variant="outline" className="flex-1" disabled={loading} onClick={(e)=>handleLogin(e)}>Renvoyer</Button>
+                  </div>
+                </form>
+              )}
+              {otpSuccess && <p className="text-center text-green-600 text-sm">Connexion validée...</p>}
 
-              {/* Google Login Button */}
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full"
-                onClick={handleGoogleLogin}
-                disabled={loading}
-              >
-                <Mail className="h-4 w-4 mr-2" />
-                Continuer avec Google
-              </Button>
+              {!twoFactorPending && (
+                <>
+                <div className="relative my-4">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-white px-2 text-muted-foreground">Ou continuer avec</span>
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={handleGoogleLogin}
+                  disabled={loading}
+                >
+                  <Mail className="h-4 w-4 mr-2" />
+                  Continuer avec Google
+                </Button>
+                </>
+              )}
             </TabsContent>
 
             <TabsContent value="register" className="space-y-4">

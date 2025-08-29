@@ -18,6 +18,8 @@ use App\Http\Controllers\Api\{
     ChallengeController,
     ChallengeActionController
 };
+use App\Models\LoginOtp; // utilisé par la route debug locale
+use App\Models\User as DebugUser; // alias pour éviter conflits éventuels
 
 /*
 |--------------------------------------------------------------------------
@@ -100,6 +102,7 @@ Route::prefix('test')->group(function () {
 Route::prefix('auth')->group(function () {
     Route::post('register', [AuthController::class, 'register']);
     Route::post('login', [AuthController::class, 'login']);
+    Route::post('verify-otp', [AuthController::class, 'verifyOtp']);
     Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
     Route::get('user', [AuthController::class, 'user'])->middleware('auth:sanctum');
     Route::put('profile', [AuthController::class, 'updateProfile'])->middleware('auth:sanctum');
@@ -109,6 +112,30 @@ Route::prefix('auth')->group(function () {
     Route::get('google/callback', [GoogleAuthController::class, 'handleGoogleCallback']);
     Route::post('google/login', [GoogleAuthController::class, 'loginWithGoogle']);
 });
+
+// DEBUG LOCAL UNIQUEMENT: récupérer le dernier OTP d'un email (ne pas déployer en prod)
+if (app()->environment('local')) {
+    Route::get('auth/debug/latest-otp', function (Request $request) {
+        $email = $request->query('email');
+        if (!$email) {
+            return response()->json(['message' => 'Paramètre email requis'], 400);
+        }
+        $user = DebugUser::where('email', $email)->first();
+        if (!$user) {
+            return response()->json(['message' => 'Utilisateur introuvable'], 404);
+        }
+        $otp = LoginOtp::where('user_id', $user->id)->latest()->first();
+        if (!$otp) {
+            return response()->json(['message' => 'Aucun OTP trouvé'], 404);
+        }
+        return response()->json([
+            'otp_id' => $otp->id,
+            'code' => $otp->code,
+            'expires_at' => $otp->expires_at,
+            'consumed_at' => $otp->consumed_at,
+        ]);
+    });
+}
 
 // Mot de passe oublié / réinitialisation (API JSON)
 use App\Http\Controllers\Auth\PasswordResetLinkController;

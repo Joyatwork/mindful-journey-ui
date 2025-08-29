@@ -8,6 +8,10 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Schema;
+use App\Models\LoginOtp;
+use App\Mail\TwoFactorCodeMail;
 use Illuminate\Validation\ValidationException;
 use App\Models\User;
 
@@ -54,15 +58,96 @@ class AuthController extends Controller
 
         if (!$user || !Hash::check($request->password, $user->password)) {
             throw ValidationException::withMessages([
-                'email' => ['Les informations d\'identification fournies sont incorrectes.'],
+                'email' => ["Les informations d'identification fournies sont incorrectes."],
             ]);
         }
 
-        // Créer un token Sanctum
+        // Vérifier que la table login_otps existe (migration appliquée)
+        if (!Schema::hasTable('login_otps')) {
+            Log::warning('2FA désactivé temporairement: table login_otps absente. Retour au login direct.');
+            $token = $user->createToken('auth-token')->plainTextToken;
+            return response()->json([
+                'message' => 'Connexion réussie (2FA non disponible)',
+                'user' => $user,
+                'token' => $token,
+                'two_factor' => false
+            ]);
+        }
+
+        // Supprimer anciens OTP expirés ou consommés
+        LoginOtp::where('user_id', $user->id)
+            ->where(function ($q) {
+                $q->where('expires_at', '<', now())
+                  ->orWhereNotNull('consumed_at');
+            })->delete();
+
+        $code = str_pad((string) random_int(0, 99999), 5, '0', STR_PAD_LEFT);
+
+        $otp = LoginOtp::create([
+            'user_id' => $user->id,
+            'code' => $code,
+            'expires_at' => now()->addMinutes(10),
+        ]);
+
+        try {
+            Mail::to($user->email)->send(new TwoFactorCodeMail($code, config('app.name', 'Mindful Journey')));
+        } catch (\Throwable $e) {
+            Log::error('Erreur envoi mail 2FA: '.$e->getMessage());
+            return response()->json([
+                'message' => "Erreur lors de l'envoi du code, réessayez plus tard."], 500);
+        }
+
+        return response()->json([
+            'message' => 'Code envoyé par email',
+            'two_factor' => true,
+            'otp_id' => $otp->id,
+            'expires_in_seconds' => 600,
+        ]);
+    }
+
+    /**
+     * Vérifie le code OTP et retourne le token final si valide
+     */
+    public function verifyOtp(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'otp_id' => 'required|integer',
+            'code' => 'required|string|size:5'
+        ]);
+
+        $otp = LoginOtp::find($data['otp_id']);
+        if (!$otp) {
+            return response()->json(['message' => 'Code introuvable'], 404);
+        }
+
+        if ($otp->isConsumed()) {
+            return response()->json(['message' => 'Code déjà utilisé'], 400);
+        }
+        if ($otp->isExpired()) {
+            $otp->delete();
+            return response()->json(['message' => 'Code expiré'], 400);
+        }
+        if ($otp->attempts >= 5) {
+            $otp->delete();
+            return response()->json(['message' => 'Trop de tentatives, recommencez la connexion'], 429);
+        }
+
+        if (!hash_equals($otp->code, $data['code'])) {
+            $otp->increment('attempts');
+            return response()->json([
+                'message' => 'Code incorrect',
+                'remaining_attempts' => 5 - $otp->attempts
+            ], 400);
+        }
+
+        $otp->consumed_at = now();
+        $otp->save();
+
+        $user = $otp->user;
         $token = $user->createToken('auth-token')->plainTextToken;
 
         return response()->json([
-            'message' => 'Connexion réussie',
+            'message' => 'Connexion validée',
             'user' => $user,
             'token' => $token,
         ]);

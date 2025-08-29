@@ -160,6 +160,10 @@ const testApiService = {
       method: 'POST',
       body: JSON.stringify(credentials)
     }),
+    verifyOtp: (data: { otp_id: number; code: string }) => testApiRequest('/auth/verify-otp', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    }),
     forgotPassword: (email: string) => testApiRequest('/forgot-password', {
       method: 'POST',
       body: JSON.stringify({ email })

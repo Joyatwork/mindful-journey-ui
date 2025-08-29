@@ -15,12 +15,20 @@ interface User {
   created_at: string;
 }
 
+interface TwoFactorPending {
+  otpId: number;
+  expiresAt: string; // ISO string
+  email: string;
+}
+
 interface AuthContextType {
   user: User | null;
   token: string | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  twoFactorPending: TwoFactorPending | null;
+  login: (email: string, password: string) => Promise<{ twoFactor?: true }>;
+  verifyOtp: (code: string) => Promise<void>;
   register: (name: string, email: string, password: string, password_confirmation: string) => Promise<void>;
   forgotPassword: (email: string) => Promise<void>;
   resetPassword: (data: { email: string; token: string; password: string; password_confirmation: string }) => Promise<void>;
@@ -48,6 +56,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [twoFactorPending, setTwoFactorPending] = useState<TwoFactorPending | null>(null);
+  const [lastCredentials, setLastCredentials] = useState<{ email: string; password: string } | null>(null);
 
   const isAuthenticated = !!user && !!token;
 
@@ -100,41 +110,55 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     loadUserData();
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string): Promise<{ twoFactor?: true }> => {
     try {
       console.log('🔄 Début de la connexion...');
       const response = await testApiService.auth.login({ email, password });
       console.log('✅ Réponse login:', response);
-      
+      setLastCredentials({ email, password });
+
+      if (response.two_factor) {
+        // Étape 2FA : ne pas définir user/token maintenant
+        const expiresAt = new Date(Date.now() + (response.expires_in_seconds || 600) * 1000).toISOString();
+        setTwoFactorPending({ otpId: response.otp_id, expiresAt, email });
+        return { twoFactor: true };
+      }
+
+      // Flux sans 2FA (fallback si désactivé côté backend)
       setUser(response.user);
       setToken(response.token || null);
-      
-      // Sauvegarder dans localStorage
+
       if (response.token) {
         localStorage.setItem('auth_token', response.token);
         localStorage.setItem('auth_user', JSON.stringify(response.user));
         console.log('💾 Données sauvées dans localStorage (login):', response.user);
-      }
-      
-      // Récupérer les données utilisateur fraîches pour s'assurer d'avoir les dernières modifications
-      if (response.token) {
         try {
           console.log('🔄 Récupération des données utilisateur fraîches...');
           const userResponse = await testApiService.auth.getUser(response.token);
-          console.log('✅ Données utilisateur fraîches:', userResponse);
-          
           setUser(userResponse.user);
           localStorage.setItem('auth_user', JSON.stringify(userResponse.user));
-          console.log('💾 Données fraîches sauvées dans localStorage:', userResponse.user);
         } catch (error) {
           console.warn('⚠️ Impossible de récupérer les données utilisateur fraîches:', error);
-          // On continue avec les données de login de base
         }
       }
+  return {};
     } catch (error: any) {
       // Rethrow original error to keep status/data for UI handling
       throw error;
     }
+  };
+
+  const verifyOtp = async (code: string) => {
+    if (!twoFactorPending) throw new Error('Aucune vérification en attente');
+    const { otpId } = { otpId: twoFactorPending.otpId };
+    const response = await testApiService.auth.verifyOtp({ otp_id: otpId, code });
+    // Succès -> enregistrer user/token
+    setUser(response.user);
+    setToken(response.token || null);
+    localStorage.setItem('auth_token', response.token);
+    localStorage.setItem('auth_user', JSON.stringify(response.user));
+    setTwoFactorPending(null);
+    setLastCredentials(null);
   };
 
   const register = async (name: string, email: string, password: string, password_confirmation: string) => {
@@ -288,7 +312,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     token,
     isLoading,
     isAuthenticated,
+  twoFactorPending,
     login,
+  verifyOtp,
     register,
   forgotPassword,
   resetPassword,
