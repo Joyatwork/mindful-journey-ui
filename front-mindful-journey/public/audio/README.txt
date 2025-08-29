@@ -1,4 +1,7 @@
-Place your royalty-free guided meditation MP3 here as guided-meditation-fr.mp3
+Place ici tes fichiers audio libres de droit.
+Nom attendu par défaut: guided-default.mp3
+Format recommandé: MP3 128kbps (poids léger).
+Option: ajouter audio_url dans la donnée d'un défi pour un fichier spécifique.Place your royalty-free guided meditation MP3 here as guided-meditation-fr.mp3
 
 Suggested sources (royalty-free / permissive licenses):
 - Pixabay Music (https://pixabay.com/music/)
