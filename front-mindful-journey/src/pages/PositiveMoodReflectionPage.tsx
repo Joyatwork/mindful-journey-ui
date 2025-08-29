@@ -38,9 +38,10 @@ const PositiveMoodReflectionPage: React.FC = () => {
         const today = await apiService.healthData.getTodayMood?.();
         const entry = today?.entry as any;
         if (mounted && entry) {
-          if (entry.details) {
-            setDetails(entry.details);
-            lastSavedRef.current = entry.details;
+          const existing = entry?.details || entry?.notes;
+          if (existing) {
+            setDetails(existing);
+            lastSavedRef.current = existing;
           }
           if (Array.isArray(entry.activities) && entry.activities.length) {
             // filtrer seulement ceux de nos options pour éviter du bruit
@@ -71,7 +72,7 @@ const PositiveMoodReflectionPage: React.FC = () => {
           energy_level: 5,
           stress_level: 3,
           sleep_quality: null,
-          notes: null,
+          notes: details.trim() || null,
           details: details.trim() || null,
           activities: selected,
           emotions: []
@@ -102,7 +103,7 @@ const PositiveMoodReflectionPage: React.FC = () => {
           energy_level: 5,
           stress_level: 3,
           sleep_quality: null,
-          notes: null,
+          notes: details.trim() || null,
           details: details.trim() || null,
           activities: selected,
           emotions: []

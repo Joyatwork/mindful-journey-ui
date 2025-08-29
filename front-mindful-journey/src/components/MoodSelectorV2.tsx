@@ -1,10 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { CheckCircle2, AlertCircle, Loader2, PencilLine } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import apiService from '@/lib/api';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 
 interface MoodOption {
@@ -48,11 +46,8 @@ const MoodSelectorV2: React.FC<MoodSelectorV2Props> = ({
   const [errorMessage, setErrorMessage] = useState('');
   const lastSavedRef = useRef<number | undefined>();
   const timerRef = useRef<number | undefined>();
-  const [detailOpen, setDetailOpen] = useState(false);
-  const [detailValue, setDetailValue] = useState('');
-  const [detailSaving, setDetailSaving] = useState(false);
-  const [detailError, setDetailError] = useState('');
-  const [lastDetailSavedAt, setLastDetailSavedAt] = useState<string | null>(null);
+  // Dialog/details removed; keep placeholder variable for backward payload compatibility.
+  const detailValue = '';
 
   // Prefill today's existing entry details
   useEffect(() => {
@@ -62,10 +57,7 @@ const MoodSelectorV2: React.FC<MoodSelectorV2Props> = ({
         const today = await apiService.healthData.getTodayMood?.();
         if (mounted && today?.entry) {
           const e = today.entry as any;
-            if (e.details) {
-              setDetailValue(e.details);
-              setLastDetailSavedAt(new Date().toISOString());
-            }
+            // previously would load detail text; dialog removed.
             if (e.mood_level && !internalValue) {
               setInternalValue(e.mood_level);
               lastSavedRef.current = e.mood_level;
@@ -91,14 +83,14 @@ const MoodSelectorV2: React.FC<MoodSelectorV2Props> = ({
     try {
       setSaveState('saving');
       setErrorMessage('');
-      const payload = {
+  const payload = {
         date: new Date().toISOString().split('T')[0],
         mood_level: v,
         mood_emoji: moodOptions.find(o => o.value === v)?.emoji || '🙂',
         energy_level: 5,
         stress_level: 3,
         sleep_quality: null,
-        notes: null,
+    notes: detailValue || null,
   details: detailValue || null,
         activities: [],
         emotions: []
@@ -114,35 +106,7 @@ const MoodSelectorV2: React.FC<MoodSelectorV2Props> = ({
     }
   }, [onSaved]);
 
-  const saveDetails = useCallback(async () => {
-    if (!internalValue) return;
-    setDetailSaving(true);
-    setDetailError('');
-    try {
-      const payload = {
-        date: new Date().toISOString().split('T')[0],
-        mood_level: internalValue,
-        mood_emoji: moodOptions.find(o => o.value === internalValue)?.emoji || '🙂',
-        energy_level: 5,
-        stress_level: 3,
-        sleep_quality: null,
-  notes: null, // legacy
-  details: detailValue || null,
-        activities: [],
-        emotions: []
-      };
-      await apiService.healthData.saveMoodData(payload);
-      setLastDetailSavedAt(new Date().toISOString());
-      setDetailOpen(false);
-      if (!autoSave) {
-        lastSavedRef.current = internalValue; // marquer comme sauvegardé
-      }
-    } catch (e: any) {
-      setDetailError(e?.message || 'Erreur lors de la sauvegarde détaillée');
-    } finally {
-      setDetailSaving(false);
-    }
-  }, [internalValue, detailValue, autoSave]);
+  // saveDetails removed with dialog.
 
   // auto-save with debounce
   useEffect(() => {
@@ -232,56 +196,7 @@ const MoodSelectorV2: React.FC<MoodSelectorV2Props> = ({
           </button>
         </div>
       )}
-      {internalValue && (
-        <div className="mt-4 flex flex-wrap items-center gap-3 justify-between">
-          <button
-            type="button"
-            onClick={() => setDetailOpen(true)}
-            className="inline-flex items-center gap-2 text-xs font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-md px-3 py-2 transition-colors"
-          >
-            <PencilLine className="h-4 w-4" />
-            Voulez-vous détailler ?
-          </button>
-          {lastDetailSavedAt && (
-            <span className="text-[11px] text-emerald-600">Dernière note sauvegardée {new Date(lastDetailSavedAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
-          )}
-        </div>
-      )}
-
-      <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Décrire votre état</DialogTitle>
-            <DialogDescription>
-              Ajoutez quelques précisions sur ce que vous ressentez maintenant. Cela enrichira votre suivi.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3 pt-2">
-            <div className="text-sm text-emerald-800/80 flex items-center gap-2">
-              <span className="text-xl" aria-hidden>{moodOptions.find(o => o.value === internalValue)?.emoji}</span>
-              <span>{moodOptions.find(o => o.value === internalValue)?.label}</span>
-            </div>
-            <Textarea
-              value={detailValue}
-              onChange={(e) => setDetailValue(e.target.value)}
-              placeholder="Ex: Un peu tendu après une mauvaise nuit, besoin de respirations profondes..."
-              className="min-h-[140px] resize-vertical"
-            />
-            {detailError && (
-              <Alert className="border-red-200 bg-red-50">
-                <AlertCircle className="h-4 w-4 text-red-600" />
-                <AlertDescription className="text-red-800 text-xs">{detailError}</AlertDescription>
-              </Alert>
-            )}
-          </div>
-          <DialogFooter className="flex gap-2 pt-4">
-            <Button variant="outline" onClick={() => setDetailOpen(false)} disabled={detailSaving}>Annuler</Button>
-            <Button onClick={saveDetails} disabled={detailSaving || !detailValue.trim()} className="bg-emerald-600 hover:bg-emerald-700">
-              {detailSaving ? 'Sauvegarde...' : 'Enregistrer'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+  {/* Details dialog removed as requested */}
     </Card>
   );
 };

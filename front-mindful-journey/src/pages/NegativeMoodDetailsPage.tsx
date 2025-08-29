@@ -29,9 +29,12 @@ const NegativeMoodDetailsPage: React.FC = () => {
         const today = await apiService.healthData.getTodayMood?.();
         const entry = today?.entry as any;
         if (mounted && entry) {
-          if (entry.details) {
-            setDetails(entry.details);
-            lastSavedRef.current = entry.details;
+          // Backend actuel stocke 'notes', le frontend utilisait 'details'.
+          // On unifie: lecture fallback entry.details || entry.notes.
+          const existing = entry?.details || entry?.notes;
+          if (existing) {
+            setDetails(existing);
+            lastSavedRef.current = existing;
           }
         }
       } catch { /* silencieux */ }
@@ -54,7 +57,8 @@ const NegativeMoodDetailsPage: React.FC = () => {
           energy_level: 3,
           stress_level: 6,
           sleep_quality: null,
-          notes: null,
+          // Dupliquer dans notes pour compat backend (table a 'notes').
+          notes: details.trim() || null,
           details: details.trim() || null,
           activities: factors, // réutiliser champ activities pour facteurs pour l'instant
           emotions: []
