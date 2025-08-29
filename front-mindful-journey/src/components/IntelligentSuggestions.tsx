@@ -31,6 +31,12 @@ interface Suggestion {
   action_steps?: string[];
   // URL d'un audio guidé optionnel pour ce défi / contenu
   audio_url?: string;
+  // Transcription texte optionnelle
+  transcription?: string;
+  // Variante: tableau de paragraphes
+  transcription_blocks?: string[];
+  // Variantes audio multi-langues: { fr: '/audio/fr.mp3', en: '/audio/en.mp3' }
+  audio_variants?: Record<string, string>;
 }
 
 interface HealthProfessional {
@@ -90,6 +96,10 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
   const [customImmediateAudioUrls, setCustomImmediateAudioUrls] = useState<Record<number, string>>({});
   const customImmediateUrlOriginalNames = useRef<Record<number, string>>({});
   const [isPaused, setIsPaused] = useState(false);
+  const [openChallengeTexts, setOpenChallengeTexts] = useState<Record<number, boolean>>({});
+  const [openImmediateTexts, setOpenImmediateTexts] = useState<Record<number, boolean>>({});
+  const [challengeLangSelections, setChallengeLangSelections] = useState<Record<number, string>>({});
+  const [immediateLangSelections, setImmediateLangSelections] = useState<Record<number, string>>({});
 
   // Parse "5 min" / "10 minutes" / "7m" -> minutes number
   const parseDurationMinutes = (d?: string): number => {
@@ -139,7 +149,13 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
     setAudioLoading(true);
   setIsPaused(false);
 
-  const src = customAudioUrls[index] || challenge.audio_url || '/audio/guided-default.mp3'; // Priorité audio custom
+    // Choix de langue si variantes
+    let variantUrl: string | undefined;
+    if (challenge.audio_variants) {
+      const selected = challengeLangSelections[index];
+      variantUrl = (selected && challenge.audio_variants[selected]) || challenge.audio_variants['fr'] || Object.values(challenge.audio_variants)[0];
+    }
+    const src = customAudioUrls[index] || variantUrl || challenge.audio_url || '/audio/guided-default.mp3'; // Priorité custom > variant > single > défaut
   const audio = new Audio(src);
   audioRef.current = audio;
   // Support M4A (container MP4 + AAC) et MP3. La boucle ne sera activée qu'en fonction de la durée réelle.
@@ -183,7 +199,7 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
         clearAudio();
       }
     }, 6000);
-  }, [audioLoading, clearAudio, playingChallengeIndex, stopCurrent, customAudioUrls]);
+  }, [audioLoading, clearAudio, playingChallengeIndex, stopCurrent, customAudioUrls, challengeLangSelections]);
 
   const startImmediateAudio = useCallback((index: number, action: Suggestion) => {
     if (playingImmediateIndex === index) {
@@ -200,7 +216,12 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
     setPlayingChallengeIndex(null);
     setAudioLoading(true);
     setIsPaused(false);
-    const src = customImmediateAudioUrls[index] || action.audio_url || '/audio/guided-default.mp3';
+    let variantUrl: string | undefined;
+    if (action.audio_variants) {
+      const selected = immediateLangSelections[index];
+      variantUrl = (selected && action.audio_variants[selected]) || action.audio_variants['fr'] || Object.values(action.audio_variants)[0];
+    }
+    const src = customImmediateAudioUrls[index] || variantUrl || action.audio_url || '/audio/guided-default.mp3';
     const audio = new Audio(src);
     audioRef.current = audio;
     audio.preload = 'auto';
@@ -239,7 +260,7 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
         clearAudio();
       }
     }, 6000);
-  }, [audioLoading, clearAudio, playingImmediateIndex, customImmediateAudioUrls, stopCurrent]);
+  }, [audioLoading, clearAudio, playingImmediateIndex, customImmediateAudioUrls, stopCurrent, immediateLangSelections]);
 
   // Sélection d'un fichier audio local pour un challenge
   const handleSelectAudio = (index: number, file: File) => {
@@ -297,6 +318,9 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
     setIsPaused(false);
   };
 
+  const toggleChallengeText = (index: number) => setOpenChallengeTexts(p => ({ ...p, [index]: !p[index] }));
+  const toggleImmediateText = (index: number) => setOpenImmediateTexts(p => ({ ...p, [index]: !p[index] }));
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -327,7 +351,33 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
       };
 
       const response = await apiService.recommendations.getPersonalized(context);
-      setSuggestions(response.suggestions);
+      // Normalisation: injecter audio_variants si une seule url fournie pour permettre le sélecteur
+      const norm = { ...response.suggestions } as SuggestionGroup;
+      try {
+        const ensureVariants = (arr?: Suggestion[]) => {
+          if (!arr) return;
+          arr.forEach(s => {
+            if (!s) return;
+            // Si pas de variants mais une url simple, créer un objet par défaut
+            if (!s.audio_variants && s.audio_url) {
+              s.audio_variants = { fr: s.audio_url };
+            }
+            // Si transcription_blocks absent mais transcription string contient des \n\n, splitter
+            if (!s.transcription_blocks && s.transcription && s.transcription.includes('\n')) {
+              const blocks = s.transcription.split(/\n{2,}/).map(b => b.trim()).filter(Boolean);
+              if (blocks.length > 1) s.transcription_blocks = blocks;
+            }
+          });
+        };
+        ensureVariants(norm.challenges);
+        ensureVariants(norm.immediate_actions);
+        ensureVariants(norm.content);
+      } catch (e) {
+        console.warn('Normalization error', e);
+      }
+      // Debug: inspect audio_variants presence après normalisation
+      try { console.log('[IntelligentSuggestions] suggestions fetched (normalized)', norm); } catch {}
+      setSuggestions(norm);
       setLastUpdate(new Date());
     } catch (err: any) {
       setError(err.message || 'Erreur lors du chargement des suggestions');
@@ -382,6 +432,7 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
             const progress = isPlaying && totalSeconds > 0 ? (1 - remainingSeconds / totalSeconds) : 0;
             const mm = Math.floor(remainingSeconds / 60).toString().padStart(2, '0');
             const ss = (remainingSeconds % 60).toString().padStart(2, '0');
+            const audioLangs = action.audio_variants ? Object.keys(action.audio_variants) : [];
             return (
               <div key={index} className={`bg-white p-4 rounded-lg border border-red-200 relative ${isPlaying ? 'ring-2 ring-red-300' : ''}`}>
                 <div className="flex items-start justify-between mb-2 gap-2 min-w-0">
@@ -422,6 +473,26 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                   <p className="mt-1 text-xs text-red-600">{audioError}</p>
                 )}
                 <div className="flex gap-2 flex-wrap">
+                  {audioLangs.length > 0 && (
+                    <div className="flex items-center gap-1 text-xs">
+                      <label htmlFor={`imm-lang-${index}`} className="text-gray-600">Langue:</label>
+                      <select
+                        id={`imm-lang-${index}`}
+                        className="border rounded px-1 py-0.5 text-xs"
+                        value={immediateLangSelections[index] || ''}
+                        onChange={e => {
+                          setImmediateLangSelections(prev => ({ ...prev, [index]: e.target.value }));
+                          if (isPlaying) {
+                            // Redémarrer avec nouvelle langue
+                            startImmediateAudio(index, action);
+                          }
+                        }}
+                      >
+                        <option value="">Auto</option>
+                        {audioLangs.map(lang => <option key={lang} value={lang}>{lang}</option>)}
+                      </select>
+                    </div>
+                  )}
                   {!isPlaying && (
                     <Button size="sm" className="flex-1 bg-red-600 hover:bg-red-700" onClick={() => startImmediateAudio(index, action)}>
                       Commencer avec audio
@@ -435,9 +506,9 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                   {isPlaying && (
                     <Button size="sm" variant="outline" onClick={() => stopCurrent()}>Stop</Button>
                   )}
-                  {!isPlaying && (
-                    <Button size="sm" variant="outline" onClick={() => onSuggestionSelect?.(action)}>Détails</Button>
-                  )}
+                  <Button size="sm" variant={openImmediateTexts[index] ? 'default' : 'outline'} onClick={() => toggleImmediateText(index)}>
+                    {openImmediateTexts[index] ? 'Masquer texte' : 'Texte'}
+                  </Button>
                   {isPlaying && audioLoading && (
                     <Button size="sm" disabled className="flex-1">Chargement...</Button>
                   )}
@@ -459,6 +530,30 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                 </div>
                 {customImmediateAudioUrls[index] && (
                   <div className="mt-1 text-xs text-gray-500 truncate">Audio local: {customImmediateUrlOriginalNames.current[index]}</div>
+                )}
+                {openImmediateTexts[index] && (
+                  <div className="mt-2 p-3 rounded border bg-red-50 text-sm max-h-56 overflow-auto space-y-2">
+                    {action.transcription_blocks && action.transcription_blocks.length > 0 ? (
+                      <div className="space-y-2">
+                        {action.transcription_blocks.map((p,i)=>(
+                          <p key={i} className="whitespace-pre-wrap break-anywhere leading-relaxed">{p}</p>
+                        ))}
+                      </div>
+                    ) : (
+                      (() => {
+                        const text = action.transcription || action.description || (customImmediateAudioUrls[index] ? "Transcription non disponible pour l'audio local." : 'Aucune transcription.');
+                        return <div className="whitespace-pre-wrap break-anywhere">{text}</div>;
+                      })()
+                    )}
+                    {(!action.transcription && action.action_steps?.length) && (
+                      <div>
+                        <p className="font-medium text-xs text-gray-600 mb-1">Étapes :</p>
+                        <ol className="text-xs space-y-1 list-decimal list-inside">
+                          {action.action_steps.map((s,i)=>(<li key={i} className="break-anywhere">{s}</li>))}
+                        </ol>
+                      </div>
+                    )}
+                  </div>
                 )}
                 {isPlaying && remainingSeconds === 0 && (
                   <div className="mt-2 text-xs text-green-600 font-medium">Action complétée ✅</div>
@@ -488,6 +583,7 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
             const progress = isPlaying && totalSeconds > 0 ? (1 - remainingSeconds / totalSeconds) : 0;
             const mm = Math.floor(remainingSeconds / 60).toString().padStart(2, '0');
             const ss = (remainingSeconds % 60).toString().padStart(2, '0');
+            const audioLangs = challenge.audio_variants ? Object.keys(challenge.audio_variants) : [];
             return (
               <div key={index} className={`bg-white p-4 rounded-lg border relative ${isPlaying ? 'ring-2 ring-orange-300' : ''}`}>
                 <div className="flex items-start justify-between mb-2 gap-2 min-w-0">
@@ -533,6 +629,25 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                 )}
                 <div className="mt-3 flex flex-col gap-2">
                   <div className="flex gap-2 flex-wrap">
+                    {audioLangs.length > 0 && (
+                      <div className="flex items-center gap-1 text-xs">
+                        <label htmlFor={`ch-lang-${index}`} className="text-gray-600">Langue:</label>
+                        <select
+                          id={`ch-lang-${index}`}
+                          className="border rounded px-1 py-0.5 text-xs"
+                          value={challengeLangSelections[index] || ''}
+                          onChange={e => {
+                            setChallengeLangSelections(prev => ({ ...prev, [index]: e.target.value }));
+                            if (isPlaying) {
+                              startChallengeAudio(index, challenge);
+                            }
+                          }}
+                        >
+                          <option value="">Auto</option>
+                          {audioLangs.map(lang => <option key={lang} value={lang}>{lang}</option>)}
+                        </select>
+                      </div>
+                    )}
                     {!isPlaying && (
                       <Button
                         size="sm"
@@ -562,15 +677,13 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                         Stop
                       </Button>
                     )}
-                    {!isPlaying && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => onSuggestionSelect?.(challenge)}
-                      >
-                        Détails
-                      </Button>
-                    )}
+                    <Button
+                      size="sm"
+                      variant={openChallengeTexts[index] ? 'default' : 'outline'}
+                      onClick={() => toggleChallengeText(index)}
+                    >
+                      {openChallengeTexts[index] ? 'Masquer texte' : 'Texte'}
+                    </Button>
                     {isPlaying && audioLoading && (
                       <Button size="sm" disabled className="flex-1">Chargement...</Button>
                     )}
@@ -597,6 +710,30 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                   </div>
                   {customAudioUrls[index] && (
                     <div className="text-xs text-gray-500 truncate">Audio local: {customUrlOriginalNames.current[index]}</div>
+                  )}
+                  {openChallengeTexts[index] && (
+                    <div className="mt-2 p-3 rounded border bg-orange-50 text-sm max-h-60 overflow-auto space-y-2">
+                      {challenge.transcription_blocks && challenge.transcription_blocks.length > 0 ? (
+                        <div className="space-y-2">
+                          {challenge.transcription_blocks.map((p,i)=>(
+                            <p key={i} className="whitespace-pre-wrap break-anywhere leading-relaxed">{p}</p>
+                          ))}
+                        </div>
+                      ) : (
+                        (() => {
+                          const text = challenge.transcription || challenge.description || (customAudioUrls[index] ? "Transcription non disponible pour l'audio local." : 'Aucune transcription.');
+                          return <div className="whitespace-pre-wrap break-anywhere">{text}</div>;
+                        })()
+                      )}
+                      {(!challenge.transcription && challenge.action_steps?.length) && (
+                        <div>
+                          <p className="font-medium text-xs text-gray-600 mb-1">Étapes :</p>
+                          <ol className="text-xs space-y-1 list-decimal list-inside">
+                            {challenge.action_steps.map((s,i)=>(<li key={i} className="break-anywhere">{s}</li>))}
+                          </ol>
+                        </div>
+                      )}
+                    </div>
                   )}
                 </div>
                 {isPlaying && remainingSeconds === 0 && (
