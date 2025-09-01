@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
@@ -9,11 +9,12 @@ import { ArrowLeft, ArrowRight } from 'lucide-react';
 interface DiagnosticQuestion {
   id: string;
   question: string;
-  type: 'slider' | 'emoji' | 'choice';
+  type: 'slider' | 'emoji' | 'choice' | 'text';
   options?: string[];
   min?: number;
   max?: number;
   labels?: { min: string; max: string };
+  description?: string; // texte additionnel facultatif
 }
 
 interface DiagnosticStepProps {
@@ -25,6 +26,10 @@ interface DiagnosticStepProps {
   onNext: () => void;
   onPrevious: () => void;
   canGoNext: boolean;
+  hidePreviousButton?: boolean;
+  primaryLabel?: string; // force un libellé personnalisé (ex: Ok)
+  previousLabel?: string; // personnalisation éventuelle
+  inlineBackArrow?: boolean; // afficher une petite flèche retour à côté du bouton principal
 }
 
 const DiagnosticStep = ({
@@ -35,8 +40,13 @@ const DiagnosticStep = ({
   onValueChange,
   onNext,
   onPrevious,
-  canGoNext
+  canGoNext,
+  hidePreviousButton,
+  primaryLabel,
+  previousLabel,
+  inlineBackArrow
 }: DiagnosticStepProps) => {
+  const [animatingChoice, setAnimatingChoice] = useState<any>(null);
   const emojiOptions = [
     { value: 1, emoji: '😰', label: 'Très stressé' },
     { value: 2, emoji: '😟', label: 'Stressé' },
@@ -73,45 +83,73 @@ const DiagnosticStep = ({
       case 'emoji':
         return (
           <div className="grid grid-cols-5 gap-3">
-            {emojiOptions.map((option) => (
-              <button
-                key={option.value}
-                onClick={() => onValueChange(option.value)}
-                className={`
-                  flex flex-col items-center p-4 rounded-2xl transition-all duration-200
-                  ${value === option.value 
-                    ? 'bg-wellness-gradient text-white scale-105 shadow-lg' 
-                    : 'bg-gray-50 hover:bg-gray-100 hover:scale-105'
-                  }
-                `}
-              >
-                <span className="text-3xl mb-2">{option.emoji}</span>
-                <span className="text-xs text-center font-medium">
-                  {option.label}
-                </span>
-              </button>
-            ))}
+            {emojiOptions.map((option) => {
+              const active = value === option.value;
+              const animate = animatingChoice === option.value;
+              return (
+                <button
+                  key={option.value}
+                  onClick={() => {
+                    onValueChange(option.value);
+                    setAnimatingChoice(option.value);
+                    setTimeout(() => setAnimatingChoice(null), 420);
+                  }}
+                  className={`
+                    flex flex-col items-center p-4 rounded-2xl transition-transform duration-200
+                    ${active
+                      ? 'bg-wellness-gradient text-white shadow-lg' 
+                      : 'bg-gray-50 hover:bg-gray-100'}
+                    ${animate ? 'animate-selectPulse' : ''}
+                  `}
+                >
+                  <span className="text-3xl mb-2">{option.emoji}</span>
+                  <span className="text-xs text-center font-medium">
+                    {option.label}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         );
 
       case 'choice':
         return (
           <div className="space-y-3">
-            {question.options?.map((option, index) => (
-              <button
-                key={index}
-                onClick={() => onValueChange(option)}
-                className={`
-                  w-full p-4 rounded-lg text-left transition-all duration-200 border
-                  ${value === option
-                    ? 'border-primary bg-primary/5 text-primary'
-                    : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                  }
-                `}
-              >
-                {option}
-              </button>
-            ))}
+            {question.options?.map((option, index) => {
+              const active = value === option;
+              const animate = animatingChoice === option;
+              return (
+                <button
+                  key={index}
+                  onClick={() => {
+                    onValueChange(option);
+                    setAnimatingChoice(option);
+                    setTimeout(() => setAnimatingChoice(null), 420);
+                  }}
+                  className={`
+                    w-full p-4 rounded-lg text-left transition-all duration-200 border relative
+                    ${active
+                      ? 'border-primary bg-primary/5 text-primary shadow-sm'
+                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'}
+                    ${animate ? 'animate-selectPulse' : ''}
+                  `}
+                >
+                  {option}
+                </button>
+              );
+            })}
+          </div>
+        );
+
+      case 'text':
+        return (
+          <div>
+            <textarea
+              placeholder={"Répondez ici..."}
+              value={value || ''}
+              onChange={(e) => onValueChange(e.target.value)}
+              className="w-full h-40 resize-none rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/40 p-4 text-sm leading-relaxed bg-white/70 backdrop-blur"
+            />
           </div>
         );
 
@@ -134,31 +172,50 @@ const DiagnosticStep = ({
       </div>
 
       <Card className="p-8 glass-card border-0 shadow-lg">
-        <h2 className="text-xl font-semibold mb-6 text-center leading-relaxed">
-          {question.question}
-        </h2>
+        <div className="mb-6 text-center">
+          <h2 className="text-xl font-semibold leading-relaxed whitespace-pre-line">
+            {question.question}
+          </h2>
+          {question.description && (
+            <p className="mt-3 text-sm text-muted-foreground whitespace-pre-line">
+              {question.description}
+            </p>
+          )}
+        </div>
 
         <div className="mb-8">
           {renderInput()}
         </div>
 
-        <div className="flex justify-between">
-          <Button
-            variant="outline"
-            onClick={onPrevious}
-            disabled={currentStep === 1}
-            className="flex items-center space-x-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            <span>Précédent</span>
-          </Button>
-
+        <div className={`flex items-center gap-3 ${hidePreviousButton ? (inlineBackArrow ? 'justify-between' : 'justify-end') : 'justify-between'}`}>
+          {!hidePreviousButton && (
+            <Button
+              variant="outline"
+              onClick={onPrevious}
+              disabled={currentStep === 1}
+              className="flex items-center space-x-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span>{previousLabel || 'Précédent'}</span>
+            </Button>
+          )}
+          {hidePreviousButton && inlineBackArrow && currentStep > 1 && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onPrevious}
+              className="h-10 w-10 p-0 flex items-center justify-center bg-wellness-gradient text-white border-0 shadow hover:opacity-90 transition"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+          )}
+          <div className="flex-1" />
           <Button
             onClick={onNext}
             disabled={!canGoNext}
             className="flex items-center space-x-2 bg-wellness-gradient hover:opacity-90"
           >
-            <span>{currentStep === totalSteps ? 'Terminer' : 'Suivant'}</span>
+            <span>{primaryLabel || (currentStep === totalSteps ? 'Terminer' : 'Suivant')}</span>
             <ArrowRight className="h-4 w-4" />
           </Button>
         </div>

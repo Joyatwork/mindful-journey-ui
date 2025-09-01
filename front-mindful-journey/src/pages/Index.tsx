@@ -49,8 +49,11 @@ import {
   UserCheck,
   LogOut,
   ArrowLeft,
-  Sparkles
+  Sparkles,
+  Check
 } from 'lucide-react';
+import AnnualBackground from '@/components/AnnualBackground';
+import AnnualOptionList from '@/components/AnnualOptionList';
 
 const Index = () => {
   const location = useLocation();
@@ -63,6 +66,116 @@ const Index = () => {
   const [diagnosticStep, setDiagnosticStep] = useState(1);
   const [diagnosticAnswers, setDiagnosticAnswers] = useState<Record<string, any>>({});
   const [showPostDiagnosticSuggestions, setShowPostDiagnosticSuggestions] = useState(false);
+  // Etat spécifique au parcours annuel (intro -> futur questionnaire personnalisé)
+  const [annualStarted, setAnnualStarted] = useState(false);
+  const [annualStep, setAnnualStep] = useState(1);
+  const [annualAnswers, setAnnualAnswers] = useState<Record<string, any>>({});
+  const [annualFinished, setAnnualFinished] = useState(false);
+  const [annualGeneral, setAnnualGeneral] = useState(false); // écran question générale post-fin
+  const [annualGeneralAnswer, setAnnualGeneralAnswer] = useState<string>(''); // réponse menu déroulant final
+  const [annualFeelings, setAnnualFeelings] = useState(false); // écran des ressentis après la question générale
+  const [annualFeelingsAnswer, setAnnualFeelingsAnswer] = useState<string[]>([]); // multi-sélection
+  const [annualExplain, setAnnualExplain] = useState(false); // écran d'explication finale
+  const [annualExplainText, setAnnualExplainText] = useState('');
+  const [annualLikert, setAnnualLikert] = useState(false); // écran likert
+  const [annualLikertAnswer, setAnnualLikertAnswer] = useState<string>('');
+  const [annualLikertWork, setAnnualLikertWork] = useState(false); // deuxième écran likert (travail)
+  const [annualLikertWorkAnswer, setAnnualLikertWorkAnswer] = useState<string>('');
+  const [annualSatisfaction, setAnnualSatisfaction] = useState(false); // écran satisfaction 0..10
+  const [annualSatisfactionAnswer, setAnnualSatisfactionAnswer] = useState<number | null>(null);
+  const [annualExplainWhy, setAnnualExplainWhy] = useState(false); // nouvel écran explication après satisfaction
+  const [annualExplainWhyText, setAnnualExplainWhyText] = useState('');
+  const [annualMotivation, setAnnualMotivation] = useState(false); // écran motivation final transition
+  const [annualWorkSchedule, setAnnualWorkSchedule] = useState(false); // nouvel écran horaires de travail
+  const [annualWorkScheduleAnswer, setAnnualWorkScheduleAnswer] = useState('');
+  const [annualWorkload, setAnnualWorkload] = useState(false); // écran charge de travail
+  const [annualWorkloadAnswer, setAnnualWorkloadAnswer] = useState<number | null>(null);
+  const [annualTaskDifficulty, setAnnualTaskDifficulty] = useState(false); // écran difficulté tâches
+  const [annualTaskDifficultyAnswer, setAnnualTaskDifficultyAnswer] = useState<number | null>(null);
+  const annualStoragePrefix = React.useMemo(() => (user?.id ? `annual:${user.id}:` : 'annual:guest:'), [user?.id]);
+
+  // --------------------------------------------------
+  // Progression unifiée du parcours annuel
+  // Étapes (7): 1=gender,2=age,3=department,4=general,5=feelings,6=explain,7=likert
+  const ANNUAL_TOTAL_STEPS = 14;
+  const getAnnualProgressStep = () => {
+    if (!annualStarted) return 0;
+    if (!annualFinished) return annualStep; // 1..3
+    // après les 3 premières questions de base
+    if (annualFinished && !annualGeneral) return 3; // écran transition
+    if (annualFinished && annualGeneral && !annualFeelings) return 4; // écran général ou juste après
+    if (annualFinished && annualGeneral && annualFeelings && !annualExplain) return 5;
+    if (annualFinished && annualGeneral && annualFeelings && annualExplain && !annualLikert) return 6;
+  if (annualFinished && annualGeneral && annualFeelings && annualExplain && annualLikert && !annualLikertWork) return 7;
+  if (annualFinished && annualGeneral && annualFeelings && annualExplain && annualLikert && annualLikertWork && !annualSatisfaction) return 8;
+  if (annualFinished && annualGeneral && annualFeelings && annualExplain && annualLikert && annualLikertWork && annualSatisfaction && !annualExplainWhy) return 9;
+  if (annualFinished && annualGeneral && annualFeelings && annualExplain && annualLikert && annualLikertWork && annualSatisfaction && annualExplainWhy && !annualMotivation) return 10;
+  if (annualFinished && annualGeneral && annualFeelings && annualExplain && annualLikert && annualLikertWork && annualSatisfaction && annualExplainWhy && annualMotivation && !annualWorkSchedule) return 11;
+  if (annualFinished && annualGeneral && annualFeelings && annualExplain && annualLikert && annualLikertWork && annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && !annualWorkload) return 12;
+  if (annualFinished && annualGeneral && annualFeelings && annualExplain && annualLikert && annualLikertWork && annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && !annualTaskDifficulty) return 13;
+  if (annualFinished && annualGeneral && annualFeelings && annualExplain && annualLikert && annualLikertWork && annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty) return 14;
+    return 0;
+  };
+  const annualProgressStep = getAnnualProgressStep();
+  const AnnualProgressBar: React.FC<{ className?: string }> = ({ className = '' }) => (
+    <div className={"mb-6 " + className} aria-label={`Progression ${annualProgressStep} sur ${ANNUAL_TOTAL_STEPS}`}>
+      <div className="h-2 w-full bg-white/20 rounded-full overflow-hidden">
+        <div className="h-full bg-gradient-to-r from-indigo-500 to-fuchsia-500 transition-all" style={{ width: `${(annualProgressStep / ANNUAL_TOTAL_STEPS) * 100}%` }} />
+      </div>
+      <div className="flex justify-between mt-2 text-xs text-white/70">
+        <span>Étape {annualProgressStep}</span>
+        <span>{ANNUAL_TOTAL_STEPS} étapes</span>
+      </div>
+    </div>
+  );
+
+  // Questions du parcours annuel (personnalisable progressivement)
+  const annualQuestions: Array<{id:string; question:string; type:'choice' | 'text'; options?:string[]; description?:string}> = [
+    {
+      id: 'gender',
+  question: 'Tu es*',
+      type: 'choice',
+      options: ['Une femme','Un homme']
+    },
+    {
+      id: 'age',
+  question: 'Quel âge as-tu?*',
+      description: 'Pour des conseils adaptés à ton suivi.',
+      type: 'choice',
+      options: [
+        'Moins de 30 ans',
+        '30 ans +',
+        '40 ans +',
+        '50 ans +',
+        '60 ans +'
+      ]
+    },
+    {
+      id: 'department',
+  question: 'Dans quel service/département\ntravailles-tu?*',
+      description: 'Pour mieux sensibiliser ton responsable d\'équipe, à la prise en compte du bien-être dans le relationnel et la cohésion d\'équipe.',
+      type: 'text'
+    }
+  ];
+
+  // Charger automatiquement les réponses sauvegardées (auto-save) au démarrage du parcours annuel
+  useEffect(() => {
+    if (!annualStarted) return; // charge seulement une fois lancé
+    try {
+      const restored: Record<string, any> = {};
+      for (const q of annualQuestions) {
+        const k = annualStoragePrefix + q.id;
+        const v = localStorage.getItem(k);
+        if (v !== null) {
+          try { restored[q.id] = JSON.parse(v); } catch { restored[q.id] = v; }
+        }
+      }
+      if (Object.keys(restored).length) {
+        setAnnualAnswers(prev => ({ ...restored, ...prev }));
+      }
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [annualStarted, annualStoragePrefix]);
   const { toast } = useToast();
   type NotificationItem = {
     id: string;
@@ -333,56 +446,7 @@ const Index = () => {
     }
   ];
 
-  // Questions auto-diagnostic annuel (plus approfondi)
-  const annualDiagnosticQuestions = [
-    ...diagnosticQuestions,
-    {
-      id: 'year_stress_trend',
-      question: 'Sur l’année écoulée, votre stress a-t-il plutôt…',
-      type: 'choice' as const,
-      options: [
-        'Fortement diminué',
-        'Un peu diminué',
-        'Resté stable',
-        'Un peu augmenté',
-        'Fortement augmenté'
-      ]
-    },
-    {
-      id: 'year_energy_trend',
-      question: 'Globalement votre énergie sur 12 mois a…',
-      type: 'choice' as const,
-      options: [
-        'Beaucoup progressé',
-        'Légèrement progressé',
-        'Stagné',
-        'Légèrement baissé',
-        'Fortement baissé'
-      ]
-    },
-    {
-      id: 'burnout_risk',
-      question: 'Vous sentez-vous proche d’un épuisement professionnel (burnout) ?',
-      type: 'choice' as const,
-      options: [
-        'Pas du tout',
-        'Un peu',
-        'Par moments',
-        'Assez souvent',
-        'Très fortement'
-      ]
-    },
-    {
-      id: 'year_main_challenge',
-      question: 'Quel a été votre plus grand défi bien‑être cette année ?',
-      type: 'text' as const
-    },
-    {
-      id: 'year_goal_priority',
-      question: 'Votre priorité principale pour l’année qui vient ?',
-      type: 'text' as const
-    }
-  ];
+  // Auto-diagnostic annuel: parcours personnalisé à venir (placeholder uniquement pour l'instant)
 
   // Vue active: diagnostic court ou annuel
   const isAnnual = currentView === 'diagnostic-annual';
@@ -733,7 +797,7 @@ const Index = () => {
         </Button>
 
         <Button 
-          onClick={() => setCurrentView('diagnostic-annual')}
+          onClick={() => { setAnnualStarted(false); setCurrentView('diagnostic-annual'); }}
           className="h-16 bg-gradient-to-br from-indigo-500 to-fuchsia-600 hover:opacity-90 text-white rounded-2xl"
         >
           <div className="text-center">
@@ -925,7 +989,815 @@ const Index = () => {
   );
 
   const renderDiagnostic = () => {
-    const questions = isAnnual ? annualDiagnosticQuestions : diagnosticQuestions;
+    if (isAnnual && !annualStarted) {
+      return (
+        <div className="relative min-h-screen w-full overflow-hidden animate-fadeIn">
+          {/* Image de fond (peut être remplacée par /annual-bg.jpg si souhaité) */}
+          <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1503264116251-35a269479413?auto=format&fit=crop&w=1400&q=60')" }} />
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <div className="relative z-10 flex flex-col min-h-screen px-6 pt-12 pb-10">
+            <div className="max-w-xl mx-auto w-full flex flex-col flex-1">
+              <div className="mb-10">
+                <Button variant="ghost" size="sm" className="p-2 mb-6 text-white/80 hover:bg-white/10" onClick={() => setCurrentView('dashboard')}>
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+                <h1 className="text-4xl font-semibold text-white leading-tight mb-6 drop-shadow-[0_2px_8px_rgba(0,0,0,0.35)]">
+                  Tu vas pouvoir t'épanouir !
+                </h1>
+                <div className="rounded-2xl border border-white/30 bg-white/10 backdrop-blur-md p-5 space-y-6 shadow-lg">
+                  <p className="text-white/85 text-sm leading-relaxed">
+                    JoyatWork t'accompagne chaque jour pour prendre soin de toi. Questionnaire conçu par des Experts Praticiens pour :
+                  </p>
+                  <ul className="space-y-4 text-left">
+                    <li className="flex items-start gap-4 group">
+                      <span className="h-8 w-8 flex items-center justify-center rounded-full bg-indigo-500/80 border border-white/30 text-white text-sm font-semibold shadow">1</span>
+                      <span className="text-white/90 font-medium leading-snug group-hover:text-white">Être plus heureux(se)</span>
+                    </li>
+                    <li className="flex items-start gap-4 group">
+                      <span className="h-8 w-8 flex items-center justify-center rounded-full bg-fuchsia-500/80 border border-white/30 text-white text-sm font-semibold shadow">2</span>
+                      <span className="text-white/90 font-medium leading-snug group-hover:text-white">Devenir plus détendu(e)</span>
+                    </li>
+                    <li className="flex items-start gap-4 group">
+                      <span className="h-8 w-8 flex items-center justify-center rounded-full bg-emerald-500/80 border border-white/30 text-white text-sm font-semibold shadow">3</span>
+                      <span className="text-white/90 font-medium leading-snug group-hover:text-white">Être en meilleure forme jusqu'à la fin</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              <div className="mt-auto space-y-4">
+                <Button className="w-full h-14 text-base font-semibold bg-gradient-to-r from-indigo-500 to-fuchsia-600 hover:opacity-90 shadow-lg shadow-fuchsia-900/30" onClick={() => { setAnnualStarted(true); setAnnualFinished(false); setAnnualGeneral(false); setAnnualFeelings(false); setAnnualExplain(false); setAnnualLikert(false); setAnnualGeneralAnswer(''); setAnnualFeelingsAnswer([]); setAnnualExplainText(''); setAnnualLikertAnswer(''); setAnnualStep(1); }}>
+                  Continuer
+                </Button>
+                <Button variant="outline" className="w-full h-12 border-white/40 text-white hover:bg-white/10 bg-white/5" onClick={() => setCurrentView('dashboard')}>Plus tard</Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    // Écran explication (après feelings)
+    if (isAnnual && annualStarted && annualFinished && annualGeneral && annualFeelings && annualExplain && annualLikert && annualLikertWork) {
+      // Écran motivation final (après explication why)
+      // Écran question horaires de travail (après motivation)
+      if (annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && !annualWorkload) {
+        const scheduleOptions = [
+          { code: 'A', label: 'Fixes, clairs' },
+          { code: 'B', label: 'Flexibles' },
+          { code: 'C', label: 'Convenables' },
+          { code: 'D', label: 'Sans limite' },
+          { code: 'E', label: 'Décalés, de nuit' }
+        ];
+        return (
+          <div className="relative min-h-screen w-full overflow-hidden">
+            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1524253482453-3fed8d2fe12b?auto=format&fit=crop&w=1400&q=60')" }} />
+            <div className="absolute inset-0 bg-black/65 backdrop-blur-sm" />
+            <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
+              <div className="max-w-xl mx-auto w-full flex flex-col flex-1">
+                <AnnualProgressBar className="mb-8" />
+                <div className="mb-8 text-left">
+                  <h1 className="text-3xl font-semibold text-white leading-snug mb-6">Mes horaires de travail sont*</h1>
+                  <p className="text-white/70 text-sm mb-4">Sélectionne l'option qui correspond le mieux à ton rythme.</p>
+                  <div className="space-y-4">
+                    {scheduleOptions.map(opt => {
+                      const selected = annualWorkScheduleAnswer === opt.code;
+                      return (
+                        <button
+                          key={opt.code}
+                          type="button"
+                          onClick={() => { setAnnualWorkScheduleAnswer(opt.code); try { localStorage.setItem(annualStoragePrefix + 'work_schedule_type', JSON.stringify(opt.code)); } catch {} }}
+                          onMouseDown={(e) => e.currentTarget.classList.add('pressing')}
+                          onMouseUp={(e) => e.currentTarget.classList.remove('pressing')}
+                          onMouseLeave={(e) => e.currentTarget.classList.remove('pressing')}
+                          className={`w-full flex items-center gap-4 rounded-2xl border backdrop-blur-md px-5 py-4 text-left transition [transition-property:background,border,color,transform] duration-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400/70 ${selected ? 'bg-white/25 border-white text-white shadow-lg animate-selectPop' : 'bg-white/10 border-white/50 text-white hover:bg-white/15'}`}
+                          aria-pressed={selected}
+                        >
+                          <span className="flex items-center justify-center h-9 w-9 rounded-full bg-indigo-500 text-white text-sm font-bold border border-white/40 shadow">{opt.code}</span>
+                          <span className="font-medium tracking-wide">{opt.label}</span>
+                          {selected && <Check className="ml-auto h-6 w-6 text-white" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div className="mt-auto">
+                  <div className="rounded-2xl overflow-hidden">
+                    <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-indigo-600 to-blue-700/90 backdrop-blur-md border border-white/20 rounded-2xl">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="h-12 font-medium w-16 flex items-center justify-center bg-white/10 border-white/40 text-white hover:bg-white/20"
+                        onClick={() => { setAnnualWorkSchedule(false); }}
+                        aria-label="Revenir"
+                      >
+                        &lt;
+                      </Button>
+                      <Button
+                        className="flex-1 h-12 text-base font-semibold bg-white/15 hover:bg-white/25 text-white backdrop-blur-md border border-white/30 disabled:opacity-40 disabled:cursor-not-allowed"
+                        disabled={!annualWorkScheduleAnswer}
+                        onClick={() => { if (annualWorkScheduleAnswer) { setAnnualWorkload(true); } }}
+                      >
+                        Ok
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      }
+      if (annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload) {
+        const numbers = Array.from({ length: 11 }, (_, i) => i);
+        return (
+          <div className="relative min-h-screen w-full overflow-hidden">
+            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1605296867304-46d5465a13f1?auto=format&fit=crop&w=1400&q=60')" }} />
+            <div className="absolute inset-0 bg-black/65 backdrop-blur-sm" />
+            <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
+              <div className="max-w-xl mx-auto w-full flex flex-col flex-1">
+                <AnnualProgressBar className="mb-8" />
+                <div className="mb-8 text-left">
+                  <h1 className="text-3xl font-semibold text-white leading-snug mb-4">Ma charge de travail (missions et tâches quotidiennes).<br />0 = Inexistante. 5 = Modéré(e). 10 = Excessive*</h1>
+                  <p className="text-white/70 text-sm mb-6">Choisis un chiffre qui reflète ta perception actuelle.</p>
+                  <div className="grid grid-cols-6 gap-3">
+                    {numbers.slice(0,6).map(n => {
+                      const selected = annualWorkloadAnswer === n;
+                      return (
+                        <button
+                          key={n}
+                          type="button"
+                          onClick={() => { setAnnualWorkloadAnswer(n); try { localStorage.setItem(annualStoragePrefix + 'workload_level', JSON.stringify(n)); } catch {} }}
+                          className={`aspect-square flex items-center justify-center rounded-xl border text-sm font-semibold backdrop-blur-md transition [transition-property:background,border,color,transform] duration-200 ${selected ? 'bg-white/30 border-white text-white shadow-lg animate-selectPop' : 'bg-white/10 border-white/40 text-white hover:bg-white/15'}`}
+                          aria-pressed={selected}
+                        >{n}</button>
+                      );
+                    })}
+                    {numbers.slice(6).map(n => {
+                      const selected = annualWorkloadAnswer === n;
+                      return (
+                        <button
+                          key={n}
+                          type="button"
+                          onClick={() => { setAnnualWorkloadAnswer(n); try { localStorage.setItem(annualStoragePrefix + 'workload_level', JSON.stringify(n)); } catch {} }}
+                          className={`aspect-square flex items-center justify-center rounded-xl border text-sm font-semibold backdrop-blur-md transition [transition-property:background,border,color,transform] duration-200 ${selected ? 'bg-white/30 border-white text-white shadow-lg animate-selectPop' : 'bg-white/10 border-white/40 text-white hover:bg-white/15'}`}
+                          aria-pressed={selected}
+                        >{n}</button>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div className="mt-auto">
+                  <div className="rounded-2xl overflow-hidden">
+                    <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-indigo-600 to-blue-700/90 backdrop-blur-md border border-white/20 rounded-2xl">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="h-12 font-medium w-16 flex items-center justify-center bg-white/10 border-white/40 text-white hover:bg-white/20"
+                        onClick={() => { setAnnualWorkload(false); }}
+                        aria-label="Revenir"
+                      >
+                        &lt;
+                      </Button>
+                      <Button
+                        className="flex-1 h-12 text-base font-semibold bg-white/15 hover:bg-white/25 text-white backdrop-blur-md border border-white/30 disabled:opacity-40 disabled:cursor-not-allowed"
+                        disabled={annualWorkloadAnswer === null}
+                        onClick={() => { if (annualWorkloadAnswer !== null) { setAnnualTaskDifficulty(true); } }}
+                      >
+                        Ok
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      }
+      if (annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty) {
+        const numbers = Array.from({ length: 11 }, (_, i) => i);
+        return (
+          <div className="relative min-h-screen w-full overflow-hidden">
+            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1400&q=60')" }} />
+            <div className="absolute inset-0 bg-black/65 backdrop-blur-sm" />
+            <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
+              <div className="max-w-xl mx-auto w-full flex flex-col flex-1">
+                <AnnualProgressBar className="mb-8" />
+                <div className="mb-8 text-left">
+                  <h1 className="text-3xl font-semibold text-white leading-snug mb-4">Mon niveau de difficulté dans les tâches quotidiennes.<br />Tâches répétitives, manuelles, pénibles...<br />0 = Pas du tout difficile. 5 = Assez difficile. 10 = Très difficile*</h1>
+                  <p className="text-white/70 text-sm mb-6">Sélectionne un chiffre qui reflète ta perception actuelle.</p>
+                  <div className="grid grid-cols-6 gap-3">
+                    {numbers.slice(0,6).map(n => {
+                      const selected = annualTaskDifficultyAnswer === n;
+                      return (
+                        <button
+                          key={n}
+                          type="button"
+                          onClick={() => { setAnnualTaskDifficultyAnswer(n); try { localStorage.setItem(annualStoragePrefix + 'task_difficulty_level', JSON.stringify(n)); } catch {} }}
+                          className={`aspect-square flex items-center justify-center rounded-xl border text-sm font-semibold backdrop-blur-md transition [transition-property:background,border,color,transform] duration-200 ${selected ? 'bg-white/30 border-white text-white shadow-lg animate-selectPop' : 'bg-white/10 border-white/40 text-white hover:bg-white/15'}`}
+                          aria-pressed={selected}
+                        >{n}</button>
+                      );
+                    })}
+                    {numbers.slice(6).map(n => {
+                      const selected = annualTaskDifficultyAnswer === n;
+                      return (
+                        <button
+                          key={n}
+                          type="button"
+                          onClick={() => { setAnnualTaskDifficultyAnswer(n); try { localStorage.setItem(annualStoragePrefix + 'task_difficulty_level', JSON.stringify(n)); } catch {} }}
+                          className={`aspect-square flex items-center justify-center rounded-xl border text-sm font-semibold backdrop-blur-md transition [transition-property:background,border,color,transform] duration-200 ${selected ? 'bg-white/30 border-white text-white shadow-lg animate-selectPop' : 'bg-white/10 border-white/40 text-white hover:bg-white/15'}`}
+                          aria-pressed={selected}
+                        >{n}</button>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div className="mt-auto">
+                  <div className="rounded-2xl overflow-hidden">
+                    <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-indigo-600 to-blue-700/90 backdrop-blur-md border border-white/20 rounded-2xl">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="h-12 font-medium w-16 flex items-center justify-center bg-white/10 border-white/40 text-white hover:bg-white/20"
+                        onClick={() => { setAnnualTaskDifficulty(false); }}
+                        aria-label="Revenir"
+                      >
+                        &lt;
+                      </Button>
+                      <Button
+                        className="flex-1 h-12 text-base font-semibold bg-white/15 hover:bg-white/25 text-white backdrop-blur-md border border-white/30 disabled:opacity-40 disabled:cursor-not-allowed"
+                        disabled={annualTaskDifficultyAnswer === null}
+                        onClick={() => { if (annualTaskDifficultyAnswer !== null) { setCurrentView('dashboard'); setAnnualStarted(false); setAnnualGeneral(false); setAnnualFeelings(false); setAnnualExplain(false); setAnnualLikert(false); setAnnualLikertWork(false); setAnnualSatisfaction(false); setAnnualExplainWhy(false); setAnnualMotivation(false); setAnnualWorkSchedule(false); setAnnualWorkload(false); setAnnualTaskDifficulty(false); } }}
+                      >
+                        Ok
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      }
+      // Écran motivation
+      if (annualSatisfaction && annualExplainWhy && annualMotivation && !annualWorkSchedule) {
+        return (
+          <div className="relative min-h-screen w-full overflow-hidden">
+            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1602192106373-52c8d08af2b5?auto=format&fit=crop&w=1400&q=60')" }} />
+            <div className="absolute inset-0 bg-black/65 backdrop-blur-sm" />
+            <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
+              <div className="max-w-xl mx-auto w-full flex flex-col flex-1">
+                <AnnualProgressBar className="mb-8" />
+                <div className="flex-1 flex items-center">
+                  <blockquote className="text-center w-full">
+                    <p className="text-3xl font-semibold text-white leading-snug">
+                      <span className="block">Nous sommes là pour toi.</span>
+                      <span className="block">Notre priorité, te sentir en meilleure forme !</span>
+                    </p>
+                  </blockquote>
+                </div>
+                <div className="mt-auto">
+                  <div className="rounded-2xl overflow-hidden">
+                    <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-indigo-600 to-blue-700/90 backdrop-blur-md border border-white/20 rounded-2xl">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="h-12 font-medium w-16 flex items-center justify-center bg-white/10 border-white/40 text-white hover:bg-white/20"
+                        onClick={() => { setAnnualMotivation(false); }}
+                        aria-label="Revenir"
+                      >
+                        &lt;
+                      </Button>
+                      <Button
+                        className="flex-1 h-12 text-base font-semibold bg-white/15 hover:bg-white/25 text-white backdrop-blur-md border border-white/30"
+                        onClick={() => { setAnnualWorkSchedule(true); }}
+                      >
+                        Continuer
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      }
+      // Écran explication why (avant motivation)
+      if (annualSatisfaction && annualExplainWhy && !annualMotivation) {
+        const minLen = 4;
+        const canSubmit = annualExplainWhyText.trim().length >= minLen;
+        return (
+          <div className="relative min-h-screen w-full overflow-hidden">
+            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=1400&q=60')" }} />
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+            <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
+              <div className="max-w-xl mx-auto w-full flex flex-col flex-1">
+                <AnnualProgressBar className="mb-8" />
+                <div className="mb-8 text-left">
+                  <h1 className="text-3xl font-semibold text-white leading-snug mb-6">Peux-tu expliquer pourquoi?*</h1>
+                  <div className="mt-2">
+                    <div className="relative">
+                      <textarea
+                        className="w-full min-h-[180px] bg-transparent focus:outline-none text-white text-sm leading-relaxed placeholder-blue-200/70 px-1 pb-2"
+                        placeholder="Répondez ici…"
+                        value={annualExplainWhyText}
+                        onChange={(e) => { const v = e.target.value; setAnnualExplainWhyText(v); try { localStorage.setItem(annualStoragePrefix + 'explain_work_satisfaction', JSON.stringify(v)); } catch {} }}
+                      />
+                      <div className="pointer-events-none absolute left-0 right-0 bottom-0 h-px bg-gradient-to-r from-transparent via-white/60 to-transparent" />
+                    </div>
+                    {!canSubmit && <p className="mt-2 text-xs text-white/70">Merci de saisir au moins {minLen} caractères.</p>}
+                  </div>
+                </div>
+                <div className="mt-auto">
+                  <div className="rounded-2xl overflow-hidden">
+                    <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-indigo-600 to-blue-700/90 backdrop-blur-md border border-white/20 rounded-2xl">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="h-12 font-medium w-16 flex items-center justify-center bg-white/10 border-white/40 text-white hover:bg-white/20"
+                        onClick={() => { setAnnualExplainWhy(false); }}
+                        aria-label="Revenir"
+                      >
+                        &lt;
+                      </Button>
+                      <Button
+                        className="flex-1 h-12 text-base font-semibold bg-white/15 hover:bg-white/25 text-white backdrop-blur-md border border-white/30 disabled:opacity-40 disabled:cursor-not-allowed"
+                        disabled={!canSubmit}
+                        onClick={() => { if (canSubmit) { setAnnualMotivation(true); } }}
+                      >
+                        Ok
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      }
+      if (annualSatisfaction) {
+        const numbers = Array.from({ length: 11 }, (_, i) => i); // 0..10
+        return (
+          <div className="relative min-h-screen w-full overflow-hidden">
+            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1525182008055-f88b95ff7980?auto=format&fit=crop&w=1400&q=60')" }} />
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+            <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
+              <div className="max-w-xl mx-auto w-full flex flex-col flex-1">
+                <AnnualProgressBar className="mb-8" />
+                <div className="mb-8 text-left">
+                  <h1 className="text-3xl font-semibold text-white leading-snug mb-4">Je suis satisfait de mon travail.</h1>
+                  <p className="text-white/80 text-sm mb-6">0 = Pas du tout satisfait(e) · 7 = Satisfait(e) · 10 = Très satisfait(e)</p>
+                  <div className="grid grid-cols-6 gap-3">
+                    {numbers.slice(0,6).map(n => {
+                      const selected = annualSatisfactionAnswer === n;
+                      return (
+                        <button
+                          key={n}
+                          type="button"
+                          onClick={() => { setAnnualSatisfactionAnswer(n); try { localStorage.setItem(annualStoragePrefix + 'satisfaction_work', JSON.stringify(n)); } catch {} }}
+                          className={`aspect-square flex items-center justify-center rounded-xl border text-sm font-semibold backdrop-blur-md transition [transition-property:background,border,color,transform] duration-200 ${selected ? 'bg-white/25 border-white text-white shadow-lg animate-selectPop' : 'bg-white/10 border-white/40 text-white hover:bg-white/15'}`}
+                          aria-pressed={selected}
+                        >{n}</button>
+                      );
+                    })}
+                    {numbers.slice(6).map(n => {
+                      const selected = annualSatisfactionAnswer === n;
+                      return (
+                        <button
+                          key={n}
+                          type="button"
+                          onClick={() => { setAnnualSatisfactionAnswer(n); try { localStorage.setItem(annualStoragePrefix + 'satisfaction_work', JSON.stringify(n)); } catch {} }}
+                          className={`aspect-square flex items-center justify-center rounded-xl border text-sm font-semibold backdrop-blur-md transition [transition-property:background,border,color,transform] duration-200 ${selected ? 'bg-white/25 border-white text-white shadow-lg animate-selectPop' : 'bg-white/10 border-white/40 text-white hover:bg-white/15'}`}
+                          aria-pressed={selected}
+                        >{n}</button>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div className="mt-auto">
+                  <div className="rounded-2xl overflow-hidden">
+                    <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-indigo-600 to-blue-700/90 backdrop-blur-md border border-white/20 rounded-2xl">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="h-12 font-medium w-16 flex items-center justify-center bg-white/10 border-white/40 text-white hover:bg-white/20"
+                        onClick={() => { setAnnualSatisfaction(false); }}
+                        aria-label="Revenir"
+                      >
+                        &lt;
+                      </Button>
+                      <Button
+                        className="flex-1 h-12 text-base font-semibold bg-white/15 hover:bg-white/25 text-white backdrop-blur-md border border-white/30 disabled:opacity-40 disabled:cursor-not-allowed"
+                        disabled={annualSatisfactionAnswer === null}
+                        onClick={() => { if (annualSatisfactionAnswer !== null) { setAnnualExplainWhy(true); } }}
+                      >
+                        Ok
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      }
+      // Fin après deuxième Likert travail
+      const workLikertOptions = [
+        { code: 'A', label: 'Tout à fait d\'accord' },
+        { code: 'B', label: 'Plutôt d\'accord' },
+        { code: 'C', label: 'Pas d\'accord' },
+        { code: 'D', label: 'Pas du tout d\'accord' }
+      ];
+      return (
+        <div className="relative min-h-screen w-full overflow-hidden">
+          <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1400&q=60')" }} />
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
+            <div className="max-w-xl mx-auto w-full flex flex-col flex-1">
+              <AnnualProgressBar className="mb-8" />
+              <div className="mb-8 text-left">
+                <h1 className="text-3xl font-semibold text-white leading-snug mb-6">Je suis épanoui(e) et investi(e) dans mon travail</h1>
+                <div className="space-y-4">
+                  {workLikertOptions.map(opt => {
+                    const selected = annualLikertWorkAnswer === opt.code;
+                    return (
+                      <button
+                        key={opt.code}
+                        type="button"
+                        onClick={() => { setAnnualLikertWorkAnswer(opt.code); try { localStorage.setItem(annualStoragePrefix + 'likert_work_engagement', JSON.stringify(opt.code)); } catch {} }}
+                        onMouseDown={(e) => e.currentTarget.classList.add('pressing')}
+                        onMouseUp={(e) => e.currentTarget.classList.remove('pressing')}
+                        onMouseLeave={(e) => e.currentTarget.classList.remove('pressing')}
+                        className={`w-full flex items-center gap-4 rounded-2xl border backdrop-blur-md px-5 py-4 text-left transition [transition-property:background,border,color,transform] duration-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400/70 ${selected ? 'bg-white/20 border-white text-white shadow-lg animate-selectPop' : 'bg-white/10 border-white/50 text-white hover:bg-white/15'}`}
+                        aria-pressed={selected}
+                      >
+                        <span className="flex items-center justify-center h-9 w-9 rounded-full bg-indigo-500 text-white text-sm font-bold border border-white/40 shadow">{opt.code}</span>
+                        <span className="font-medium tracking-wide">{opt.label}</span>
+                        {selected && <Check className="ml-auto h-6 w-6 text-white" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="mt-auto">
+                <div className="rounded-2xl overflow-hidden">
+                  <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-indigo-600 to-blue-700/90 backdrop-blur-md border border-white/20 rounded-2xl">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="h-12 font-medium w-16 flex items-center justify-center bg-white/10 border-white/40 text-white hover:bg-white/20"
+                      onClick={() => { setAnnualLikertWork(false); setAnnualLikert(true); }}
+                      aria-label="Revenir"
+                    >
+                      &lt;
+                    </Button>
+                    <Button
+                      className="flex-1 h-12 text-base font-semibold bg-white/15 hover:bg-white/25 text-white backdrop-blur-md border border-white/30 disabled:opacity-40 disabled:cursor-not-allowed"
+                      disabled={!annualLikertWorkAnswer}
+                      onClick={() => { if (annualLikertWorkAnswer) { setAnnualSatisfaction(true); } }}
+                    >
+                      Ok
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    if (isAnnual && annualStarted && annualFinished && annualGeneral && annualFeelings && annualExplain && annualLikert && !annualLikertWork) {
+      // Premier Likert (bonheur global) → enchaîne vers Likert travail
+      const likertOptions = [
+        { code: 'A', label: 'Tout à fait d\'accord' },
+        { code: 'B', label: 'Plutôt d\'accord' },
+        { code: 'C', label: 'Pas d\'accord' },
+        { code: 'D', label: 'Pas du tout d\'accord' }
+      ];
+      return (
+        <div className="relative min-h-screen w-full overflow-hidden">
+          <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1503264116251-35a269479413?auto=format&fit=crop&w=1400&q=60')" }} />
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
+            <div className="max-w-xl mx-auto w-full flex flex-col flex-1">
+              <AnnualProgressBar className="mb-8" />
+              <div className="mb-8 text-left">
+                <h1 className="text-3xl font-semibold text-white leading-snug mb-6">Je suis heureux(se) et comblé(e) dans ma vie</h1>
+                <div className="space-y-4">
+                  {likertOptions.map(opt => {
+                    const selected = annualLikertAnswer === opt.code;
+                    return (
+                      <button
+                        key={opt.code}
+                        type="button"
+                        onClick={() => { setAnnualLikertAnswer(opt.code); try { localStorage.setItem(annualStoragePrefix + 'likert_happiness', JSON.stringify(opt.code)); } catch {} }}
+                        onMouseDown={(e) => e.currentTarget.classList.add('pressing')}
+                        onMouseUp={(e) => e.currentTarget.classList.remove('pressing')}
+                        onMouseLeave={(e) => e.currentTarget.classList.remove('pressing')}
+                        className={`w-full flex items-center gap-4 rounded-2xl border backdrop-blur-md px-5 py-4 text-left transition [transition-property:background,border,color,transform] duration-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400/70 ${selected ? 'bg-white/20 border-white text-white shadow-lg animate-selectPop' : 'bg-white/10 border-white/50 text-white hover:bg-white/15'}`}
+                        aria-pressed={selected}
+                      >
+                        <span className="flex items-center justify-center h-9 w-9 rounded-full bg-indigo-500 text-white text-sm font-bold border border-white/40 shadow">{opt.code}</span>
+                        <span className="font-medium tracking-wide">{opt.label}</span>
+                        {selected && <Check className="ml-auto h-6 w-6 text-white" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="mt-auto">
+                <div className="rounded-2xl overflow-hidden">
+                  <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-indigo-600 to-blue-700/90 backdrop-blur-md border border-white/20 rounded-2xl">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="h-12 font-medium w-16 flex items-center justify-center bg-white/10 border-white/40 text-white hover:bg-white/20"
+                      onClick={() => { setAnnualLikert(false); }}
+                      aria-label="Revenir"
+                    >
+                      &lt;
+                    </Button>
+                    <Button
+                      className="flex-1 h-12 text-base font-semibold bg-white/15 hover:bg-white/25 text-white backdrop-blur-md border border-white/30 disabled:opacity-40 disabled:cursor-not-allowed"
+                      disabled={!annualLikertAnswer}
+                      onClick={() => { if (annualLikertAnswer) { setAnnualLikertWork(true); } }}
+                    >
+                      Ok
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    if (isAnnual && annualStarted && annualFinished && annualGeneral && annualFeelings && annualExplain) {
+      const canFinish = annualExplainText.trim().length > 3; // au moins quelques caractères
+      return (
+        <AnnualBackground>
+          <div className="max-w-xl mx-auto w-full flex flex-col flex-1">
+              <AnnualProgressBar />
+              <div className="mb-8 text-left">
+                <h1 className="text-2xl font-bold leading-snug mb-4 whitespace-pre-line text-white">Et peux-tu expliquer pourquoi?*</h1>
+                <p className="text-sm text-white/80 mb-4">Prends ton temps, nous voulons mieux te comprendre.</p>
+                <div className="rounded-2xl border border-white/40 bg-white/10 backdrop-blur-md p-3">
+                  <textarea
+                    className="w-full min-h-[160px] rounded-xl border border-white/30 px-4 py-3 text-sm bg-white/10 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-indigo-400/80 focus:border-indigo-300 resize-vertical"
+                    placeholder="Réponds ici..."
+                    value={annualExplainText}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setAnnualExplainText(val);
+                      try { localStorage.setItem(annualStoragePrefix + 'feelings_explain', JSON.stringify(val)); } catch {}
+                    }}
+                  />
+                </div>
+                {!canFinish && (
+                  <p className="mt-2 text-xs text-white/70">Merci d'écrire au moins quelques mots.</p>
+                )}
+              </div>
+              <div className="mt-auto flex gap-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-12 font-medium w-16 flex items-center justify-center bg-white/10 border-white/40 text-white hover:bg-white/20"
+                  onClick={() => { setAnnualExplain(false); }}
+                  aria-label="Revenir"
+                >
+                  &lt;
+                </Button>
+                <Button
+                  className="flex-1 h-12 text-base font-semibold bg-gradient-to-r from-indigo-500 to-fuchsia-500 hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+                  disabled={!canFinish}
+                  onClick={() => { if (canFinish) { setAnnualLikert(true); } }}
+                >
+                  Ok
+                </Button>
+              </div>
+      </div>
+    </AnnualBackground>
+      );
+    }
+    // Écran feelings (après la question générale)
+    if (isAnnual && annualStarted && annualFinished && annualGeneral && annualFeelings) {
+      return (
+        <AnnualBackground>
+          <div className="max-w-xl mx-auto w-full flex flex-col flex-1">
+              <AnnualProgressBar />
+              <div className="text-left mb-8">
+                <h1 className="text-2xl font-bold leading-snug mb-6 text-white">Te sens-tu?*</h1>
+                <AnnualOptionList
+                  multiple
+                  options={[
+                    'Agacé(e)','Anxieux(se)','Déçu(e)','Ennuyé(e)','Impatient(e)','Nerveux(se)','Fragile','Jugé(e)','Triste','Épuisé(e)','Stressé(e)','Perdu(e)','Dévalorisé(e)','Pas écouté(e)','Isolé(e)','En quête de sens','Autre'
+                  ].map(v => ({ value: v }))}
+                  value={annualFeelingsAnswer}
+                  onChange={(val) => {
+                    if (Array.isArray(val)) {
+                      setAnnualFeelingsAnswer(val);
+                      try { localStorage.setItem(annualStoragePrefix + 'feelings_state', JSON.stringify(val)); } catch {}
+                    }
+                  }}
+                  className="mb-2"
+                />
+                {annualFeelingsAnswer.length === 0 && (
+                  <p className="text-xs text-white/70 mt-2">Sélectionne au moins une option pour continuer.</p>
+                )}
+              </div>
+              <div className="mt-auto flex gap-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-12 font-medium w-16 flex items-center justify-center bg-white/10 border-white/40 text-white hover:bg-white/20"
+                  onClick={() => { setAnnualFeelings(false); }}
+                  aria-label="Revenir"
+                >
+                  &lt;
+                </Button>
+                <Button
+                  className="flex-1 h-12 text-base font-semibold bg-gradient-to-r from-indigo-500 to-fuchsia-500 hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+                  disabled={annualFeelingsAnswer.length === 0}
+                  onClick={() => { if (annualFeelingsAnswer.length) { setAnnualExplain(true); } }}
+                >
+                  Ok
+                </Button>
+              </div>
+      </div>
+    </AnnualBackground>
+      );
+    }
+    // Écran question générale
+    if (isAnnual && annualStarted && annualFinished && annualGeneral) {
+      return (
+        <AnnualBackground>
+          <div className="max-w-xl mx-auto w-full flex flex-col flex-1">
+              <AnnualProgressBar />
+              <div className="text-left mb-8">
+                <h1 className="text-2xl font-bold leading-snug mb-6 text-white">De façon générale, comment vas-tu?*</h1>
+                <AnnualOptionList
+                  options={[
+                    { value: 'Super bien*', label: 'Super bien*', emoji: '😃' },
+                    { value: 'Bien*', label: 'Bien*', emoji: '🙂' },
+                    { value: 'Pas très bien*', label: 'Pas très bien*', emoji: '😕' },
+                    { value: 'Mal*', label: 'Mal*', emoji: '😟' },
+                    { value: 'je ne sais pas*', label: 'je ne sais pas*', emoji: '🤔' }
+                  ]}
+                  value={annualGeneralAnswer}
+                  onChange={(val) => {
+                    if (typeof val === 'string') {
+                      setAnnualGeneralAnswer(val);
+                      try { localStorage.setItem(annualStoragePrefix + 'general_wellbeing', JSON.stringify(val)); } catch {}
+                    }
+                  }}
+                  showCheckIndicator
+                  className="mb-2"
+                />
+                {!annualGeneralAnswer && (
+                  <p className="text-xs text-white/70 mt-2">Sélectionne une option pour continuer.</p>
+                )}
+              </div>
+              <div className="mt-auto flex gap-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-12 font-medium w-16 flex items-center justify-center bg-white/10 border-white/40 text-white hover:bg-white/20"
+                  onClick={() => { setAnnualGeneral(false); }}
+                  aria-label="Revenir"
+                >
+                  &lt;
+                </Button>
+                <Button
+                  className="flex-1 h-12 text-base font-semibold bg-gradient-to-r from-indigo-500 to-fuchsia-500 hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+                  disabled={!annualGeneralAnswer}
+                  onClick={() => { if (annualGeneralAnswer) { setAnnualFeelings(true); } }}
+                >
+                  Ok
+                </Button>
+              </div>
+      </div>
+    </AnnualBackground>
+      );
+    }
+    if (isAnnual && annualStarted && annualFinished) {
+      return (
+        <div className="relative min-h-screen w-full overflow-hidden animate-fadeIn">
+          <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1503264116251-35a269479413?auto=format&fit=crop&w=1400&q=60')" }} />
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <div className="relative z-10 flex flex-col items-center justify-center min-h-screen px-6 text-center">
+            <div className="max-w-xl w-full space-y-10">
+              <div className="mb-2">
+                <AnnualProgressBar className="mb-0" />
+              </div>
+              <h1 className="text-4xl font-semibold text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.35)]">Très bien. C'est parti!</h1>
+              <Button
+                className="w-full h-14 text-base font-semibold bg-gradient-to-r from-indigo-500 to-fuchsia-600 hover:opacity-90 shadow-lg shadow-fuchsia-900/30"
+                onClick={() => { setAnnualGeneral(true); }}
+              >
+                Continuer
+              </Button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+  if (isAnnual && annualStarted) {
+      // Rendu des questions annuelles via le même composant DiagnosticStep
+      const currentAnnualQuestion: any = annualQuestions[annualStep - 1];
+      const currentAnnualAnswer = annualAnswers[currentAnnualQuestion?.id];
+
+      const handleAnnualNext = () => {
+        if (annualStep < annualQuestions.length) {
+          setAnnualStep(annualStep + 1);
+        } else {
+          setAnnualFinished(true);
+        }
+      };
+
+      const handleAnnualPrevious = () => {
+        if (annualStep > 1) setAnnualStep(annualStep - 1);
+      };
+
+      const handleAnnualAnswerChange = (val: any) => {
+        setAnnualAnswers(prev => ({ ...prev, [currentAnnualQuestion.id]: val }));
+        // Auto-save immédiat (léger) – pourrait être amélioré avec debounce si besoin.
+        try {
+          const key = annualStoragePrefix + currentAnnualQuestion.id;
+          localStorage.setItem(key, typeof val === 'string' ? JSON.stringify(val) : JSON.stringify(val));
+        } catch {}
+      };
+
+      const isRequired = currentAnnualQuestion.question.includes('*');
+      const hasAnswer = currentAnnualAnswer !== undefined && (
+        currentAnnualQuestion.type !== 'text' || (typeof currentAnnualAnswer === 'string' && currentAnnualAnswer.trim() !== '')
+      );
+      const canProceed = !isRequired || hasAnswer;
+
+      return (
+        <div className="relative min-h-screen w-full overflow-hidden animate-fadeIn">
+          <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1503264116251-35a269479413?auto=format&fit=crop&w=1400&q=60')" }} />
+            <div className="absolute inset-0 bg-black/55 backdrop-blur-sm" />
+            <div className="relative z-10 min-h-screen px-4 pt-16 pb-10 flex flex-col">
+              <div className="max-w-xl mx-auto w-full flex-1 flex flex-col">
+                <AnnualProgressBar />
+                <div className="rounded-2xl border border-white/30 bg-white/10 backdrop-blur-md p-6 shadow-lg flex flex-col flex-1">
+                  <div className="mb-6 text-left">
+                    <h2 className="text-xl font-semibold leading-relaxed whitespace-pre-line text-white">
+                      {currentAnnualQuestion.question}
+                    </h2>
+                    {currentAnnualQuestion.description && (
+                      <p className="mt-3 text-sm text-white/70 whitespace-pre-line">
+                        {currentAnnualQuestion.description}
+                      </p>
+                    )}
+                  </div>
+                  <div className="mb-8">
+                    {currentAnnualQuestion.type === 'choice' && (
+                      <div className="space-y-3">
+                        {currentAnnualQuestion.options?.map((opt:string) => {
+                          const selected = currentAnnualAnswer === opt;
+                          return (
+                            <button
+                              key={opt}
+                              type="button"
+                              onClick={() => handleAnnualAnswerChange(opt)}
+                              onMouseDown={(e) => e.currentTarget.classList.add('pressing')}
+                              onMouseUp={(e) => e.currentTarget.classList.remove('pressing')}
+                              onMouseLeave={(e) => e.currentTarget.classList.remove('pressing')}
+                              className={`w-full rounded-xl border px-5 py-4 flex items-center justify-between transition [transition-property:background,border,color,transform] duration-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-400/70 ${selected ? 'bg-white/25 border-white text-white shadow-lg animate-selectPop' : 'bg-white/10 border-white/40 text-white hover:bg-white/15'}`}
+                              aria-pressed={selected}
+                            >
+                              <span className="text-left flex-1 pr-4">{opt}</span>
+                              {selected && <span className="h-2.5 w-2.5 rounded-full bg-fuchsia-300 shadow-inner" />}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                    {currentAnnualQuestion.type === 'text' && (
+                      <textarea
+                        className="w-full min-h-[140px] rounded-xl border border-white/30 px-4 py-3 text-sm bg-white/10 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-indigo-400/80 focus:border-indigo-300 resize-vertical"
+                        placeholder="Écris ta réponse ici..."
+                        value={currentAnnualAnswer || ''}
+                        onChange={(e) => handleAnnualAnswerChange(e.target.value)}
+                      />
+                    )}
+                  </div>
+                  <div className="mt-auto flex justify-end">
+                    <Button
+                      onClick={handleAnnualNext}
+                      disabled={!canProceed}
+                      className="h-12 px-8 text-base font-semibold bg-gradient-to-r from-indigo-500 to-fuchsia-600 hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      Ok
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+        </div>
+      );
+    }
+    const questions = diagnosticQuestions;
   const currentQuestion: any = questions[diagnosticStep - 1];
     const currentAnswer = diagnosticAnswers[currentQuestion?.id];
 
