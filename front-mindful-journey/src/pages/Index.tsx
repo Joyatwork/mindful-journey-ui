@@ -284,6 +284,7 @@ const Index = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.state]);
 
+  // Questions auto-diagnostic (hebdomadaire / rapide)
   const diagnosticQuestions = [
     {
       id: 'stress_level',
@@ -331,6 +332,60 @@ const Index = () => {
       ]
     }
   ];
+
+  // Questions auto-diagnostic annuel (plus approfondi)
+  const annualDiagnosticQuestions = [
+    ...diagnosticQuestions,
+    {
+      id: 'year_stress_trend',
+      question: 'Sur l’année écoulée, votre stress a-t-il plutôt…',
+      type: 'choice' as const,
+      options: [
+        'Fortement diminué',
+        'Un peu diminué',
+        'Resté stable',
+        'Un peu augmenté',
+        'Fortement augmenté'
+      ]
+    },
+    {
+      id: 'year_energy_trend',
+      question: 'Globalement votre énergie sur 12 mois a…',
+      type: 'choice' as const,
+      options: [
+        'Beaucoup progressé',
+        'Légèrement progressé',
+        'Stagné',
+        'Légèrement baissé',
+        'Fortement baissé'
+      ]
+    },
+    {
+      id: 'burnout_risk',
+      question: 'Vous sentez-vous proche d’un épuisement professionnel (burnout) ?',
+      type: 'choice' as const,
+      options: [
+        'Pas du tout',
+        'Un peu',
+        'Par moments',
+        'Assez souvent',
+        'Très fortement'
+      ]
+    },
+    {
+      id: 'year_main_challenge',
+      question: 'Quel a été votre plus grand défi bien‑être cette année ?',
+      type: 'text' as const
+    },
+    {
+      id: 'year_goal_priority',
+      question: 'Votre priorité principale pour l’année qui vient ?',
+      type: 'text' as const
+    }
+  ];
+
+  // Vue active: diagnostic court ou annuel
+  const isAnnual = currentView === 'diagnostic-annual';
 
   
   useEffect(() => {
@@ -676,6 +731,16 @@ const Index = () => {
             <div className="text-sm font-medium">Auto-diagnostic</div>
           </div>
         </Button>
+
+        <Button 
+          onClick={() => setCurrentView('diagnostic-annual')}
+          className="h-16 bg-gradient-to-br from-indigo-500 to-fuchsia-600 hover:opacity-90 text-white rounded-2xl"
+        >
+          <div className="text-center">
+            <Brain className="h-6 w-6 mx-auto mb-1" />
+            <div className="text-sm font-medium">Auto-diagnostic annuel</div>
+          </div>
+        </Button>
         
         <Button 
           onClick={() => setCurrentView('challenges')}
@@ -860,11 +925,12 @@ const Index = () => {
   );
 
   const renderDiagnostic = () => {
-    const currentQuestion = diagnosticQuestions[diagnosticStep - 1];
+    const questions = isAnnual ? annualDiagnosticQuestions : diagnosticQuestions;
+  const currentQuestion: any = questions[diagnosticStep - 1];
     const currentAnswer = diagnosticAnswers[currentQuestion?.id];
 
     const handleNext = async () => {
-      if (diagnosticStep < diagnosticQuestions.length) {
+      if (diagnosticStep < questions.length) {
         setDiagnosticStep(diagnosticStep + 1);
       } else {
         console.log('Diagnostic completed:', diagnosticAnswers);
@@ -934,12 +1000,35 @@ const Index = () => {
       }));
     };
 
+    const isText = currentQuestion?.type === 'text';
+    if (isText) {
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 py-8 px-4 pt-12">
+          <div className="max-w-xl mx-auto bg-white rounded-xl shadow p-6 space-y-6">
+            <div>
+              <p className="text-sm text-gray-500 mb-2">Question {diagnosticStep} / {questions.length}</p>
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">{currentQuestion.question}</h2>
+              <textarea
+                className="w-full border rounded-md p-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 min-h-[140px] resize-y"
+                placeholder="Votre réponse..."
+                value={currentAnswer || ''}
+                onChange={(e) => handleAnswerChange(e.target.value)}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Button variant="outline" disabled={diagnosticStep === 1} onClick={handlePrevious}>Précédent</Button>
+              <Button onClick={handleNext} disabled={!currentAnswer}>Suivant</Button>
+            </div>
+          </div>
+        </div>
+      );
+    }
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 py-8 px-4 pt-12">
         <DiagnosticStep
           question={currentQuestion}
           currentStep={diagnosticStep}
-          totalSteps={diagnosticQuestions.length}
+          totalSteps={questions.length}
           value={currentAnswer}
           onValueChange={handleAnswerChange}
           onNext={handleNext}
@@ -1191,7 +1280,7 @@ const Index = () => {
 
         <div className="px-4 py-6 pb-32 safe-area-inset-top">
           {currentView === 'dashboard' && renderDashboard()}
-          {currentView === 'diagnostic' && renderDiagnostic()}
+          {(currentView === 'diagnostic' || currentView === 'diagnostic-annual') && renderDiagnostic()}
           {currentView === 'challenges' && renderChallenges()}
           {currentView === 'progress' && renderProgress()}
           {currentView === 'profile' && <ProfilePage />}
