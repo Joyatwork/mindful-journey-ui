@@ -236,7 +236,8 @@ class AuthController extends Controller
         Log::info('Utilisateur après modification (avant save):', $user->toArray());
         
         $saved = $user->save();
-        Log::info('Résultat save():', $saved ? 'SUCCESS' : 'FAILED');
+    // Log status properly (second argument must be an array, avoid previous TypeError)
+    Log::info('Résultat save(): '.($saved ? 'SUCCESS' : 'FAILED'));
         
         Log::info('Utilisateur après save:', $user->fresh()->toArray());
 
