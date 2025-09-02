@@ -118,12 +118,15 @@ const Index = () => {
   const [annualNutritionAnswer, setAnnualNutritionAnswer] = useState<number | null>(null);
   const [annualNutritionExplain, setAnnualNutritionExplain] = useState(false); // écran explication alimentation (étape 28)
   const [annualNutritionExplainText, setAnnualNutritionExplainText] = useState('');
+  const [annualPhysicalActivity, setAnnualPhysicalActivity] = useState(false); // écran activité physique (étape 29)
+  const [annualPhysicalActivityAnswer, setAnnualPhysicalActivityAnswer] = useState<string>('');
+  const [annualPhysicalActivityOpen, setAnnualPhysicalActivityOpen] = useState(false); // ouverture menu activité physique
   const annualStoragePrefix = React.useMemo(() => (user?.id ? `annual:${user.id}:` : 'annual:guest:'), [user?.id]);
 
   // --------------------------------------------------
   // Progression unifiée du parcours annuel
   // Étapes (7): 1=gender,2=age,3=department,4=general,5=feelings,6=explain,7=likert
-  const ANNUAL_TOTAL_STEPS = 28;
+  const ANNUAL_TOTAL_STEPS = 29;
   const getAnnualProgressStep = () => {
     if (!annualStarted) return 0;
     if (!annualFinished) return annualStep; // 1..3
@@ -153,7 +156,8 @@ const Index = () => {
   if (annualFinished && annualGeneral && annualFeelings && annualExplain && annualLikert && annualLikertWork && annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty && annualPhysicalFatigue && annualMentalFatigue && annualMentalFatigueExplain && annualReassure && annualPain && annualPainLocation && annualAnxiety && annualAnxietyExplain && annualSleepQuality && annualSleepQualityExplain && annualSleepDuration && !annualCareMessage) return 25; // durée sommeil
   if (annualFinished && annualGeneral && annualFeelings && annualExplain && annualLikert && annualLikertWork && annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty && annualPhysicalFatigue && annualMentalFatigue && annualMentalFatigueExplain && annualReassure && annualPain && annualPainLocation && annualAnxiety && annualAnxietyExplain && annualSleepQuality && annualSleepQualityExplain && annualSleepDuration && annualCareMessage && !annualNutrition) return 26; // message rassurant
   if (annualFinished && annualGeneral && annualFeelings && annualExplain && annualLikert && annualLikertWork && annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty && annualPhysicalFatigue && annualMentalFatigue && annualMentalFatigueExplain && annualReassure && annualPain && annualPainLocation && annualAnxiety && annualAnxietyExplain && annualSleepQuality && annualSleepQualityExplain && annualSleepDuration && annualCareMessage && annualNutrition && !annualNutritionExplain) return 27; // alimentation saine
-  if (annualFinished && annualGeneral && annualFeelings && annualExplain && annualLikert && annualLikertWork && annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty && annualPhysicalFatigue && annualMentalFatigue && annualMentalFatigueExplain && annualReassure && annualPain && annualPainLocation && annualAnxiety && annualAnxietyExplain && annualSleepQuality && annualSleepQualityExplain && annualSleepDuration && annualCareMessage && annualNutrition && annualNutritionExplain) return 28; // explication alimentation
+  if (annualFinished && annualGeneral && annualFeelings && annualExplain && annualLikert && annualLikertWork && annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty && annualPhysicalFatigue && annualMentalFatigue && annualMentalFatigueExplain && annualReassure && annualPain && annualPainLocation && annualAnxiety && annualAnxietyExplain && annualSleepQuality && annualSleepQualityExplain && annualSleepDuration && annualCareMessage && annualNutrition && annualNutritionExplain && !annualPhysicalActivity) return 28; // explication alimentation
+  if (annualFinished && annualGeneral && annualFeelings && annualExplain && annualLikert && annualLikertWork && annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty && annualPhysicalFatigue && annualMentalFatigue && annualMentalFatigueExplain && annualReassure && annualPain && annualPainLocation && annualAnxiety && annualAnxietyExplain && annualSleepQuality && annualSleepQualityExplain && annualSleepDuration && annualCareMessage && annualNutrition && annualNutritionExplain && annualPhysicalActivity) return 29; // activité physique
     return 0;
   };
   const annualProgressStep = getAnnualProgressStep();
@@ -2042,7 +2046,7 @@ const Index = () => {
         );
       }
       // Écran explication alimentation (étape 28)
-      if (annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty && annualPhysicalFatigue && annualMentalFatigue && annualMentalFatigueExplain && annualReassure && annualPain && annualPainLocation && annualAnxiety && annualAnxietyExplain && annualSleepQuality && annualSleepQualityExplain && annualSleepDuration && annualCareMessage && annualNutrition && annualNutritionExplain) {
+  if (annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty && annualPhysicalFatigue && annualMentalFatigue && annualMentalFatigueExplain && annualReassure && annualPain && annualPainLocation && annualAnxiety && annualAnxietyExplain && annualSleepQuality && annualSleepQualityExplain && annualSleepDuration && annualCareMessage && annualNutrition && annualNutritionExplain && !annualPhysicalActivity) {
         return (
           <div className="relative min-h-screen w-full overflow-hidden">
             <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1502743277-affbba0b4775?auto=format&fit=crop&w=1400&q=60')" }} />
@@ -2082,7 +2086,72 @@ const Index = () => {
                       <Button
                         className="flex-1 h-12 text-base font-semibold bg-white/15 hover:bg-white/25 text-white backdrop-blur-md border border-white/30 disabled:opacity-40 disabled:cursor-not-allowed"
                         disabled={!annualNutritionExplainText.trim()}
-                        onClick={() => { if (annualNutritionExplainText.trim()) { setCurrentView('dashboard'); setAnnualStarted(false); setAnnualGeneral(false); setAnnualFeelings(false); setAnnualExplain(false); setAnnualLikert(false); setAnnualLikertWork(false); setAnnualSatisfaction(false); setAnnualExplainWhy(false); setAnnualMotivation(false); setAnnualWorkSchedule(false); setAnnualWorkload(false); setAnnualTaskDifficulty(false); setAnnualPhysicalFatigue(false); setAnnualMentalFatigue(false); setAnnualMentalFatigueExplain(false); setAnnualReassure(false); setAnnualPain(false); setAnnualPainLocation(false); setAnnualAnxiety(false); setAnnualAnxietyExplain(false); setAnnualSleepQuality(false); setAnnualSleepQualityExplain(false); setAnnualSleepDuration(false); setAnnualCareMessage(false); setAnnualNutrition(false); setAnnualNutritionExplain(false); setAnnualPhysicalFatigueAnswer(null); setAnnualMentalFatigueAnswer(null); setAnnualMentalFatigueExplainText(''); setAnnualPainAnswer(null); setAnnualPainLocationText(''); setAnnualAnxietyAnswer(null); setAnnualAnxietyExplainText(''); setAnnualSleepQualityAnswer(null); setAnnualSleepQualityExplainText(''); setAnnualSleepDurationAnswer(''); setAnnualNutritionAnswer(null); setAnnualNutritionExplainText(''); } }}
+                        onClick={() => { if (annualNutritionExplainText.trim()) { if (!annualPhysicalActivityAnswer) { const def='Oui'; setAnnualPhysicalActivityAnswer(def); try { localStorage.setItem(annualStoragePrefix + 'physical_activity', JSON.stringify(def)); } catch {} } setAnnualPhysicalActivity(true); } }}
+                      >
+                        Ok
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      }
+      // Écran activité physique (étape 29)
+      if (annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty && annualPhysicalFatigue && annualMentalFatigue && annualMentalFatigueExplain && annualReassure && annualPain && annualPainLocation && annualAnxiety && annualAnxietyExplain && annualSleepQuality && annualSleepQualityExplain && annualSleepDuration && annualCareMessage && annualNutrition && annualNutritionExplain && annualPhysicalActivity) {
+  const options = ['Oui','Non','Parfois'];
+        return (
+          <div className="relative min-h-screen w-full overflow-hidden">
+            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1599058917212-d750089bc07c?auto=format&fit=crop&w=1400&q=60')" }} />
+            <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+            <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
+              <div className="max-w-xl mx-auto w-full flex flex-col flex-1">
+                <AnnualProgressBar className="mb-8" />
+                <div className="mb-10 text-left">
+                  <h1 className="text-3xl font-semibold text-white leading-snug mb-4">Je pratique une activité physique régulière*</h1>
+                  <p className="text-white/60 italic text-sm mb-10">pour lutter contre la sédentarité</p>
+                  <div className="max-w-xl w-full">
+                    <div className="relative">
+                      <button type="button" onClick={() => setAnnualPhysicalActivityOpen(o=>!o)} className="w-full text-left flex items-center justify-between bg-transparent focus:outline-none text-white text-lg tracking-wide">
+                        <span>{annualPhysicalActivityAnswer || 'Choisir...'}</span>
+                        <span className="text-white/70 text-sm">▼</span>
+                      </button>
+                      <div className="h-px w-full bg-white/30 mt-2" />
+                      {annualPhysicalActivityOpen && (
+                        <div className="mt-2 bg-white/10 border border-white/30 rounded-lg backdrop-blur-md shadow-lg overflow-hidden">
+                          {options.map(opt => {
+                            const selected = annualPhysicalActivityAnswer === opt;
+                            return (
+                              <button
+                                key={opt}
+                                type="button"
+                                onClick={() => { setAnnualPhysicalActivityAnswer(opt); setAnnualPhysicalActivityOpen(false); try { localStorage.setItem(annualStoragePrefix + 'physical_activity', JSON.stringify(opt)); } catch {} }}
+                                className={`w-full text-left px-4 py-2 text-sm font-medium transition-colors ${selected ? 'bg-white/25 text-white' : 'text-white hover:bg-white/15'}`}
+                              >{opt}</button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-auto">
+                  <div className="rounded-2xl overflow-hidden">
+                    <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-indigo-600 to-blue-700/90 backdrop-blur-md border border-white/20 rounded-2xl">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="h-12 font-medium w-16 flex items-center justify-center bg-white/10 border-white/40 text-white hover:bg-white/20"
+                        onClick={() => { setAnnualPhysicalActivity(false); }}
+                        aria-label="Revenir"
+                      >
+                        &lt;
+                      </Button>
+                      <Button
+                        className="flex-1 h-12 text-base font-semibold bg-white/15 hover:bg-white/25 text-white backdrop-blur-md border border-white/30 disabled:opacity-40 disabled:cursor-not-allowed"
+                        disabled={!annualPhysicalActivityAnswer}
+                        onClick={() => { if (annualPhysicalActivityAnswer) { setCurrentView('dashboard'); setAnnualStarted(false); setAnnualGeneral(false); setAnnualFeelings(false); setAnnualExplain(false); setAnnualLikert(false); setAnnualLikertWork(false); setAnnualSatisfaction(false); setAnnualExplainWhy(false); setAnnualMotivation(false); setAnnualWorkSchedule(false); setAnnualWorkload(false); setAnnualTaskDifficulty(false); setAnnualPhysicalFatigue(false); setAnnualMentalFatigue(false); setAnnualMentalFatigueExplain(false); setAnnualReassure(false); setAnnualPain(false); setAnnualPainLocation(false); setAnnualAnxiety(false); setAnnualAnxietyExplain(false); setAnnualSleepQuality(false); setAnnualSleepQualityExplain(false); setAnnualSleepDuration(false); setAnnualCareMessage(false); setAnnualNutrition(false); setAnnualNutritionExplain(false); setAnnualPhysicalActivity(false); setAnnualPhysicalFatigueAnswer(null); setAnnualMentalFatigueAnswer(null); setAnnualMentalFatigueExplainText(''); setAnnualPainAnswer(null); setAnnualPainLocationText(''); setAnnualAnxietyAnswer(null); setAnnualAnxietyExplainText(''); setAnnualSleepQualityAnswer(null); setAnnualSleepQualityExplainText(''); setAnnualSleepDurationAnswer(''); setAnnualNutritionAnswer(null); setAnnualNutritionExplainText(''); setAnnualPhysicalActivityAnswer(''); } }}
                       >
                         Ok
                       </Button>
