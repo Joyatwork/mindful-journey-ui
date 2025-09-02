@@ -130,12 +130,14 @@ const Index = () => {
   const [annualSymptomsSelected, setAnnualSymptomsSelected] = useState<string[]>(['Picotement']);
   const [annualWorkstation, setAnnualWorkstation] = useState(false); // étape 34 aménagement poste
   const [annualWorkstationText, setAnnualWorkstationText] = useState('');
+  const [annualPractitionerNote, setAnnualPractitionerNote] = useState(false); // étape 35 note praticien
+  const [annualPractitionerNoteText, setAnnualPractitionerNoteText] = useState('');
   const annualStoragePrefix = React.useMemo(() => (user?.id ? `annual:${user.id}:` : 'annual:guest:'), [user?.id]);
 
   // --------------------------------------------------
   // Progression unifiée du parcours annuel
   // Étapes (7): 1=gender,2=age,3=department,4=general,5=feelings,6=explain,7=likert
-  const ANNUAL_TOTAL_STEPS = 34;
+  const ANNUAL_TOTAL_STEPS = 35;
   const getAnnualProgressStep = () => {
     if (!annualStarted) return 0;
     if (!annualFinished) return annualStep; // 1..3
@@ -171,7 +173,8 @@ const Index = () => {
   if (annualFinished && annualGeneral && annualFeelings && annualExplain && annualLikert && annualLikertWork && annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty && annualPhysicalFatigue && annualMentalFatigue && annualMentalFatigueExplain && annualReassure && annualPain && annualPainLocation && annualAnxiety && annualAnxietyExplain && annualSleepQuality && annualSleepQualityExplain && annualSleepDuration && annualCareMessage && annualNutrition && annualNutritionExplain && annualPhysicalActivity && annualPhysicalActivityNoExplain && !annualPhysicalActivityDetail && !annualAlmostThere) return 31; // explication non activité
   if (annualFinished && annualGeneral && annualFeelings && annualExplain && annualLikert && annualLikertWork && annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty && annualPhysicalFatigue && annualMentalFatigue && annualMentalFatigueExplain && annualReassure && annualPain && annualPainLocation && annualAnxiety && annualAnxietyExplain && annualSleepQuality && annualSleepQualityExplain && annualSleepDuration && annualCareMessage && annualNutrition && annualNutritionExplain && annualPhysicalActivity && (annualPhysicalActivityDetail || annualPhysicalActivityNoExplain) && annualAlmostThere && !annualSymptoms) return 32; // transition presque fini
   if (annualFinished && annualGeneral && annualFeelings && annualExplain && annualLikert && annualLikertWork && annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty && annualPhysicalFatigue && annualMentalFatigue && annualMentalFatigueExplain && annualReassure && annualPain && annualPainLocation && annualAnxiety && annualAnxietyExplain && annualSleepQuality && annualSleepQualityExplain && annualSleepDuration && annualCareMessage && annualNutrition && annualNutritionExplain && annualPhysicalActivity && (annualPhysicalActivityDetail || annualPhysicalActivityNoExplain) && annualAlmostThere && annualSymptoms && !annualWorkstation) return 33; // symptômes
-  if (annualFinished && annualGeneral && annualFeelings && annualExplain && annualLikert && annualLikertWork && annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty && annualPhysicalFatigue && annualMentalFatigue && annualMentalFatigueExplain && annualReassure && annualPain && annualPainLocation && annualAnxiety && annualAnxietyExplain && annualSleepQuality && annualSleepQualityExplain && annualSleepDuration && annualCareMessage && annualNutrition && annualNutritionExplain && annualPhysicalActivity && (annualPhysicalActivityDetail || annualPhysicalActivityNoExplain) && annualAlmostThere && annualSymptoms && annualWorkstation) return 34; // aménagement poste de travail
+  if (annualFinished && annualGeneral && annualFeelings && annualExplain && annualLikert && annualLikertWork && annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty && annualPhysicalFatigue && annualMentalFatigue && annualMentalFatigueExplain && annualReassure && annualPain && annualPainLocation && annualAnxiety && annualAnxietyExplain && annualSleepQuality && annualSleepQualityExplain && annualSleepDuration && annualCareMessage && annualNutrition && annualNutritionExplain && annualPhysicalActivity && (annualPhysicalActivityDetail || annualPhysicalActivityNoExplain) && annualAlmostThere && annualSymptoms && annualWorkstation && !annualPractitionerNote) return 34; // aménagement poste de travail
+  if (annualFinished && annualGeneral && annualFeelings && annualExplain && annualLikert && annualLikertWork && annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty && annualPhysicalFatigue && annualMentalFatigue && annualMentalFatigueExplain && annualReassure && annualPain && annualPainLocation && annualAnxiety && annualAnxietyExplain && annualSleepQuality && annualSleepQualityExplain && annualSleepDuration && annualCareMessage && annualNutrition && annualNutritionExplain && annualPhysicalActivity && (annualPhysicalActivityDetail || annualPhysicalActivityNoExplain) && annualAlmostThere && annualSymptoms && annualWorkstation && annualPractitionerNote) return 35; // note praticien
     return 0;
   };
   const annualProgressStep = getAnnualProgressStep();
@@ -2404,7 +2407,7 @@ const Index = () => {
         );
       }
       // Écran aménagement poste de travail (étape 34)
-      if (annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty && annualPhysicalFatigue && annualMentalFatigue && annualMentalFatigueExplain && annualReassure && annualPain && annualPainLocation && annualAnxiety && annualAnxietyExplain && annualSleepQuality && annualSleepQualityExplain && annualSleepDuration && annualCareMessage && annualNutrition && annualNutritionExplain && annualPhysicalActivity && (annualPhysicalActivityDetail || annualPhysicalActivityNoExplain) && annualAlmostThere && annualSymptoms && annualWorkstation) {
+  if (annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty && annualPhysicalFatigue && annualMentalFatigue && annualMentalFatigueExplain && annualReassure && annualPain && annualPainLocation && annualAnxiety && annualAnxietyExplain && annualSleepQuality && annualSleepQualityExplain && annualSleepDuration && annualCareMessage && annualNutrition && annualNutritionExplain && annualPhysicalActivity && (annualPhysicalActivityDetail || annualPhysicalActivityNoExplain) && annualAlmostThere && annualSymptoms && annualWorkstation && !annualPractitionerNote) {
         return (
           <div className="relative min-h-screen w-full overflow-hidden">
             <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1593642532744-d377ab507dc8?auto=format&fit=crop&w=1400&q=60')" }} />
@@ -2441,9 +2444,57 @@ const Index = () => {
                       <Button
                         className="flex-1 h-12 text-base font-semibold bg-white/15 hover:bg-white/25 text-white backdrop-blur-md border border-white/30 disabled:opacity-40 disabled:cursor-not-allowed"
                         disabled={!annualWorkstationText.trim()}
-                        onClick={() => { if (annualWorkstationText.trim()) { setCurrentView('dashboard'); setAnnualStarted(false); /* fin provisoire après étape 34 */ } }}
+                        onClick={() => { if (annualWorkstationText.trim()) { setAnnualPractitionerNote(true); } }}
                       >
-                        Ok
+                        Continuer
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      }
+      // Écran note praticien (étape 35)
+      if (annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty && annualPhysicalFatigue && annualMentalFatigue && annualMentalFatigueExplain && annualReassure && annualPain && annualPainLocation && annualAnxiety && annualAnxietyExplain && annualSleepQuality && annualSleepQualityExplain && annualSleepDuration && annualCareMessage && annualNutrition && annualNutritionExplain && annualPhysicalActivity && (annualPhysicalActivityDetail || annualPhysicalActivityNoExplain) && annualAlmostThere && annualSymptoms && annualWorkstation && annualPractitionerNote) {
+        return (
+          <div className="relative min-h-screen w-full overflow-hidden">
+            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1518976024611-28bf4b37a07a?auto=format&fit=crop&w=1400&q=60')" }} />
+            <div className="absolute inset-0 bg-black/65 backdrop-blur-sm" />
+            <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
+              <div className="max-w-2xl mx-auto w-full flex flex-col flex-1">
+                <AnnualProgressBar className="mb-8" />
+                <div className="mb-8 text-left">
+                  <h1 className="text-3xl font-semibold text-white leading-snug mb-6">Tu peux ajouter une information pour ton Praticien</h1>
+                  <p className="text-white/70 text-sm mb-6">Optionnel – partage un détail qui pourrait aider ton suivi.</p>
+                  <div className="max-w-xl w-full">
+                    <textarea
+                      value={annualPractitionerNoteText}
+                      onChange={e => { setAnnualPractitionerNoteText(e.target.value); try { localStorage.setItem(annualStoragePrefix + 'practitioner_note', e.target.value); } catch {} }}
+                      placeholder="Écris une note personnelle… (optionnel)"
+                      className="w-full bg-white/10 focus:bg-white/15 transition rounded-xl p-4 text-white placeholder-blue-200 text-base leading-relaxed resize-none h-40 focus:outline-none border border-white/20 focus:border-white/40"
+                      aria-label="Note pour le praticien"
+                    />
+                  </div>
+                </div>
+                <div className="mt-auto">
+                  <div className="rounded-2xl overflow-hidden">
+                    <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-indigo-600 to-blue-700/90 backdrop-blur-md border border-white/20 rounded-2xl">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="h-12 font-medium w-16 flex items-center justify-center bg-white/10 border-white/40 text-white hover:bg-white/20"
+                        onClick={() => { setAnnualPractitionerNote(false); }}
+                        aria-label="Revenir"
+                      >
+                        &lt;
+                      </Button>
+                      <Button
+                        className="flex-1 h-12 text-base font-semibold bg-white/15 hover:bg-white/25 text-white backdrop-blur-md border border-white/30"
+                        onClick={() => { setCurrentView('dashboard'); setAnnualStarted(false); /* fin provisoire après étape 35 */ }}
+                      >
+                        Continuer
                       </Button>
                     </div>
                   </div>
