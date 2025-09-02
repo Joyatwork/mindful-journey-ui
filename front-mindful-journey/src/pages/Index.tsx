@@ -1106,7 +1106,7 @@ const Index = () => {
           </div>
         );
       }
-      if (annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload) {
+  if (annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && !annualTaskDifficulty) {
         const numbers = Array.from({ length: 11 }, (_, i) => i);
         return (
           <div className="relative min-h-screen w-full overflow-hidden">
