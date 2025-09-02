@@ -103,12 +103,14 @@ const Index = () => {
   const [annualPainAnswer, setAnnualPainAnswer] = useState<number | null>(null);
   const [annualPainLocation, setAnnualPainLocation] = useState(false); // écran localisation douleur
   const [annualPainLocationText, setAnnualPainLocationText] = useState('');
+  const [annualAnxiety, setAnnualAnxiety] = useState(false); // écran anxiété
+  const [annualAnxietyAnswer, setAnnualAnxietyAnswer] = useState<number | null>(null);
   const annualStoragePrefix = React.useMemo(() => (user?.id ? `annual:${user.id}:` : 'annual:guest:'), [user?.id]);
 
   // --------------------------------------------------
   // Progression unifiée du parcours annuel
   // Étapes (7): 1=gender,2=age,3=department,4=general,5=feelings,6=explain,7=likert
-  const ANNUAL_TOTAL_STEPS = 20;
+  const ANNUAL_TOTAL_STEPS = 21;
   const getAnnualProgressStep = () => {
     if (!annualStarted) return 0;
     if (!annualFinished) return annualStep; // 1..3
@@ -130,7 +132,8 @@ const Index = () => {
   if (annualFinished && annualGeneral && annualFeelings && annualExplain && annualLikert && annualLikertWork && annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty && annualPhysicalFatigue && annualMentalFatigue && annualMentalFatigueExplain && !annualReassure) return 17; // explication fatigue mentale
   if (annualFinished && annualGeneral && annualFeelings && annualExplain && annualLikert && annualLikertWork && annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty && annualPhysicalFatigue && annualMentalFatigue && annualMentalFatigueExplain && annualReassure && !annualPain) return 18; // réassurance
   if (annualFinished && annualGeneral && annualFeelings && annualExplain && annualLikert && annualLikertWork && annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty && annualPhysicalFatigue && annualMentalFatigue && annualMentalFatigueExplain && annualReassure && annualPain && !annualPainLocation) return 19; // douleur intensité
-  if (annualFinished && annualGeneral && annualFeelings && annualExplain && annualLikert && annualLikertWork && annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty && annualPhysicalFatigue && annualMentalFatigue && annualMentalFatigueExplain && annualReassure && annualPain && annualPainLocation) return 20; // localisation douleur
+  if (annualFinished && annualGeneral && annualFeelings && annualExplain && annualLikert && annualLikertWork && annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty && annualPhysicalFatigue && annualMentalFatigue && annualMentalFatigueExplain && annualReassure && annualPain && annualPainLocation && !annualAnxiety) return 20; // localisation douleur
+  if (annualFinished && annualGeneral && annualFeelings && annualExplain && annualLikert && annualLikertWork && annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty && annualPhysicalFatigue && annualMentalFatigue && annualMentalFatigueExplain && annualReassure && annualPain && annualPainLocation && annualAnxiety) return 21; // anxiété
     return 0;
   };
   const annualProgressStep = getAnnualProgressStep();
@@ -1552,7 +1555,7 @@ const Index = () => {
         );
       }
       // Écran localisation douleur (étape 20)
-      if (annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty && annualPhysicalFatigue && annualMentalFatigue && annualMentalFatigueExplain && annualReassure && annualPain && annualPainLocation) {
+  if (annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty && annualPhysicalFatigue && annualMentalFatigue && annualMentalFatigueExplain && annualReassure && annualPain && annualPainLocation && !annualAnxiety) {
         return (
           <div className="relative min-h-screen w-full overflow-hidden">
             <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1603398938378-e54eab446dde?auto=format&fit=crop&w=1400&q=60')" }} />
@@ -1592,7 +1595,74 @@ const Index = () => {
                       <Button
                         className="flex-1 h-12 text-base font-semibold bg-white/15 hover:bg-white/25 text-white backdrop-blur-md border border-white/30 disabled:opacity-40 disabled:cursor-not-allowed"
                         disabled={!annualPainLocationText.trim()}
-                        onClick={() => { if (annualPainLocationText.trim()) { setCurrentView('dashboard'); setAnnualStarted(false); setAnnualGeneral(false); setAnnualFeelings(false); setAnnualExplain(false); setAnnualLikert(false); setAnnualLikertWork(false); setAnnualSatisfaction(false); setAnnualExplainWhy(false); setAnnualMotivation(false); setAnnualWorkSchedule(false); setAnnualWorkload(false); setAnnualTaskDifficulty(false); setAnnualPhysicalFatigue(false); setAnnualMentalFatigue(false); setAnnualMentalFatigueExplain(false); setAnnualReassure(false); setAnnualPain(false); setAnnualPainLocation(false); setAnnualPhysicalFatigueAnswer(null); setAnnualMentalFatigueAnswer(null); setAnnualMentalFatigueExplainText(''); setAnnualPainAnswer(null); setAnnualPainLocationText(''); } }}
+                        onClick={() => { if (annualPainLocationText.trim()) { if (annualAnxietyAnswer === null) { setAnnualAnxietyAnswer(8); try { localStorage.setItem(annualStoragePrefix + 'anxiety_level', JSON.stringify(8)); } catch {} } setAnnualAnxiety(true); } }}
+                      >
+                        Ok
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      }
+      // Écran anxiété (étape 21)
+      if (annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty && annualPhysicalFatigue && annualMentalFatigue && annualMentalFatigueExplain && annualReassure && annualPain && annualPainLocation && annualAnxiety) {
+        const numbers = Array.from({ length: 11 }, (_, i) => i);
+        return (
+          <div className="relative min-h-screen w-full overflow-hidden">
+            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1552196563-55cd4e45efb3?auto=format&fit=crop&w=1400&q=60')" }} />
+            <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+            <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
+              <div className="max-w-xl mx-auto w-full flex flex-col flex-1">
+                <AnnualProgressBar className="mb-8" />
+                <div className="mb-8 text-left">
+                  <h1 className="text-3xl font-semibold text-white leading-snug mb-4">Ressens-tu de l’anxiété, de l’angoisse ?<br />0 = Pas du tout. 5 = Parfois. 10 = Souvent*</h1>
+                  <p className="text-white/70 text-sm mb-6">Sélectionne ton niveau actuel (8 est pré‑sélectionné, modifiable).</p>
+                  <div className="grid grid-cols-6 gap-3">
+                    {numbers.slice(0,6).map(n => {
+                      const selected = annualAnxietyAnswer === n;
+                      return (
+                        <button
+                          key={n}
+                          type="button"
+                          onClick={() => { setAnnualAnxietyAnswer(n); try { localStorage.setItem(annualStoragePrefix + 'anxiety_level', JSON.stringify(n)); } catch {} }}
+                          className={`aspect-square flex items-center justify-center rounded-xl border text-sm font-semibold backdrop-blur-md transition [transition-property:background,border,color,transform] duration-200 ${selected ? 'bg-white/30 border-white text-white shadow-lg animate-selectPop' : 'bg-white/10 border-white/40 text-white hover:bg-white/15'}`}
+                          aria-pressed={selected}
+                        >{n}</button>
+                      );
+                    })}
+                    {numbers.slice(6).map(n => {
+                      const selected = annualAnxietyAnswer === n;
+                      return (
+                        <button
+                          key={n}
+                          type="button"
+                          onClick={() => { setAnnualAnxietyAnswer(n); try { localStorage.setItem(annualStoragePrefix + 'anxiety_level', JSON.stringify(n)); } catch {} }}
+                          className={`aspect-square flex items-center justify-center rounded-xl border text-sm font-semibold backdrop-blur-md transition [transition-property:background,border,color,transform] duration-200 ${selected ? 'bg-white/30 border-white text-white shadow-lg animate-selectPop' : 'bg-white/10 border-white/40 text-white hover:bg-white/15'}`}
+                          aria-pressed={selected}
+                        >{n}</button>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div className="mt-auto">
+                  <div className="rounded-2xl overflow-hidden">
+                    <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-indigo-600 to-blue-700/90 backdrop-blur-md border border-white/20 rounded-2xl">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="h-12 font-medium w-16 flex items-center justify-center bg-white/10 border-white/40 text-white hover:bg-white/20"
+                        onClick={() => { setAnnualAnxiety(false); }}
+                        aria-label="Revenir"
+                      >
+                        &lt;
+                      </Button>
+                      <Button
+                        className="flex-1 h-12 text-base font-semibold bg-white/15 hover:bg-white/25 text-white backdrop-blur-md border border-white/30 disabled:opacity-40 disabled:cursor-not-allowed"
+                        disabled={annualAnxietyAnswer === null}
+                        onClick={() => { if (annualAnxietyAnswer !== null) { setCurrentView('dashboard'); setAnnualStarted(false); setAnnualGeneral(false); setAnnualFeelings(false); setAnnualExplain(false); setAnnualLikert(false); setAnnualLikertWork(false); setAnnualSatisfaction(false); setAnnualExplainWhy(false); setAnnualMotivation(false); setAnnualWorkSchedule(false); setAnnualWorkload(false); setAnnualTaskDifficulty(false); setAnnualPhysicalFatigue(false); setAnnualMentalFatigue(false); setAnnualMentalFatigueExplain(false); setAnnualReassure(false); setAnnualPain(false); setAnnualPainLocation(false); setAnnualAnxiety(false); setAnnualPhysicalFatigueAnswer(null); setAnnualMentalFatigueAnswer(null); setAnnualMentalFatigueExplainText(''); setAnnualPainAnswer(null); setAnnualPainLocationText(''); setAnnualAnxietyAnswer(null); } }}
                       >
                         Ok
                       </Button>
