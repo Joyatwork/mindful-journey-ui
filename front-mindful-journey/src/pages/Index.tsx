@@ -111,12 +111,14 @@ const Index = () => {
   const [annualSleepQualityAnswer, setAnnualSleepQualityAnswer] = useState<number | null>(null);
   const [annualSleepQualityExplain, setAnnualSleepQualityExplain] = useState(false); // écran explication sommeil (étape 24)
   const [annualSleepQualityExplainText, setAnnualSleepQualityExplainText] = useState('');
+  const [annualSleepDuration, setAnnualSleepDuration] = useState(false); // écran durée sommeil (étape 25)
+  const [annualSleepDurationAnswer, setAnnualSleepDurationAnswer] = useState<string>('');
   const annualStoragePrefix = React.useMemo(() => (user?.id ? `annual:${user.id}:` : 'annual:guest:'), [user?.id]);
 
   // --------------------------------------------------
   // Progression unifiée du parcours annuel
   // Étapes (7): 1=gender,2=age,3=department,4=general,5=feelings,6=explain,7=likert
-  const ANNUAL_TOTAL_STEPS = 24;
+  const ANNUAL_TOTAL_STEPS = 25;
   const getAnnualProgressStep = () => {
     if (!annualStarted) return 0;
     if (!annualFinished) return annualStep; // 1..3
@@ -142,7 +144,8 @@ const Index = () => {
   if (annualFinished && annualGeneral && annualFeelings && annualExplain && annualLikert && annualLikertWork && annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty && annualPhysicalFatigue && annualMentalFatigue && annualMentalFatigueExplain && annualReassure && annualPain && annualPainLocation && annualAnxiety && !annualAnxietyExplain) return 21; // anxiété
   if (annualFinished && annualGeneral && annualFeelings && annualExplain && annualLikert && annualLikertWork && annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty && annualPhysicalFatigue && annualMentalFatigue && annualMentalFatigueExplain && annualReassure && annualPain && annualPainLocation && annualAnxiety && annualAnxietyExplain && !annualSleepQuality) return 22; // explication anxiété
   if (annualFinished && annualGeneral && annualFeelings && annualExplain && annualLikert && annualLikertWork && annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty && annualPhysicalFatigue && annualMentalFatigue && annualMentalFatigueExplain && annualReassure && annualPain && annualPainLocation && annualAnxiety && annualAnxietyExplain && annualSleepQuality && !annualSleepQualityExplain) return 23; // qualité sommeil
-  if (annualFinished && annualGeneral && annualFeelings && annualExplain && annualLikert && annualLikertWork && annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty && annualPhysicalFatigue && annualMentalFatigue && annualMentalFatigueExplain && annualReassure && annualPain && annualPainLocation && annualAnxiety && annualAnxietyExplain && annualSleepQuality && annualSleepQualityExplain) return 24; // explication sommeil
+  if (annualFinished && annualGeneral && annualFeelings && annualExplain && annualLikert && annualLikertWork && annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty && annualPhysicalFatigue && annualMentalFatigue && annualMentalFatigueExplain && annualReassure && annualPain && annualPainLocation && annualAnxiety && annualAnxietyExplain && annualSleepQuality && annualSleepQualityExplain && !annualSleepDuration) return 24; // explication sommeil
+  if (annualFinished && annualGeneral && annualFeelings && annualExplain && annualLikert && annualLikertWork && annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty && annualPhysicalFatigue && annualMentalFatigue && annualMentalFatigueExplain && annualReassure && annualPain && annualPainLocation && annualAnxiety && annualAnxietyExplain && annualSleepQuality && annualSleepQualityExplain && annualSleepDuration) return 25; // durée sommeil
     return 0;
   };
   const annualProgressStep = getAnnualProgressStep();
@@ -1803,7 +1806,7 @@ const Index = () => {
         );
       }
       // Écran explication sommeil (étape 24)
-      if (annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty && annualPhysicalFatigue && annualMentalFatigue && annualMentalFatigueExplain && annualReassure && annualPain && annualPainLocation && annualAnxiety && annualAnxietyExplain && annualSleepQuality && annualSleepQualityExplain) {
+  if (annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty && annualPhysicalFatigue && annualMentalFatigue && annualMentalFatigueExplain && annualReassure && annualPain && annualPainLocation && annualAnxiety && annualAnxietyExplain && annualSleepQuality && annualSleepQualityExplain && !annualSleepDuration) {
         return (
           <div className="relative min-h-screen w-full overflow-hidden">
             <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1470259078422-826894b933aa?auto=format&fit=crop&w=1400&q=60')" }} />
@@ -1843,7 +1846,71 @@ const Index = () => {
                       <Button
                         className="flex-1 h-12 text-base font-semibold bg-white/15 hover:bg-white/25 text-white backdrop-blur-md border border-white/30 disabled:opacity-40 disabled:cursor-not-allowed"
                         disabled={!annualSleepQualityExplainText.trim()}
-                        onClick={() => { if (annualSleepQualityExplainText.trim()) { setCurrentView('dashboard'); setAnnualStarted(false); setAnnualGeneral(false); setAnnualFeelings(false); setAnnualExplain(false); setAnnualLikert(false); setAnnualLikertWork(false); setAnnualSatisfaction(false); setAnnualExplainWhy(false); setAnnualMotivation(false); setAnnualWorkSchedule(false); setAnnualWorkload(false); setAnnualTaskDifficulty(false); setAnnualPhysicalFatigue(false); setAnnualMentalFatigue(false); setAnnualMentalFatigueExplain(false); setAnnualReassure(false); setAnnualPain(false); setAnnualPainLocation(false); setAnnualAnxiety(false); setAnnualAnxietyExplain(false); setAnnualSleepQuality(false); setAnnualSleepQualityExplain(false); setAnnualPhysicalFatigueAnswer(null); setAnnualMentalFatigueAnswer(null); setAnnualMentalFatigueExplainText(''); setAnnualPainAnswer(null); setAnnualPainLocationText(''); setAnnualAnxietyAnswer(null); setAnnualAnxietyExplainText(''); setAnnualSleepQualityAnswer(null); setAnnualSleepQualityExplainText(''); } }}
+                        onClick={() => { if (annualSleepQualityExplainText.trim()) { if (!annualSleepDurationAnswer) { const def='E'; setAnnualSleepDurationAnswer(def); try { localStorage.setItem(annualStoragePrefix + 'sleep_duration', JSON.stringify(def)); } catch {} } setAnnualSleepDuration(true); } }}
+                      >
+                        Ok
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      }
+      // Écran durée sommeil (étape 25)
+      if (annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty && annualPhysicalFatigue && annualMentalFatigue && annualMentalFatigueExplain && annualReassure && annualPain && annualPainLocation && annualAnxiety && annualAnxietyExplain && annualSleepQuality && annualSleepQualityExplain && annualSleepDuration) {
+        const options = [
+          { id: 'A', label: '- de 6 heures' },
+          { id: 'B', label: '6 heures' },
+          { id: 'C', label: '7 heures' },
+          { id: 'D', label: '8 heures' },
+          { id: 'E', label: '9 heures +' }
+        ];
+        const letterStyles = 'inline-flex items-center justify-center w-7 h-7 rounded-md text-sm font-bold bg-blue-500/20 text-blue-300 border border-blue-400/40 mr-3';
+        return (
+          <div className="relative min-h-screen w-full overflow-hidden">
+            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1501975558162-0be7b8ca95ea?auto=format&fit=crop&w=1400&q=60')" }} />
+            <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+            <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
+              <div className="max-w-xl mx-auto w-full flex flex-col flex-1">
+                <AnnualProgressBar className="mb-8" />
+                <div className="mb-8 text-left">
+                  <h1 className="text-3xl font-semibold text-white leading-snug mb-6">Généralement je dors*</h1>
+                  <div className="space-y-4">
+                    {options.map(opt => {
+                      const selected = annualSleepDurationAnswer === opt.id;
+                      return (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          onClick={() => { setAnnualSleepDurationAnswer(opt.id); try { localStorage.setItem(annualStoragePrefix + 'sleep_duration', JSON.stringify(opt.id)); } catch {} }}
+                          className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border text-sm font-medium backdrop-blur-md transition [transition-property:background,border,color,transform] duration-200 ${selected ? 'bg-white/25 border-white text-white shadow-lg' : 'bg-white/10 border-white/40 text-white hover:bg-white/15'}`}
+                          aria-pressed={selected}
+                        >
+                          <span className="flex items-center"><span className={letterStyles}>{opt.id}</span>{opt.label}</span>
+                          {selected && <span className="text-white font-semibold">✓</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div className="mt-auto">
+                  <div className="rounded-2xl overflow-hidden">
+                    <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-indigo-600 to-blue-700/90 backdrop-blur-md border border-white/20 rounded-2xl">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="h-12 font-medium w-16 flex items-center justify-center bg-white/10 border-white/40 text-white hover:bg-white/20"
+                        onClick={() => { setAnnualSleepDuration(false); }}
+                        aria-label="Revenir"
+                      >
+                        &lt;
+                      </Button>
+                      <Button
+                        className="flex-1 h-12 text-base font-semibold bg-white/15 hover:bg-white/25 text-white backdrop-blur-md border border-white/30 disabled:opacity-40 disabled:cursor-not-allowed"
+                        disabled={!annualSleepDurationAnswer}
+                        onClick={() => { if (annualSleepDurationAnswer) { setCurrentView('dashboard'); setAnnualStarted(false); setAnnualGeneral(false); setAnnualFeelings(false); setAnnualExplain(false); setAnnualLikert(false); setAnnualLikertWork(false); setAnnualSatisfaction(false); setAnnualExplainWhy(false); setAnnualMotivation(false); setAnnualWorkSchedule(false); setAnnualWorkload(false); setAnnualTaskDifficulty(false); setAnnualPhysicalFatigue(false); setAnnualMentalFatigue(false); setAnnualMentalFatigueExplain(false); setAnnualReassure(false); setAnnualPain(false); setAnnualPainLocation(false); setAnnualAnxiety(false); setAnnualAnxietyExplain(false); setAnnualSleepQuality(false); setAnnualSleepQualityExplain(false); setAnnualSleepDuration(false); setAnnualPhysicalFatigueAnswer(null); setAnnualMentalFatigueAnswer(null); setAnnualMentalFatigueExplainText(''); setAnnualPainAnswer(null); setAnnualPainLocationText(''); setAnnualAnxietyAnswer(null); setAnnualAnxietyExplainText(''); setAnnualSleepQualityAnswer(null); setAnnualSleepQualityExplainText(''); setAnnualSleepDurationAnswer(''); } }}
                       >
                         Ok
                       </Button>
