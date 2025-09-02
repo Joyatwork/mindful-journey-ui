@@ -113,12 +113,13 @@ const Index = () => {
   const [annualSleepQualityExplainText, setAnnualSleepQualityExplainText] = useState('');
   const [annualSleepDuration, setAnnualSleepDuration] = useState(false); // écran durée sommeil (étape 25)
   const [annualSleepDurationAnswer, setAnnualSleepDurationAnswer] = useState<string>('');
+  const [annualCareMessage, setAnnualCareMessage] = useState(false); // écran message rassurant (étape 26)
   const annualStoragePrefix = React.useMemo(() => (user?.id ? `annual:${user.id}:` : 'annual:guest:'), [user?.id]);
 
   // --------------------------------------------------
   // Progression unifiée du parcours annuel
   // Étapes (7): 1=gender,2=age,3=department,4=general,5=feelings,6=explain,7=likert
-  const ANNUAL_TOTAL_STEPS = 25;
+  const ANNUAL_TOTAL_STEPS = 26;
   const getAnnualProgressStep = () => {
     if (!annualStarted) return 0;
     if (!annualFinished) return annualStep; // 1..3
@@ -145,7 +146,8 @@ const Index = () => {
   if (annualFinished && annualGeneral && annualFeelings && annualExplain && annualLikert && annualLikertWork && annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty && annualPhysicalFatigue && annualMentalFatigue && annualMentalFatigueExplain && annualReassure && annualPain && annualPainLocation && annualAnxiety && annualAnxietyExplain && !annualSleepQuality) return 22; // explication anxiété
   if (annualFinished && annualGeneral && annualFeelings && annualExplain && annualLikert && annualLikertWork && annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty && annualPhysicalFatigue && annualMentalFatigue && annualMentalFatigueExplain && annualReassure && annualPain && annualPainLocation && annualAnxiety && annualAnxietyExplain && annualSleepQuality && !annualSleepQualityExplain) return 23; // qualité sommeil
   if (annualFinished && annualGeneral && annualFeelings && annualExplain && annualLikert && annualLikertWork && annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty && annualPhysicalFatigue && annualMentalFatigue && annualMentalFatigueExplain && annualReassure && annualPain && annualPainLocation && annualAnxiety && annualAnxietyExplain && annualSleepQuality && annualSleepQualityExplain && !annualSleepDuration) return 24; // explication sommeil
-  if (annualFinished && annualGeneral && annualFeelings && annualExplain && annualLikert && annualLikertWork && annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty && annualPhysicalFatigue && annualMentalFatigue && annualMentalFatigueExplain && annualReassure && annualPain && annualPainLocation && annualAnxiety && annualAnxietyExplain && annualSleepQuality && annualSleepQualityExplain && annualSleepDuration) return 25; // durée sommeil
+  if (annualFinished && annualGeneral && annualFeelings && annualExplain && annualLikert && annualLikertWork && annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty && annualPhysicalFatigue && annualMentalFatigue && annualMentalFatigueExplain && annualReassure && annualPain && annualPainLocation && annualAnxiety && annualAnxietyExplain && annualSleepQuality && annualSleepQualityExplain && annualSleepDuration && !annualCareMessage) return 25; // durée sommeil
+  if (annualFinished && annualGeneral && annualFeelings && annualExplain && annualLikert && annualLikertWork && annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty && annualPhysicalFatigue && annualMentalFatigue && annualMentalFatigueExplain && annualReassure && annualPain && annualPainLocation && annualAnxiety && annualAnxietyExplain && annualSleepQuality && annualSleepQualityExplain && annualSleepDuration && annualCareMessage) return 26; // message rassurant
     return 0;
   };
   const annualProgressStep = getAnnualProgressStep();
@@ -1859,7 +1861,7 @@ const Index = () => {
         );
       }
       // Écran durée sommeil (étape 25)
-      if (annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty && annualPhysicalFatigue && annualMentalFatigue && annualMentalFatigueExplain && annualReassure && annualPain && annualPainLocation && annualAnxiety && annualAnxietyExplain && annualSleepQuality && annualSleepQualityExplain && annualSleepDuration) {
+  if (annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty && annualPhysicalFatigue && annualMentalFatigue && annualMentalFatigueExplain && annualReassure && annualPain && annualPainLocation && annualAnxiety && annualAnxietyExplain && annualSleepQuality && annualSleepQualityExplain && annualSleepDuration && !annualCareMessage) {
         const options = [
           { id: 'A', label: '- de 6 heures' },
           { id: 'B', label: '6 heures' },
@@ -1910,9 +1912,53 @@ const Index = () => {
                       <Button
                         className="flex-1 h-12 text-base font-semibold bg-white/15 hover:bg-white/25 text-white backdrop-blur-md border border-white/30 disabled:opacity-40 disabled:cursor-not-allowed"
                         disabled={!annualSleepDurationAnswer}
-                        onClick={() => { if (annualSleepDurationAnswer) { setCurrentView('dashboard'); setAnnualStarted(false); setAnnualGeneral(false); setAnnualFeelings(false); setAnnualExplain(false); setAnnualLikert(false); setAnnualLikertWork(false); setAnnualSatisfaction(false); setAnnualExplainWhy(false); setAnnualMotivation(false); setAnnualWorkSchedule(false); setAnnualWorkload(false); setAnnualTaskDifficulty(false); setAnnualPhysicalFatigue(false); setAnnualMentalFatigue(false); setAnnualMentalFatigueExplain(false); setAnnualReassure(false); setAnnualPain(false); setAnnualPainLocation(false); setAnnualAnxiety(false); setAnnualAnxietyExplain(false); setAnnualSleepQuality(false); setAnnualSleepQualityExplain(false); setAnnualSleepDuration(false); setAnnualPhysicalFatigueAnswer(null); setAnnualMentalFatigueAnswer(null); setAnnualMentalFatigueExplainText(''); setAnnualPainAnswer(null); setAnnualPainLocationText(''); setAnnualAnxietyAnswer(null); setAnnualAnxietyExplainText(''); setAnnualSleepQualityAnswer(null); setAnnualSleepQualityExplainText(''); setAnnualSleepDurationAnswer(''); } }}
+                        onClick={() => { if (annualSleepDurationAnswer) { setAnnualCareMessage(true); } }}
                       >
                         Ok
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      }
+      // Écran message rassurant (étape 26)
+      if (annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty && annualPhysicalFatigue && annualMentalFatigue && annualMentalFatigueExplain && annualReassure && annualPain && annualPainLocation && annualAnxiety && annualAnxietyExplain && annualSleepQuality && annualSleepQualityExplain && annualSleepDuration && annualCareMessage) {
+        return (
+          <div className="relative min-h-screen w-full overflow-hidden">
+            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=1400&q=60')" }} />
+            <div className="absolute inset-0 bg-black/65 backdrop-blur-sm" />
+            <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
+              <div className="max-w-2xl mx-auto w-full flex flex-col flex-1">
+                <AnnualProgressBar className="mb-8" />
+                <div className="flex-1 flex items-center">
+                  <blockquote className="text-left w-full relative pl-6">
+                    <span className="absolute left-0 top-0 text-5xl leading-none text-indigo-400 select-none">“</span>
+                    <p className="text-3xl font-semibold text-white leading-snug">
+                      <span className="block">Tout ira bien.</span>
+                      <span className="block">Nous prenons soin de toi.</span>
+                    </p>
+                  </blockquote>
+                </div>
+                <div className="mt-auto">
+                  <div className="rounded-2xl overflow-hidden">
+                    <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-indigo-600 to-blue-700/90 backdrop-blur-md border border-white/20 rounded-2xl">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="h-12 font-medium w-16 flex items-center justify-center bg-white/10 border-white/40 text-white hover:bg-white/20"
+                        onClick={() => { setAnnualCareMessage(false); }}
+                        aria-label="Revenir"
+                      >
+                        &lt;
+                      </Button>
+                      <Button
+                        className="flex-1 h-12 text-base font-semibold bg-white/15 hover:bg-white/25 text-white backdrop-blur-md border border-white/30"
+                        onClick={() => { setCurrentView('dashboard'); setAnnualStarted(false); setAnnualGeneral(false); setAnnualFeelings(false); setAnnualExplain(false); setAnnualLikert(false); setAnnualLikertWork(false); setAnnualSatisfaction(false); setAnnualExplainWhy(false); setAnnualMotivation(false); setAnnualWorkSchedule(false); setAnnualWorkload(false); setAnnualTaskDifficulty(false); setAnnualPhysicalFatigue(false); setAnnualMentalFatigue(false); setAnnualMentalFatigueExplain(false); setAnnualReassure(false); setAnnualPain(false); setAnnualPainLocation(false); setAnnualAnxiety(false); setAnnualAnxietyExplain(false); setAnnualSleepQuality(false); setAnnualSleepQualityExplain(false); setAnnualSleepDuration(false); setAnnualCareMessage(false); setAnnualPhysicalFatigueAnswer(null); setAnnualMentalFatigueAnswer(null); setAnnualMentalFatigueExplainText(''); setAnnualPainAnswer(null); setAnnualPainLocationText(''); setAnnualAnxietyAnswer(null); setAnnualAnxietyExplainText(''); setAnnualSleepQualityAnswer(null); setAnnualSleepQualityExplainText(''); setAnnualSleepDurationAnswer(''); }}
+                      >
+                        Continuer
                       </Button>
                     </div>
                   </div>
