@@ -92,12 +92,14 @@ const Index = () => {
   const [annualWorkloadAnswer, setAnnualWorkloadAnswer] = useState<number | null>(null);
   const [annualTaskDifficulty, setAnnualTaskDifficulty] = useState(false); // écran difficulté tâches
   const [annualTaskDifficultyAnswer, setAnnualTaskDifficultyAnswer] = useState<number | null>(null);
+  const [annualPhysicalFatigue, setAnnualPhysicalFatigue] = useState(false); // écran fatigue physique
+  const [annualPhysicalFatigueAnswer, setAnnualPhysicalFatigueAnswer] = useState<number | null>(null);
   const annualStoragePrefix = React.useMemo(() => (user?.id ? `annual:${user.id}:` : 'annual:guest:'), [user?.id]);
 
   // --------------------------------------------------
   // Progression unifiée du parcours annuel
   // Étapes (7): 1=gender,2=age,3=department,4=general,5=feelings,6=explain,7=likert
-  const ANNUAL_TOTAL_STEPS = 14;
+  const ANNUAL_TOTAL_STEPS = 15;
   const getAnnualProgressStep = () => {
     if (!annualStarted) return 0;
     if (!annualFinished) return annualStep; // 1..3
@@ -113,7 +115,8 @@ const Index = () => {
   if (annualFinished && annualGeneral && annualFeelings && annualExplain && annualLikert && annualLikertWork && annualSatisfaction && annualExplainWhy && annualMotivation && !annualWorkSchedule) return 11;
   if (annualFinished && annualGeneral && annualFeelings && annualExplain && annualLikert && annualLikertWork && annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && !annualWorkload) return 12;
   if (annualFinished && annualGeneral && annualFeelings && annualExplain && annualLikert && annualLikertWork && annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && !annualTaskDifficulty) return 13;
-  if (annualFinished && annualGeneral && annualFeelings && annualExplain && annualLikert && annualLikertWork && annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty) return 14;
+  if (annualFinished && annualGeneral && annualFeelings && annualExplain && annualLikert && annualLikertWork && annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty && !annualPhysicalFatigue) return 14; // difficulté tâches
+  if (annualFinished && annualGeneral && annualFeelings && annualExplain && annualLikert && annualLikertWork && annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty && annualPhysicalFatigue) return 15; // fatigue physique
     return 0;
   };
   const annualProgressStep = getAnnualProgressStep();
@@ -1172,7 +1175,7 @@ const Index = () => {
           </div>
         );
       }
-      if (annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty) {
+  if (annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty && !annualPhysicalFatigue) {
         const numbers = Array.from({ length: 11 }, (_, i) => i);
         return (
           <div className="relative min-h-screen w-full overflow-hidden">
@@ -1226,7 +1229,74 @@ const Index = () => {
                       <Button
                         className="flex-1 h-12 text-base font-semibold bg-white/15 hover:bg-white/25 text-white backdrop-blur-md border border-white/30 disabled:opacity-40 disabled:cursor-not-allowed"
                         disabled={annualTaskDifficultyAnswer === null}
-                        onClick={() => { if (annualTaskDifficultyAnswer !== null) { setCurrentView('dashboard'); setAnnualStarted(false); setAnnualGeneral(false); setAnnualFeelings(false); setAnnualExplain(false); setAnnualLikert(false); setAnnualLikertWork(false); setAnnualSatisfaction(false); setAnnualExplainWhy(false); setAnnualMotivation(false); setAnnualWorkSchedule(false); setAnnualWorkload(false); setAnnualTaskDifficulty(false); } }}
+                        onClick={() => { if (annualTaskDifficultyAnswer !== null) { if (annualPhysicalFatigueAnswer === null) { setAnnualPhysicalFatigueAnswer(9); try { localStorage.setItem(annualStoragePrefix + 'physical_fatigue_level', JSON.stringify(9)); } catch {} } setAnnualPhysicalFatigue(true); } }}
+                      >
+                        Ok
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      }
+      // Écran fatigue physique (étape 15)
+      if (annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty && annualPhysicalFatigue) {
+        const numbers = Array.from({ length: 11 }, (_, i) => i);
+        return (
+          <div className="relative min-h-screen w-full overflow-hidden">
+            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1526403228293-28b7771c90f5?auto=format&fit=crop&w=1400&q=60')" }} />
+            <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+            <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
+              <div className="max-w-xl mx-auto w-full flex flex-col flex-1">
+                <AnnualProgressBar className="mb-8" />
+                <div className="mb-8 text-left">
+                  <h1 className="text-3xl font-semibold text-white leading-snug mb-4">Mon niveau de fatigue physique / mon état physique.<br />0 = Pas du tout fatigué(e). 5 = Assez fatigué(e). 10 = Très fatigué(e)*</h1>
+                  <p className="text-white/70 text-sm mb-6">Sélectionne un chiffre qui reflète ta fatigue actuelle (9 est pré‑sélectionné, modifiable).</p>
+                  <div className="grid grid-cols-6 gap-3">
+                    {numbers.slice(0,6).map(n => {
+                      const selected = annualPhysicalFatigueAnswer === n;
+                      return (
+                        <button
+                          key={n}
+                          type="button"
+                          onClick={() => { setAnnualPhysicalFatigueAnswer(n); try { localStorage.setItem(annualStoragePrefix + 'physical_fatigue_level', JSON.stringify(n)); } catch {} }}
+                          className={`aspect-square flex items-center justify-center rounded-xl border text-sm font-semibold backdrop-blur-md transition [transition-property:background,border,color,transform] duration-200 ${selected ? 'bg-white/30 border-white text-white shadow-lg animate-selectPop' : 'bg-white/10 border-white/40 text-white hover:bg-white/15'}`}
+                          aria-pressed={selected}
+                        >{n}</button>
+                      );
+                    })}
+                    {numbers.slice(6).map(n => {
+                      const selected = annualPhysicalFatigueAnswer === n;
+                      return (
+                        <button
+                          key={n}
+                          type="button"
+                          onClick={() => { setAnnualPhysicalFatigueAnswer(n); try { localStorage.setItem(annualStoragePrefix + 'physical_fatigue_level', JSON.stringify(n)); } catch {} }}
+                          className={`aspect-square flex items-center justify-center rounded-xl border text-sm font-semibold backdrop-blur-md transition [transition-property:background,border,color,transform] duration-200 ${selected ? 'bg-white/30 border-white text-white shadow-lg animate-selectPop' : 'bg-white/10 border-white/40 text-white hover:bg-white/15'}`}
+                          aria-pressed={selected}
+                        >{n}</button>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div className="mt-auto">
+                  <div className="rounded-2xl overflow-hidden">
+                    <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-indigo-600 to-blue-700/90 backdrop-blur-md border border-white/20 rounded-2xl">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="h-12 font-medium w-16 flex items-center justify-center bg-white/10 border-white/40 text-white hover:bg-white/20"
+                        onClick={() => { setAnnualPhysicalFatigue(false); }}
+                        aria-label="Revenir"
+                      >
+                        &lt;
+                      </Button>
+                      <Button
+                        className="flex-1 h-12 text-base font-semibold bg-white/15 hover:bg-white/25 text-white backdrop-blur-md border border-white/30 disabled:opacity-40 disabled:cursor-not-allowed"
+                        disabled={annualPhysicalFatigueAnswer === null}
+                        onClick={() => { if (annualPhysicalFatigueAnswer !== null) { setCurrentView('dashboard'); setAnnualStarted(false); setAnnualGeneral(false); setAnnualFeelings(false); setAnnualExplain(false); setAnnualLikert(false); setAnnualLikertWork(false); setAnnualSatisfaction(false); setAnnualExplainWhy(false); setAnnualMotivation(false); setAnnualWorkSchedule(false); setAnnualWorkload(false); setAnnualTaskDifficulty(false); setAnnualPhysicalFatigue(false); setAnnualPhysicalFatigueAnswer(null); } }}
                       >
                         Ok
                       </Button>
