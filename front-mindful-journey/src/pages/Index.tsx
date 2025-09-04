@@ -932,7 +932,7 @@ const Index = () => {
         </div>
       </Card>
 
-      <div className="grid grid-cols-2 gap-4">
+  <div className="grid grid-cols-2 gap-4">
         <Button 
           onClick={() => setCurrentView('diagnostic')}
           className="h-16 bg-wellness-gradient hover:opacity-90 text-white rounded-2xl"
@@ -953,11 +953,14 @@ const Index = () => {
           </div>
         </Button>
         
+        
+      </div>
+      <div className="grid grid-cols-1 gap-4 mt-2">
         <Button 
           onClick={() => setCurrentView('challenges')}
           className="h-16 bg-gradient-to-br from-orange-400 to-pink-400 hover:opacity-90 text-white rounded-2xl relative"
         >
-          <div className="text-center">
+          <div className="text-center w-full">
             <Target className="h-6 w-6 mx-auto mb-1" />
             <div className="text-sm font-medium">Mes Défis</div>
           </div>
@@ -967,9 +970,6 @@ const Index = () => {
             </span>
           )}
         </Button>
-      </div>
-
-      <div className="grid grid-cols-1 gap-4">
         <Button 
           onClick={() => setCurrentView('suggestions')}
           className="h-16 bg-gradient-to-br from-purple-500 to-blue-500 hover:opacity-90 text-white rounded-2xl"
