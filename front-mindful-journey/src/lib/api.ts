@@ -256,6 +256,14 @@ export const apiService = {
       }),
     
     get: () => apiRequest('/diagnostic'),
+    
+    getByScope: (scope: 'quick' | 'annual') => apiRequest(`/diagnostic?scope=${scope}`),
+    
+  saveAnnual: (data: any) => apiRequest('/diagnostic/annual', { method: 'POST', body: JSON.stringify(data) }),
+  getAnnual: () => apiRequest('/diagnostic/annual'),
+  getAnnualHistory: () => apiRequest('/diagnostic/annual/history'),
+    
+    saveQuick: (data: any) => apiRequest('/diagnostic', { method: 'POST', body: JSON.stringify({ ...data, scope: 'quick' }) }),
   },
 
   // Système de recommandations intelligent

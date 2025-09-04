@@ -1,17 +1,13 @@
-# Script PowerShell pour démarrer le frontend React et backend Laravel
-# Mindf# Démarrer le backend Laravel
-Write-Host "🔥 Démarrage du backend Laravel (Port 8081)..." -ForegroundColor Yellow
-$laravelProcess = Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd 'back-mindful-journey-iu\mindful-journey-back'; Write-Host '🔥 Backend Laravel démarré sur http://localhost:8081' -ForegroundColor Green; php artisan serve --host=0.0.0.0 --port=8081" -PassThru
+<#
+ Script de démarrage unifié Mindful Journey
+ - Vérifie prérequis (Node, PHP, dépendances)
+ - Libère le port 8080 si occupé
+ - Démarre Laravel sur 8081 (API)
+ - Démarre Vite React sur 8080 (frontend)
+#>
 
-# Attendre que Laravel démarre
-Start-Sleep -Seconds 4
-
-# Démarrer le frontend React
-Write-Host "⚛️  Démarrage du frontend React (Port 8080)..." -ForegroundColor Yellow
-$reactProcess = Start-Process powershell -ArgumentList "-NoExit", "-Command", "Write-Host '🔥 Frontend React démarré sur http://localhost:8080' -ForegroundColor Green; npm run dev -- --port 8080" -PassThru - Mode Développement
-
-Write-Host "🚀 Démarrage de Mindful Journey - Mode Développement" -ForegroundColor Green
-Write-Host "=================================================" -ForegroundColor Cyan
+Write-Host "🚀 Démarrage Mindful Journey (mode développement)" -ForegroundColor Green
+Write-Host "================================================" -ForegroundColor Cyan
 Write-Host ""
 
 # Vérifier les prérequis
@@ -45,14 +41,13 @@ if (-not (Test-Path "back-mindful-journey-iu\mindful-journey-back")) {
 Write-Host ""
 Write-Host "📦 Vérification des dépendances..." -ForegroundColor Yellow
 
+Push-Location (Split-Path $MyInvocation.MyCommand.Path)
+
 # Vérifier les dépendances frontend
 if (-not (Test-Path "node_modules")) {
-    Write-Host "⚠️  node_modules non trouvé. Installation des dépendances..." -ForegroundColor Yellow
+    Write-Host "⚠️  node_modules absent -> npm install" -ForegroundColor Yellow
     npm install
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "❌ Erreur lors de l'installation des dépendances frontend!" -ForegroundColor Red
-        exit 1
-    }
+    if ($LASTEXITCODE -ne 0) { Write-Host "❌ npm install a échoué" -ForegroundColor Red; Pop-Location; exit 1 }
 }
 
 # Vérifier les dépendances backend
@@ -85,16 +80,51 @@ if (-not (Test-Path $envPath)) {
 Write-Host ""
 Write-Host "🚀 Démarrage des serveurs..." -ForegroundColor Green
 
-# Démarrer le backend Laravel
-Write-Host "� Démarrage du backend Laravel (Port 8000)..." -ForegroundColor Yellow
-$laravelProcess = Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd 'back-mindful-journey-iu\mindful-journey-back'; Write-Host '🔥 Backend Laravel démarré sur http://localhost:8000' -ForegroundColor Green; php artisan serve --host=0.0.0.0 --port=8000" -PassThru
+function Kill-Port($port) {
+    Write-Host "🔍 Scan port $port" -ForegroundColor DarkGray
+    $attempt = 0
+    while ($attempt -lt 3) {
+        $lines = netstat -ano | Select-String ":$port" | ForEach-Object { $_.ToString() }
+        if (-not $lines) { Write-Host "✅ Port $port libre" -ForegroundColor Green; return }
+        $pids = $lines | ForEach-Object { ($_ -split '\s+')[-1] } | Sort-Object -Unique
+        foreach ($pid in $pids) {
+            if ($pid -match '^[0-9]+$') {
+                try {
+                    $procName = (Get-Process -Id $pid -ErrorAction SilentlyContinue).ProcessName
+                    Write-Host "🛑 Kill PID=$pid ($procName) sur port $port" -ForegroundColor Yellow
+                    taskkill /PID $pid /F | Out-Null
+                } catch { Write-Host "⚠️ Impossible de tuer PID $pid" -ForegroundColor DarkYellow }
+            }
+        }
+        Start-Sleep -Milliseconds 700
+        $attempt++
+    }
+    # Dernière vérif
+    $still = netstat -ano | Select-String ":$port"
+    if ($still) { Write-Host "❌ Port $port encore occupé. Relance en échec." -ForegroundColor Red }
+}
 
-# Attendre que Laravel démarre
-Start-Sleep -Seconds 4
+Write-Host "🔌 Vérification port frontend (8080)" -ForegroundColor Yellow
+Kill-Port 8080
+if ((netstat -ano | Select-String ':8080')) {
+    Write-Host "⚠️ Abandon (port 8080 non libéré). Exécute manuellement :" -ForegroundColor Red
+    Write-Host "   netstat -ano | findstr :8080" -ForegroundColor DarkCyan
+    Write-Host "   taskkill /PID <PID> /F" -ForegroundColor DarkCyan
+    return
+}
 
-# Démarrer le frontend React
-Write-Host "⚛️  Démarrage du frontend React (Port 8080)..." -ForegroundColor Yellow
-$reactProcess = Start-Process powershell -ArgumentList "-NoExit", "-Command", "Write-Host '🔥 Frontend React démarré sur http://localhost:8080' -ForegroundColor Green; npm run dev" -PassThru
+Write-Host "🧪 Lancement backend Laravel (port 8081)" -ForegroundColor Yellow
+$backendDir = "..\back-mindful-journey-iu\mindful-journey-back"
+if (-not (Test-Path $backendDir)) { Write-Host "❌ Backend introuvable: $backendDir" -ForegroundColor Red; Pop-Location; exit 1 }
+$laravelCmd = "cd '$backendDir'; php artisan serve --host=0.0.0.0 --port=8081"
+$laravelProcess = Start-Process powershell -ArgumentList "-NoExit","-Command", $laravelCmd -PassThru
+Start-Sleep -Seconds 3
+
+Write-Host "⚛️  Lancement frontend Vite (port 8080)" -ForegroundColor Yellow
+$frontendCmd = "npm run dev -- --port 8080"
+$reactProcess = Start-Process powershell -ArgumentList "-NoExit","-Command", $frontendCmd -PassThru
+
+Pop-Location
 
 Write-Host ""
 Write-Host "✅ Serveurs démarrés avec succès!" -ForegroundColor Green
@@ -115,7 +145,7 @@ Write-Host "   • L'application fonctionne même si l'API est indisponible (fal
 Write-Host "   • Les changements frontend sont rechargés automatiquement" -ForegroundColor Gray
 Write-Host "   • Consultez la console des navigateurs pour les erreurs" -ForegroundColor Gray
 Write-Host ""
-Write-Host "⚠️  Pour arrêter les serveurs, fermez les fenêtres PowerShell ouvertes" -ForegroundColor Yellow
+Write-Host "⚠️  Pour arrêter: fermer les 2 fenêtres PowerShell (frontend & backend)" -ForegroundColor Yellow
 Write-Host ""
 Write-Host "Appuyez sur une touche pour continuer..."
 $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")

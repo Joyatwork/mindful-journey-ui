@@ -201,9 +201,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/toggle-favorite/{sessionId}', [MeditationController::class, 'toggleFavorite']);
     });
 
-    // Diagnostic de bien-être
+    // Diagnostic de bien-être (rapide / quick)
     Route::get('diagnostic', [DiagnosticController::class, 'show']);
     Route::post('diagnostic', [DiagnosticController::class, 'store']);
+    // Auto-diagnostic annuel dédié
+    Route::get('diagnostic/annual', [\App\Http\Controllers\Api\AnnualDiagnosticController::class, 'show']);
+    Route::post('diagnostic/annual', [\App\Http\Controllers\Api\AnnualDiagnosticController::class, 'store']);
+    Route::get('diagnostic/annual/history', [\App\Http\Controllers\Api\AnnualDiagnosticController::class, 'index']);
 
     // Système de recommandations intelligent
     Route::prefix('recommendations')->group(function () {

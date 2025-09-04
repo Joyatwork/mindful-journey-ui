@@ -6,10 +6,9 @@ import { componentTagger } from "lovable-tagger";
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
-    // host true -> écoute sur 0.0.0.0 / :: et accepte 127.0.0.1, localhost, etc.
     host: true,
-    port: 8080,
-    strictPort: true,
+    port: Number(process.env.VITE_PORT) || 8080,
+    strictPort: true, // on veut absolument 8080; si occupé -> erreur claire
     proxy: {
       '/api': {
         target: 'http://localhost:8081',

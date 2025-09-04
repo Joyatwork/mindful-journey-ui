@@ -296,7 +296,9 @@ const Index = () => {
       localStorage.setItem(notifStorageKey, JSON.stringify(notifications));
     } catch {}
   }, [notifications, notifStorageKey]);
-  const [savedDiagnostic, setSavedDiagnostic] = useState<any>(null);
+  const [savedDiagnostic, setSavedDiagnostic] = useState<any>(null); // legacy generic
+  const [savedQuickDiagnostic, setSavedQuickDiagnostic] = useState<any>(null);
+  const [savedAnnualDiagnostic, setSavedAnnualDiagnostic] = useState<any>(null);
   const [selectedSpecialist, setSelectedSpecialist] = useState<any>(null);
 
   const handleLogout = async () => {
@@ -527,7 +529,14 @@ const Index = () => {
       if (!user) return;
       try {
         const res = await apiService.diagnostic.get();
-        setSavedDiagnostic(res?.data ?? null);
+        const data = res?.data ?? null;
+        if (data && (data.quick || data.annual)) {
+          setSavedQuickDiagnostic(data.quick || null);
+          setSavedAnnualDiagnostic(data.annual || null);
+          setSavedDiagnostic(data.quick || data.annual || null); // compat
+        } else {
+          setSavedDiagnostic(data);
+        }
       } catch (_) {
         // pas de diagnostic sauvegardé ou non disponible
       }
@@ -711,9 +720,11 @@ const Index = () => {
         onPractitionerBook={(p) => handleBookAppointment(p)}
       />
     </div>
-  ); };
+    );
+  }; // fin renderSuggestions
 
-  const renderDashboard = () => (
+  const renderDashboard = () => {
+    return (
     <div className="space-y-6 animate-fadeIn pt-4">
       {(() => {
         // Contexte pour les suggestions basées sur le dernier diagnostic
@@ -734,7 +745,7 @@ const Index = () => {
               <IntelligentSuggestions
                 userContext={{
                   mood: selectedMood ?? computedMood,
-                  stress: computedStress ?? 3,
+                 
                   energy: computedEnergy ?? 3,
                   diagnostic: savedDiagnostic,
                 }}
@@ -1032,7 +1043,8 @@ const Index = () => {
         </div>
       </div>
     </div>
-  );
+    );
+  };
 
   const renderAppointments = () => (
     <div className="space-y-4">
@@ -3027,12 +3039,89 @@ const Index = () => {
       const currentAnnualQuestion: any = annualQuestions[annualStep - 1];
       const currentAnnualAnswer = annualAnswers[currentAnnualQuestion?.id];
 
-      const handleAnnualNext = () => {
+      const handleAnnualNext = async () => {
+        // Étapes démographiques initiales (annualQuestions) -> on avance sans sauvegarder tant que pas terminé
         if (annualStep < annualQuestions.length) {
           setAnnualStep(annualStep + 1);
-        } else {
-          setAnnualFinished(true);
+          return;
         }
+        // Ici: l'utilisateur vient de valider la dernière question démographique.
+        // Ancien comportement: on retournait immédiatement (bloquant la progression au step 3).
+        // Nouveau: on marque le bloc démographique comme terminé pour afficher l'écran de transition.
+        if (annualStep === annualQuestions.length && !annualFinished) {
+          setAnnualFinished(true); // déclenche le rendu du bloc "Très bien. C'est parti!"
+          return;
+        }
+        // On ne sauvegarde que quand tout le flux avancé (écran final marqué annualConclusion true)
+        if (!annualConclusion) {
+          // On bascule dans les écrans avancés sans persister tant que pas conclusion
+          return;
+        }
+  try {
+            const stress_level = Number(diagnosticAnswers?.stress_level) || 5;
+            const energy_level = Number(diagnosticAnswers?.energy_level) || 5;
+            const work_pressure = String(diagnosticAnswers?.work_pressure || annualAnswers?.work_pressure || 'Non précisé');
+
+            // Agrégation exhaustive de toutes les réponses dispersées dans les states annuels
+            const aggregatedAnnualAnswers: Record<string, any> = {
+              ...annualAnswers, // contient déjà gender, age, department, etc.
+              general_overall: annualGeneralAnswer || null,
+              feelings: annualFeelingsAnswer || [],
+              feelings_explain: annualExplainText || null,
+              likert_general: annualLikertAnswer || null,
+              likert_work: annualLikertWorkAnswer || null,
+              satisfaction_score: annualSatisfactionAnswer ?? null,
+              satisfaction_explain: annualExplainWhyText || null,
+              work_schedule: annualWorkScheduleAnswer || null,
+              workload_level: annualWorkloadAnswer ?? null,
+              task_difficulty: annualTaskDifficultyAnswer ?? null,
+              physical_fatigue: annualPhysicalFatigueAnswer ?? null,
+              mental_fatigue: annualMentalFatigueAnswer ?? null,
+              mental_fatigue_explain: annualMentalFatigueExplainText || null,
+              pain_level: annualPainAnswer ?? null,
+              pain_location: annualPainLocationText || null,
+              anxiety_level: annualAnxietyAnswer ?? null,
+              anxiety_explain: annualAnxietyExplainText || null,
+              sleep_quality: annualSleepQualityAnswer ?? null,
+              sleep_quality_explain: annualSleepQualityExplainText || null,
+              sleep_duration: annualSleepDurationAnswer || null,
+              nutrition_level: annualNutritionAnswer ?? null,
+              nutrition_explain: annualNutritionExplainText || null,
+              physical_activity: annualPhysicalActivityAnswer || null,
+              physical_activity_detail: annualPhysicalActivityDetailText || null,
+              physical_activity_no_explain: annualPhysicalActivityNoExplainText || null,
+              symptoms: annualSymptomsSelected || [],
+              workstation_adaptation: annualWorkstationText || null,
+              practitioner_note: annualPractitionerNoteText || null,
+              conclusion: annualConclusion ? true : false,
+              quick_snapshot: diagnosticAnswers || null,
+            };
+
+            await apiService.diagnostic.saveAnnual({
+              stress_level,
+              energy_level,
+              work_pressure,
+              answers: aggregatedAnnualAnswers,
+            });
+
+            // Recharger les diagnostics (quick & annual)
+            try {
+              const res = await apiService.diagnostic.get();
+              const data = res?.data ?? null;
+              if (data && (data.quick || data.annual)) {
+                setSavedQuickDiagnostic(data.quick || null);
+                setSavedAnnualDiagnostic(data.annual || null);
+                setSavedDiagnostic(data.quick || data.annual || null);
+              } else {
+                setSavedDiagnostic(data);
+              }
+            } catch {}
+            toast({ title: 'Auto‑diagnostic annuel sauvegardé', description: 'Merci pour ces informations détaillées.' });
+          } catch (e) {
+            console.warn('Échec sauvegarde diagnostic annuel', e);
+            toast({ title: 'Erreur', description: 'Impossible de sauvegarder le diagnostic annuel.', variant: 'destructive' });
+          }
+          setAnnualFinished(true);
       };
 
       const handleAnnualPrevious = () => {
@@ -3130,7 +3219,7 @@ const Index = () => {
         console.log('Diagnostic completed:', diagnosticAnswers);
         // Sauvegarder le diagnostic côté backend (protégé Sanctum)
         try {
-          await apiService.diagnostic.save({
+          await apiService.diagnostic.saveQuick({
             stress_level: Number(diagnosticAnswers.stress_level) || 5,
             energy_level: Number(diagnosticAnswers.energy_level) || 5,
             work_pressure: String(diagnosticAnswers.work_pressure || 'Non précisé'),
@@ -3139,12 +3228,18 @@ const Index = () => {
           // Recharger le diagnostic sauvegardé
           try {
             const res = await apiService.diagnostic.get();
-            const sd = res?.data ?? null;
-            setSavedDiagnostic(sd);
-            // Décider de la redirection selon le résultat
-            const computedStress = sd ? toFiveScale(Number(sd.stress_level) || 3) : undefined;
-            const computedEnergy = sd ? toFiveScale(Number(sd.energy_level) || 3) : undefined;
-            let computedMood = sd ? moodEmojiToScore(sd.answers?.mood_emoji) : undefined;
+            const data = res?.data ?? null;
+            if (data && (data.quick || data.annual)) {
+              setSavedQuickDiagnostic(data.quick || null);
+              setSavedAnnualDiagnostic(data.annual || null);
+              setSavedDiagnostic(data.quick || data.annual || null);
+            } else {
+              setSavedDiagnostic(data);
+            }
+            const sd = (data && (data.quick || data.annual)) ? (data.quick || data.annual) : data;
+            const computedStress = sd ? toFiveScale(Number(sd?.stress_level) || 3) : undefined;
+            const computedEnergy = sd ? toFiveScale(Number(sd?.energy_level) || 3) : undefined;
+            let computedMood = sd ? moodEmojiToScore(sd?.answers?.mood_emoji) : undefined;
             if (computedMood === undefined && computedStress !== undefined) {
               computedMood = clamp(6 - computedStress, 1, 5);
             }
