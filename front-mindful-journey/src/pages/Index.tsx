@@ -133,7 +133,80 @@ const Index = () => {
   const [annualPractitionerNote, setAnnualPractitionerNote] = useState(false); // étape 35 note praticien
   const [annualPractitionerNoteText, setAnnualPractitionerNoteText] = useState('');
   const [annualConclusion, setAnnualConclusion] = useState(false); // étape 36 conclusion finale
+  const [annualSaving, setAnnualSaving] = useState(false); // état envoi final
   const annualStoragePrefix = React.useMemo(() => (user?.id ? `annual:${user.id}:` : 'annual:guest:'), [user?.id]);
+
+  // Sauvegarde finale du diagnostic annuel (appelée sur le bouton "Envoyer" de la conclusion)
+  const saveAnnualDiagnostic = async () => {
+    if (annualSaving) return;
+    setAnnualSaving(true);
+    try {
+      const stress_level = Number(diagnosticAnswers?.stress_level) || 5;
+      const energy_level = Number(diagnosticAnswers?.energy_level) || 5;
+      const work_pressure = String(diagnosticAnswers?.work_pressure || annualAnswers?.work_pressure || 'Non précisé');
+
+      const aggregatedAnnualAnswers: Record<string, any> = {
+        ...annualAnswers,
+        general_overall: annualGeneralAnswer || null,
+        feelings: annualFeelingsAnswer || [],
+        feelings_explain: annualExplainText || null,
+        likert_general: annualLikertAnswer || null,
+        likert_work: annualLikertWorkAnswer || null,
+        satisfaction_score: annualSatisfactionAnswer ?? null,
+        satisfaction_explain: annualExplainWhyText || null,
+        work_schedule: annualWorkScheduleAnswer || null,
+        workload_level: annualWorkloadAnswer ?? null,
+        task_difficulty: annualTaskDifficultyAnswer ?? null,
+        physical_fatigue: annualPhysicalFatigueAnswer ?? null,
+        mental_fatigue: annualMentalFatigueAnswer ?? null,
+        mental_fatigue_explain: annualMentalFatigueExplainText || null,
+        pain_level: annualPainAnswer ?? null,
+        pain_location: annualPainLocationText || null,
+        anxiety_level: annualAnxietyAnswer ?? null,
+        anxiety_explain: annualAnxietyExplainText || null,
+        sleep_quality: annualSleepQualityAnswer ?? null,
+        sleep_quality_explain: annualSleepQualityExplainText || null,
+        sleep_duration: annualSleepDurationAnswer || null,
+        nutrition_level: annualNutritionAnswer ?? null,
+        nutrition_explain: annualNutritionExplainText || null,
+        physical_activity: annualPhysicalActivityAnswer || null,
+        physical_activity_detail: annualPhysicalActivityDetailText || null,
+        physical_activity_no_explain: annualPhysicalActivityNoExplainText || null,
+        symptoms: annualSymptomsSelected || [],
+        workstation_adaptation: annualWorkstationText || null,
+        practitioner_note: annualPractitionerNoteText || null,
+        conclusion: true,
+        quick_snapshot: diagnosticAnswers || null,
+      };
+
+      await apiService.diagnostic.saveAnnual({
+        stress_level,
+        energy_level,
+        work_pressure,
+        answers: aggregatedAnnualAnswers,
+      });
+
+      try {
+        const res = await apiService.diagnostic.get();
+        const data = res?.data ?? null;
+        if (data && (data.quick || data.annual)) {
+          setSavedQuickDiagnostic(data.quick || null);
+          setSavedAnnualDiagnostic(data.annual || null);
+          setSavedDiagnostic(data.quick || data.annual || null);
+        } else {
+          setSavedDiagnostic(data);
+        }
+      } catch {}
+      toast({ title: 'Auto‑diagnostic annuel sauvegardé', description: 'Merci pour ces informations détaillées.' });
+      setCurrentView('dashboard');
+      setAnnualStarted(false);
+    } catch (e) {
+      console.warn('Échec sauvegarde diagnostic annuel (final)', e);
+      toast({ title: 'Erreur', description: 'Impossible de sauvegarder le diagnostic annuel.', variant: 'destructive' });
+    } finally {
+      setAnnualSaving(false);
+    }
+  };
 
   // --------------------------------------------------
   // Progression unifiée du parcours annuel
@@ -2557,13 +2630,10 @@ const Index = () => {
                       </Button>
                       <Button
                         className="flex-1 h-12 text-base font-semibold bg-emerald-500/80 hover:bg-emerald-500 text-white backdrop-blur-md border border-white/30"
-                        onClick={() => {
-                          // TODO: envoyer les données agrégées au backend
-                          setCurrentView('dashboard');
-                          setAnnualStarted(false);
-                        }}
+                        disabled={annualSaving}
+                        onClick={saveAnnualDiagnostic}
                       >
-                        Envoyer
+                        {annualSaving ? 'Envoi...' : 'Envoyer'}
                       </Button>
                     </div>
                   </div>
