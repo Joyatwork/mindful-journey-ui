@@ -14,6 +14,7 @@ const FACTORS: { key: string; label: string }[] = [
   { key: 'amis', label: 'Amis' },
   { key: 'sorties', label: 'Sorties' },
   { key: 'loisirs', label: 'Loisirs' },
+  { key: 'relation_manager', label: 'Relation-Manager' },
   { key: 'collegue', label: 'Collègue' },
   { key: 'nutrition', label: 'Nutrition' },
   { key: 'sommeil', label: 'Sommeil' },
