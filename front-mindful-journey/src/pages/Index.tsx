@@ -134,7 +134,36 @@ const Index = () => {
   const [annualPractitionerNoteText, setAnnualPractitionerNoteText] = useState('');
   const [annualConclusion, setAnnualConclusion] = useState(false); // étape 36 conclusion finale
   const [annualSaving, setAnnualSaving] = useState(false); // état envoi final
+  const [annualLocked, setAnnualLocked] = useState(false); // interdit si déjà effectué dans les 12 derniers mois
+  const [annualNextAllowed, setAnnualNextAllowed] = useState<string | null>(null);
   const annualStoragePrefix = React.useMemo(() => (user?.id ? `annual:${user.id}:` : 'annual:guest:'), [user?.id]);
+
+  // Vérifie à l'arrivée si un diagnostic annuel récent existe (pour verrouiller le bouton)
+  useEffect(() => {
+    const fetchAnnual = async () => {
+      if (!user) return;
+      try {
+        const res = await apiService.diagnostic.getAnnual(); // suppose endpoint GET /api/diagnostic/annual
+        const diag = res?.data?.data || res?.data; // selon structure
+        if (diag?.completed_at) {
+          const completed = new Date(diag.completed_at);
+          const now = new Date();
+            const diffDays = (now.getTime() - completed.getTime()) / 86400000;
+            if (diffDays < 365) {
+              setAnnualLocked(true);
+              const next = new Date(completed);
+              next.setFullYear(next.getFullYear() + 1);
+              setAnnualNextAllowed(next.toISOString());
+            } else {
+              setAnnualLocked(false);
+            }
+        }
+      } catch {
+        // silencieux
+      }
+    };
+    fetchAnnual();
+  }, [user]);
 
   // Sauvegarde finale du diagnostic annuel (appelée sur le bouton "Envoyer" de la conclusion)
   const saveAnnualDiagnostic = async () => {
@@ -943,15 +972,27 @@ const Index = () => {
           </div>
         </Button>
 
-        <Button 
-          onClick={() => { setAnnualStarted(false); setCurrentView('diagnostic-annual'); }}
-          className="h-16 bg-gradient-to-br from-indigo-500 to-fuchsia-600 hover:opacity-90 text-white rounded-2xl"
-        >
-          <div className="text-center">
-            <Brain className="h-6 w-6 mx-auto mb-1" />
-            <div className="text-sm font-medium">Auto-diagnostic annuel</div>
-          </div>
-        </Button>
+        <div className="relative">
+          <Button 
+            onClick={() => { if (!annualLocked) { setAnnualStarted(false); setCurrentView('diagnostic-annual'); } }}
+            disabled={annualLocked}
+            className={`h-16 bg-gradient-to-br from-indigo-500 to-fuchsia-600 text-white rounded-2xl relative ${annualLocked ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90'}`}
+            title={annualLocked && annualNextAllowed ? `Déjà réalisé. Prochain disponible après le ${new Date(annualNextAllowed).toLocaleDateString()}` : ''}
+          >
+            <div className="text-center">
+              <Brain className="h-6 w-6 mx-auto mb-1" />
+              <div className="text-sm font-medium">Auto-diagnostic annuel</div>
+            </div>
+            {annualLocked && (
+              <span className="absolute top-2 right-2 bg-white text-fuchsia-600 text-[10px] font-bold rounded-full px-2 py-0.5 shadow">Lock</span>
+            )}
+          </Button>
+          {annualLocked && annualNextAllowed && (
+            <p className="mt-1 text-[10px] text-center text-fuchsia-700 font-medium">
+              Disponible après le {new Date(annualNextAllowed).toLocaleDateString()}
+            </p>
+          )}
+        </div>
         
         
       </div>

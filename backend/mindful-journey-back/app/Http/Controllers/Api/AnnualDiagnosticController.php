@@ -29,6 +29,19 @@ class AnnualDiagnosticController extends Controller
             'answers'        => 'required|array',
         ]);
         $user = $request->user();
+        if ($user) {
+            $recent = AnnualDiagnostic::where('user_id', $user->id)
+                ->where('completed_at', '>=', now()->subDays(365))
+                ->orderByDesc('completed_at')
+                ->first();
+            if ($recent) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Auto-diagnostic annuel déjà réalisé durant les 12 derniers mois.',
+                    'next_allowed_at' => $recent->completed_at?->copy()->addYear(),
+                ], 429);
+            }
+        }
         $record = AnnualDiagnostic::create([
             'user_id'      => $user?->id,
             'gender'       => $validated['gender'] ?? ($request->input('answers.gender') ?? null),
