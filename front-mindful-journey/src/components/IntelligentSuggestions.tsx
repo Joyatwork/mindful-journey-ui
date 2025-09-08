@@ -377,6 +377,15 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
       }
       // Debug: inspect audio_variants presence après normalisation
       try { console.log('[IntelligentSuggestions] suggestions fetched (normalized)', norm); } catch {}
+      // Exclure les "Psychologue" des praticiens suggérés
+      try {
+        if (Array.isArray(norm.practitioners)) {
+          norm.practitioners = norm.practitioners.filter(p => {
+            const s = (p as any)?.specialty || '';
+            return !/psychologue/i.test(s);
+          });
+        }
+      } catch {}
       setSuggestions(norm);
       setLastUpdate(new Date());
     } catch (err: any) {
