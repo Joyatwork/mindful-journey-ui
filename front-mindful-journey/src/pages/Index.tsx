@@ -1190,7 +1190,7 @@ const Index = () => {
         <div className="relative min-h-screen w-full overflow-hidden animate-fadeIn">
           {/* Image de fond (peut être remplacée par /annual-bg.jpg si souhaité) */}
           <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
-          <div className="absolute inset-0 bg-black/30" />
+          <div className="absolute inset-0 bg-black/20" />
           <div className="relative z-10 flex flex-col min-h-screen px-6 pt-12 pb-10">
             <div className="max-w-xl mx-auto w-full flex flex-col flex-1">
               <div className="mb-10">
@@ -1246,7 +1246,7 @@ const Index = () => {
         return (
           <div className="relative min-h-screen w-full overflow-hidden">
             <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
-            <div className="absolute inset-0 bg-black/30" />
+            <div className="absolute inset-0 bg-black/20" />
             <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
               <div className="max-w-xl mx-auto w-full flex flex-col flex-1">
                 <AnnualProgressBar className="mb-8" />
@@ -1307,7 +1307,7 @@ const Index = () => {
         return (
           <div className="relative min-h-screen w-full overflow-hidden">
             <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
-            <div className="absolute inset-0 bg-black/30" />
+            <div className="absolute inset-0 bg-black/20" />
             <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
               <div className="max-w-xl mx-auto w-full flex flex-col flex-1">
                 <AnnualProgressBar className="mb-8" />
@@ -1373,7 +1373,7 @@ const Index = () => {
         return (
           <div className="relative min-h-screen w-full overflow-hidden">
             <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
-            <div className="absolute inset-0 bg-black/65 backdrop-blur-sm" />
+            <div className="absolute inset-0 bg-black/20" />
             <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
               <div className="max-w-xl mx-auto w-full flex flex-col flex-1">
                 <AnnualProgressBar className="mb-8" />
@@ -1440,7 +1440,7 @@ const Index = () => {
         return (
           <div className="relative min-h-screen w-full overflow-hidden">
             <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
-            <div className="absolute inset-0 bg-black/35" />
+            <div className="absolute inset-0 bg-black/20" />
             <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
               <div className="max-w-xl mx-auto w-full flex flex-col flex-1">
                 <AnnualProgressBar className="mb-8" />
@@ -1507,7 +1507,7 @@ const Index = () => {
         return (
           <div className="relative min-h-screen w-full overflow-hidden">
             <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
-            <div className="absolute inset-0 bg-black/35" />
+            <div className="absolute inset-0 bg-black/20" />
             <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
               <div className="max-w-xl mx-auto w-full flex flex-col flex-1">
                 <AnnualProgressBar className="mb-8" />
@@ -1573,7 +1573,7 @@ const Index = () => {
         return (
           <div className="relative min-h-screen w-full overflow-hidden">
             <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
-            <div className="absolute inset-0 bg-black/35" />
+            <div className="absolute inset-0 bg-black/20" />
             <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
               <div className="max-w-2xl mx-auto w-full flex flex-col flex-1">
                 <AnnualProgressBar className="mb-8" />
@@ -1625,7 +1625,7 @@ const Index = () => {
         return (
           <div className="relative min-h-screen w-full overflow-hidden">
   <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
-            <div className="absolute inset-0 bg-black/35" />
+            <div className="absolute inset-0 bg-black/20" />
             <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
               <div className="max-w-xl mx-auto w-full flex flex-col flex-1">
                 <AnnualProgressBar className="mb-8" />
@@ -1669,7 +1669,7 @@ const Index = () => {
         return (
           <div className="relative min-h-screen w-full overflow-hidden">
             <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
-            <div className="absolute inset-0 bg-black/35" />
+            <div className="absolute inset-0 bg-black/20" />
             <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
               <div className="max-w-xl mx-auto w-full flex flex-col flex-1">
                 <AnnualProgressBar className="mb-8" />
@@ -1735,7 +1735,7 @@ const Index = () => {
         return (
           <div className="relative min-h-screen w-full overflow-hidden">
             <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
-            <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+            <div className="absolute inset-0 bg-black/20" />
             <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
               <div className="max-w-2xl mx-auto w-full flex flex-col flex-1">
                 <AnnualProgressBar className="mb-8" />
@@ -1789,7 +1789,7 @@ const Index = () => {
         return (
           <div className="relative min-h-screen w-full overflow-hidden">
             <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
-            <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+            <div className="absolute inset-0 bg-black/20" />
             <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
               <div className="max-w-xl mx-auto w-full flex flex-col flex-1">
                 <AnnualProgressBar className="mb-8" />
@@ -1855,7 +1855,7 @@ const Index = () => {
         return (
           <div className="relative min-h-screen w-full overflow-hidden">
             <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
-            <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+            <div className="absolute inset-0 bg-black/20" />
             <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
               <div className="max-w-2xl mx-auto w-full flex flex-col flex-1">
                 <AnnualProgressBar className="mb-8" />
@@ -1908,7 +1908,7 @@ const Index = () => {
         return (
           <div className="relative min-h-screen w-full overflow-hidden">
             <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
-            <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+            <div className="absolute inset-0 bg-black/20" />
             <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
               <div className="max-w-xl mx-auto w-full flex flex-col flex-1">
                 <AnnualProgressBar className="mb-8" />
@@ -1974,7 +1974,7 @@ const Index = () => {
         return (
           <div className="relative min-h-screen w-full overflow-hidden">
             <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
-            <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+            <div className="absolute inset-0 bg-black/20" />
             <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
               <div className="max-w-2xl mx-auto w-full flex flex-col flex-1">
                 <AnnualProgressBar className="mb-8" />
@@ -2035,7 +2035,7 @@ const Index = () => {
         return (
           <div className="relative min-h-screen w-full overflow-hidden">
             <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
-            <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+            <div className="absolute inset-0 bg-black/20" />
             <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
               <div className="max-w-xl mx-auto w-full flex flex-col flex-1">
                 <AnnualProgressBar className="mb-8" />
@@ -2091,7 +2091,7 @@ const Index = () => {
         return (
           <div className="relative min-h-screen w-full overflow-hidden">
             <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
-            <div className="absolute inset-0 bg-black/65 backdrop-blur-sm" />
+            <div className="absolute inset-0 bg-black/20" />
             <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
               <div className="max-w-2xl mx-auto w-full flex flex-col flex-1">
                 <AnnualProgressBar className="mb-8" />
@@ -2136,7 +2136,7 @@ const Index = () => {
         return (
           <div className="relative min-h-screen w-full overflow-hidden">
             <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
-            <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+            <div className="absolute inset-0 bg-black/20" />
             <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
               <div className="max-w-xl mx-auto w-full flex flex-col flex-1">
                 <AnnualProgressBar className="mb-8" />
@@ -2202,7 +2202,7 @@ const Index = () => {
         return (
           <div className="relative min-h-screen w-full overflow-hidden">
             <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
-            <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+            <div className="absolute inset-0 bg-black/20" />
             <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
               <div className="max-w-2xl mx-auto w-full flex flex-col flex-1">
                 <AnnualProgressBar className="mb-8" />
@@ -2256,7 +2256,7 @@ const Index = () => {
         return (
           <div className="relative min-h-screen w-full overflow-hidden">
             <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
-            <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+            <div className="absolute inset-0 bg-black/20" />
             <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
               <div className="max-w-xl mx-auto w-full flex flex-col flex-1">
                 <AnnualProgressBar className="mb-8" />
@@ -2320,7 +2320,7 @@ const Index = () => {
         return (
           <div className="relative min-h-screen w-full overflow-hidden">
             <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
-            <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+            <div className="absolute inset-0 bg-black/20" />
             <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
               <div className="max-w-2xl mx-auto w-full flex flex-col flex-1">
                 <AnnualProgressBar className="mb-8" />
@@ -2423,7 +2423,7 @@ const Index = () => {
         return (
           <div className="relative min-h-screen w-full overflow-hidden">
             <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
-            <div className="absolute inset-0 bg-black/30" />
+            <div className="absolute inset-0 bg-black/20" />
             <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
               <div className="max-w-2xl mx-auto w-full flex flex-col flex-1">
                 <AnnualProgressBar className="mb-8" />
@@ -2488,7 +2488,7 @@ const Index = () => {
         return (
           <div className="relative min-h-screen w-full overflow-hidden">
             <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
-            <div className="absolute inset-0 bg-black/65 backdrop-blur-sm" />
+            <div className="absolute inset-0 bg-black/20" />
             <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
               <div className="max-w-2xl mx-auto w-full flex flex-col flex-1">
                 <AnnualProgressBar className="mb-8" />
@@ -2546,7 +2546,7 @@ const Index = () => {
         return (
           <div className="relative min-h-screen w-full overflow-hidden">
             <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
-            <div className="absolute inset-0 bg-black/65 backdrop-blur-sm" />
+            <div className="absolute inset-0 bg-black/20" />
             <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
               <div className="max-w-2xl mx-auto w-full flex flex-col flex-1">
                 <AnnualProgressBar className="mb-8" />
@@ -2596,7 +2596,7 @@ const Index = () => {
         return (
           <div className="relative min-h-screen w-full overflow-hidden">
             <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
-            <div className="absolute inset-0 bg-black/65 backdrop-blur-sm" />
+            <div className="absolute inset-0 bg-black/20" />
             <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
               <div className="max-w-2xl mx-auto w-full flex flex-col flex-1">
                 <AnnualProgressBar className="mb-8" />
@@ -2644,7 +2644,7 @@ const Index = () => {
         return (
           <div className="relative min-h-screen w-full overflow-hidden">
             <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
-            <div className="absolute inset-0 bg-black/65 backdrop-blur-sm" />
+            <div className="absolute inset-0 bg-black/20" />
             <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
               <div className="max-w-2xl mx-auto w-full flex flex-col flex-1">
                 <AnnualProgressBar className="mb-8" />
@@ -2695,7 +2695,7 @@ const Index = () => {
         return (
           <div className="relative min-h-screen w-full overflow-hidden">
             <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
-            <div className="absolute inset-0 bg-black/65 backdrop-blur-sm" />
+            <div className="absolute inset-0 bg-black/20" />
             <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
               <div className="max-w-xl mx-auto w-full flex flex-col flex-1">
                 <AnnualProgressBar className="mb-8" />
@@ -2740,7 +2740,7 @@ const Index = () => {
         return (
           <div className="relative min-h-screen w-full overflow-hidden">
             <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+            <div className="absolute inset-0 bg-black/20" />
             <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
               <div className="max-w-xl mx-auto w-full flex flex-col flex-1">
                 <AnnualProgressBar className="mb-8" />
@@ -2791,7 +2791,7 @@ const Index = () => {
         return (
           <div className="relative min-h-screen w-full overflow-hidden">
             <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+            <div className="absolute inset-0 bg-black/20" />
             <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
               <div className="max-w-xl mx-auto w-full flex flex-col flex-1">
                 <AnnualProgressBar className="mb-8" />
@@ -2862,7 +2862,7 @@ const Index = () => {
       return (
         <div className="relative min-h-screen w-full overflow-hidden">
           <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <div className="absolute inset-0 bg-black/20" />
           <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
             <div className="max-w-xl mx-auto w-full flex flex-col flex-1">
               <AnnualProgressBar className="mb-8" />
@@ -2928,7 +2928,7 @@ const Index = () => {
       return (
         <div className="relative min-h-screen w-full overflow-hidden">
           <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <div className="absolute inset-0 bg-black/20" />
           <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
             <div className="max-w-xl mx-auto w-full flex flex-col flex-1">
               <AnnualProgressBar className="mb-8" />
@@ -3134,7 +3134,7 @@ const Index = () => {
       return (
         <div className="relative min-h-screen w-full overflow-hidden animate-fadeIn">
           <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <div className="absolute inset-0 bg-black/20" />
           <div className="relative z-10 flex flex-col items-center justify-center min-h-screen px-6 text-center">
             <div className="max-w-xl w-full space-y-10">
               <div className="mb-2">
@@ -3264,7 +3264,7 @@ const Index = () => {
       return (
         <div className="relative min-h-screen w-full overflow-hidden animate-fadeIn">
           <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
-            <div className="absolute inset-0 bg-black/55 backdrop-blur-sm" />
+            <div className="absolute inset-0 bg-black/20" />
             <div className="relative z-10 min-h-screen px-4 pt-16 pb-10 flex flex-col">
               <div className="max-w-xl mx-auto w-full flex-1 flex flex-col">
                 <AnnualProgressBar />
