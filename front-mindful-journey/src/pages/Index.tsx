@@ -282,6 +282,13 @@ const Index = () => {
     return 0;
   };
   const annualProgressStep = getAnnualProgressStep();
+  // Helper fond annuel: image principale step{n}.jpg avec fallback CSS vers default.jpg
+  const annualBgStyle = (s?: number) => {
+    const step = Math.max(1, Math.min(37, s ?? (annualFinished ? annualProgressStep : annualStep)));
+    const primary = `/visuals/annual/step${step}.jpg`;
+    const fallback = `/visuals/annual/default.jpg`;
+    return { backgroundImage: `url('${primary}'), url('${fallback}')` } as React.CSSProperties;
+  };
   const AnnualProgressBar: React.FC<{ className?: string }> = ({ className = '' }) => (
     <div className={"mb-6 " + className} aria-label={`Progression ${annualProgressStep} sur ${ANNUAL_TOTAL_STEPS}`}>
       <div className="h-2 w-full bg-white/20 rounded-full overflow-hidden">
@@ -1182,7 +1189,7 @@ const Index = () => {
       return (
         <div className="relative min-h-screen w-full overflow-hidden animate-fadeIn">
           {/* Image de fond (peut être remplacée par /annual-bg.jpg si souhaité) */}
-          <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1503264116251-35a269479413?auto=format&fit=crop&w=1400&q=60')" }} />
+          <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
           <div className="relative z-10 flex flex-col min-h-screen px-6 pt-12 pb-10">
             <div className="max-w-xl mx-auto w-full flex flex-col flex-1">
@@ -1238,7 +1245,7 @@ const Index = () => {
         ];
         return (
           <div className="relative min-h-screen w-full overflow-hidden">
-            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1524253482453-3fed8d2fe12b?auto=format&fit=crop&w=1400&q=60')" }} />
+            <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
             <div className="absolute inset-0 bg-black/65 backdrop-blur-sm" />
             <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
               <div className="max-w-xl mx-auto w-full flex flex-col flex-1">
@@ -1299,7 +1306,7 @@ const Index = () => {
         const numbers = Array.from({ length: 11 }, (_, i) => i);
         return (
           <div className="relative min-h-screen w-full overflow-hidden">
-            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1605296867304-46d5465a13f1?auto=format&fit=crop&w=1400&q=60')" }} />
+            <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
             <div className="absolute inset-0 bg-black/65 backdrop-blur-sm" />
             <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
               <div className="max-w-xl mx-auto w-full flex flex-col flex-1">
@@ -1365,7 +1372,7 @@ const Index = () => {
         const numbers = Array.from({ length: 11 }, (_, i) => i);
         return (
           <div className="relative min-h-screen w-full overflow-hidden">
-            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1400&q=60')" }} />
+            <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
             <div className="absolute inset-0 bg-black/65 backdrop-blur-sm" />
             <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
               <div className="max-w-xl mx-auto w-full flex flex-col flex-1">
@@ -1432,7 +1439,7 @@ const Index = () => {
         const numbers = Array.from({ length: 11 }, (_, i) => i);
         return (
           <div className="relative min-h-screen w-full overflow-hidden">
-            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1526403228293-28b7771c90f5?auto=format&fit=crop&w=1400&q=60')" }} />
+            <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
             <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
             <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
               <div className="max-w-xl mx-auto w-full flex flex-col flex-1">
@@ -1499,7 +1506,7 @@ const Index = () => {
         const numbers = Array.from({ length: 11 }, (_, i) => i);
         return (
           <div className="relative min-h-screen w-full overflow-hidden">
-            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1605296867304-46d5465a13f1?auto=format&fit=crop&w=1400&q=60')" }} />
+            <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
             <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
             <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
               <div className="max-w-xl mx-auto w-full flex flex-col flex-1">
@@ -1565,7 +1572,7 @@ const Index = () => {
   if (annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty && annualPhysicalFatigue && annualMentalFatigue && annualMentalFatigueExplain && !annualReassure) {
         return (
           <div className="relative min-h-screen w-full overflow-hidden">
-            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1400&q=60')" }} />
+            <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
             <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
             <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
               <div className="max-w-2xl mx-auto w-full flex flex-col flex-1">
@@ -1617,7 +1624,7 @@ const Index = () => {
   if (annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty && annualPhysicalFatigue && annualMentalFatigue && annualMentalFatigueExplain && annualReassure && !annualPain) {
         return (
           <div className="relative min-h-screen w-full overflow-hidden">
-    <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1605296867304-46d5465a13f1?auto=format&fit=crop&w=1400&q=60&sat=-50&blend=ff0000&blend-mode=multiply')" }} />
+  <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
             <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
             <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
               <div className="max-w-xl mx-auto w-full flex flex-col flex-1">
@@ -1661,7 +1668,7 @@ const Index = () => {
         const numbers = Array.from({ length: 11 }, (_, i) => i);
         return (
           <div className="relative min-h-screen w-full overflow-hidden">
-            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1558327182-0f49a4b7a327?auto=format&fit=crop&w=1400&q=60')" }} />
+            <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
             <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
             <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
               <div className="max-w-xl mx-auto w-full flex flex-col flex-1">
@@ -1727,7 +1734,7 @@ const Index = () => {
   if (annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty && annualPhysicalFatigue && annualMentalFatigue && annualMentalFatigueExplain && annualReassure && annualPain && annualPainLocation && !annualAnxiety) {
         return (
           <div className="relative min-h-screen w-full overflow-hidden">
-            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1603398938378-e54eab446dde?auto=format&fit=crop&w=1400&q=60')" }} />
+            <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
             <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
             <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
               <div className="max-w-2xl mx-auto w-full flex flex-col flex-1">
@@ -1781,7 +1788,7 @@ const Index = () => {
         const numbers = Array.from({ length: 11 }, (_, i) => i);
         return (
           <div className="relative min-h-screen w-full overflow-hidden">
-            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1552196563-55cd4e45efb3?auto=format&fit=crop&w=1400&q=60')" }} />
+            <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
             <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
             <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
               <div className="max-w-xl mx-auto w-full flex flex-col flex-1">
@@ -1847,7 +1854,7 @@ const Index = () => {
   if (annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty && annualPhysicalFatigue && annualMentalFatigue && annualMentalFatigueExplain && annualReassure && annualPain && annualPainLocation && annualAnxiety && annualAnxietyExplain && !annualSleepQuality) {
         return (
           <div className="relative min-h-screen w-full overflow-hidden">
-            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1400&q=60')" }} />
+            <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
             <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
             <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
               <div className="max-w-2xl mx-auto w-full flex flex-col flex-1">
@@ -1900,7 +1907,7 @@ const Index = () => {
         const numbers = Array.from({ length: 11 }, (_, i) => i);
         return (
           <div className="relative min-h-screen w-full overflow-hidden">
-            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1511295742362-92c96b1d3d1a?auto=format&fit=crop&w=1400&q=60')" }} />
+            <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
             <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
             <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
               <div className="max-w-xl mx-auto w-full flex flex-col flex-1">
@@ -1966,7 +1973,7 @@ const Index = () => {
   if (annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty && annualPhysicalFatigue && annualMentalFatigue && annualMentalFatigueExplain && annualReassure && annualPain && annualPainLocation && annualAnxiety && annualAnxietyExplain && annualSleepQuality && annualSleepQualityExplain && !annualSleepDuration) {
         return (
           <div className="relative min-h-screen w-full overflow-hidden">
-            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1470259078422-826894b933aa?auto=format&fit=crop&w=1400&q=60')" }} />
+            <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
             <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
             <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
               <div className="max-w-2xl mx-auto w-full flex flex-col flex-1">
@@ -2027,7 +2034,7 @@ const Index = () => {
         const letterStyles = 'inline-flex items-center justify-center w-7 h-7 rounded-md text-sm font-bold bg-blue-500/20 text-blue-300 border border-blue-400/40 mr-3';
         return (
           <div className="relative min-h-screen w-full overflow-hidden">
-            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1501975558162-0be7b8ca95ea?auto=format&fit=crop&w=1400&q=60')" }} />
+            <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
             <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
             <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
               <div className="max-w-xl mx-auto w-full flex flex-col flex-1">
@@ -2083,7 +2090,7 @@ const Index = () => {
   if (annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty && annualPhysicalFatigue && annualMentalFatigue && annualMentalFatigueExplain && annualReassure && annualPain && annualPainLocation && annualAnxiety && annualAnxietyExplain && annualSleepQuality && annualSleepQualityExplain && annualSleepDuration && annualCareMessage && !annualNutrition) {
         return (
           <div className="relative min-h-screen w-full overflow-hidden">
-            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=1400&q=60')" }} />
+            <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
             <div className="absolute inset-0 bg-black/65 backdrop-blur-sm" />
             <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
               <div className="max-w-2xl mx-auto w-full flex flex-col flex-1">
@@ -2128,7 +2135,7 @@ const Index = () => {
         const numbers = Array.from({ length: 11 }, (_, i) => i);
         return (
           <div className="relative min-h-screen w-full overflow-hidden">
-            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1510626176961-4b57d4fbad03?auto=format&fit=crop&w=1400&q=60')" }} />
+            <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
             <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
             <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
               <div className="max-w-xl mx-auto w-full flex flex-col flex-1">
@@ -2194,7 +2201,7 @@ const Index = () => {
   if (annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty && annualPhysicalFatigue && annualMentalFatigue && annualMentalFatigueExplain && annualReassure && annualPain && annualPainLocation && annualAnxiety && annualAnxietyExplain && annualSleepQuality && annualSleepQualityExplain && annualSleepDuration && annualCareMessage && annualNutrition && annualNutritionExplain && !annualPhysicalActivity) {
         return (
           <div className="relative min-h-screen w-full overflow-hidden">
-            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1502743277-affbba0b4775?auto=format&fit=crop&w=1400&q=60')" }} />
+            <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
             <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
             <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
               <div className="max-w-2xl mx-auto w-full flex flex-col flex-1">
@@ -2248,7 +2255,7 @@ const Index = () => {
   const options = ['Oui','Non','Parfois'];
         return (
           <div className="relative min-h-screen w-full overflow-hidden">
-            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1599058917212-d750089bc07c?auto=format&fit=crop&w=1400&q=60')" }} />
+            <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
             <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
             <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
               <div className="max-w-xl mx-auto w-full flex flex-col flex-1">
@@ -2312,7 +2319,7 @@ const Index = () => {
   if (annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty && annualPhysicalFatigue && annualMentalFatigue && annualMentalFatigueExplain && annualReassure && annualPain && annualPainLocation && annualAnxiety && annualAnxietyExplain && annualSleepQuality && annualSleepQualityExplain && annualSleepDuration && annualCareMessage && annualNutrition && annualNutritionExplain && annualPhysicalActivity && annualPhysicalActivityDetail && !annualAlmostThere) {
         return (
           <div className="relative min-h-screen w-full overflow-hidden">
-            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1400&q=60')" }} />
+            <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
             <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
             <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
               <div className="max-w-2xl mx-auto w-full flex flex-col flex-1">
@@ -2364,7 +2371,7 @@ const Index = () => {
   if (annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty && annualPhysicalFatigue && annualMentalFatigue && annualMentalFatigueExplain && annualReassure && annualPain && annualPainLocation && annualAnxiety && annualAnxietyExplain && annualSleepQuality && annualSleepQualityExplain && annualSleepDuration && annualCareMessage && annualNutrition && annualNutritionExplain && annualPhysicalActivity && annualPhysicalActivityNoExplain && !annualPhysicalActivityDetail && !annualAlmostThere) {
         return (
           <div className="relative min-h-screen w-full overflow-hidden">
-            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1509395062183-67c5ad6faff9?auto=format&fit=crop&w=1400&q=60')" }} />
+            <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
             <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
             <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
               <div className="max-w-2xl mx-auto w-full flex flex-col flex-1">
@@ -2415,7 +2422,7 @@ const Index = () => {
   if (annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty && annualPhysicalFatigue && annualMentalFatigue && annualMentalFatigueExplain && annualReassure && annualPain && annualPainLocation && annualAnxiety && annualAnxietyExplain && annualSleepQuality && annualSleepQualityExplain && annualSleepDuration && annualCareMessage && annualNutrition && annualNutritionExplain && annualPhysicalActivity && (annualPhysicalActivityDetail || annualPhysicalActivityNoExplain) && annualAlmostThere && !annualSymptoms) {
         return (
           <div className="relative min-h-screen w-full overflow-hidden">
-            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1591076482161-42ce6da69f67?auto=format&fit=crop&w=1400&q=60')" }} />
+            <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
             <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
               <div className="max-w-2xl mx-auto w-full flex flex-col flex-1">
@@ -2480,7 +2487,7 @@ const Index = () => {
         };
         return (
           <div className="relative min-h-screen w-full overflow-hidden">
-            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1400&q=60')" }} />
+            <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
             <div className="absolute inset-0 bg-black/65 backdrop-blur-sm" />
             <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
               <div className="max-w-2xl mx-auto w-full flex flex-col flex-1">
@@ -2538,7 +2545,7 @@ const Index = () => {
   if (annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty && annualPhysicalFatigue && annualMentalFatigue && annualMentalFatigueExplain && annualReassure && annualPain && annualPainLocation && annualAnxiety && annualAnxietyExplain && annualSleepQuality && annualSleepQualityExplain && annualSleepDuration && annualCareMessage && annualNutrition && annualNutritionExplain && annualPhysicalActivity && (annualPhysicalActivityDetail || annualPhysicalActivityNoExplain) && annualAlmostThere && annualSymptoms && annualWorkstation && !annualPractitionerNote) {
         return (
           <div className="relative min-h-screen w-full overflow-hidden">
-            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1593642532744-d377ab507dc8?auto=format&fit=crop&w=1400&q=60')" }} />
+            <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
             <div className="absolute inset-0 bg-black/65 backdrop-blur-sm" />
             <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
               <div className="max-w-2xl mx-auto w-full flex flex-col flex-1">
@@ -2588,7 +2595,7 @@ const Index = () => {
   if (annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty && annualPhysicalFatigue && annualMentalFatigue && annualMentalFatigueExplain && annualReassure && annualPain && annualPainLocation && annualAnxiety && annualAnxietyExplain && annualSleepQuality && annualSleepQualityExplain && annualSleepDuration && annualCareMessage && annualNutrition && annualNutritionExplain && annualPhysicalActivity && (annualPhysicalActivityDetail || annualPhysicalActivityNoExplain) && annualAlmostThere && annualSymptoms && annualWorkstation && annualPractitionerNote && !annualConclusion) {
         return (
           <div className="relative min-h-screen w-full overflow-hidden">
-            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1518976024611-28bf4b37a07a?auto=format&fit=crop&w=1400&q=60')" }} />
+            <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
             <div className="absolute inset-0 bg-black/65 backdrop-blur-sm" />
             <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
               <div className="max-w-2xl mx-auto w-full flex flex-col flex-1">
@@ -2636,7 +2643,7 @@ const Index = () => {
       if (annualSatisfaction && annualExplainWhy && annualMotivation && annualWorkSchedule && annualWorkload && annualTaskDifficulty && annualPhysicalFatigue && annualMentalFatigue && annualMentalFatigueExplain && annualReassure && annualPain && annualPainLocation && annualAnxiety && annualAnxietyExplain && annualSleepQuality && annualSleepQualityExplain && annualSleepDuration && annualCareMessage && annualNutrition && annualNutritionExplain && annualPhysicalActivity && (annualPhysicalActivityDetail || annualPhysicalActivityNoExplain) && annualAlmostThere && annualSymptoms && annualWorkstation && annualPractitionerNote && annualConclusion) {
         return (
           <div className="relative min-h-screen w-full overflow-hidden">
-            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1529333166437-7750a6dd5a70?auto=format&fit=crop&w=1400&q=60')" }} />
+            <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
             <div className="absolute inset-0 bg-black/65 backdrop-blur-sm" />
             <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
               <div className="max-w-2xl mx-auto w-full flex flex-col flex-1">
@@ -2687,7 +2694,7 @@ const Index = () => {
       if (annualSatisfaction && annualExplainWhy && annualMotivation && !annualWorkSchedule) {
         return (
           <div className="relative min-h-screen w-full overflow-hidden">
-            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1602192106373-52c8d08af2b5?auto=format&fit=crop&w=1400&q=60')" }} />
+            <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
             <div className="absolute inset-0 bg-black/65 backdrop-blur-sm" />
             <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
               <div className="max-w-xl mx-auto w-full flex flex-col flex-1">
@@ -2732,7 +2739,7 @@ const Index = () => {
         const canSubmit = annualExplainWhyText.trim().length >= minLen;
         return (
           <div className="relative min-h-screen w-full overflow-hidden">
-            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=1400&q=60')" }} />
+            <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
             <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
               <div className="max-w-xl mx-auto w-full flex flex-col flex-1">
@@ -2783,7 +2790,7 @@ const Index = () => {
         const numbers = Array.from({ length: 11 }, (_, i) => i); // 0..10
         return (
           <div className="relative min-h-screen w-full overflow-hidden">
-            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1525182008055-f88b95ff7980?auto=format&fit=crop&w=1400&q=60')" }} />
+            <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
             <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
               <div className="max-w-xl mx-auto w-full flex flex-col flex-1">
@@ -2854,7 +2861,7 @@ const Index = () => {
       ];
       return (
         <div className="relative min-h-screen w-full overflow-hidden">
-          <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1400&q=60')" }} />
+          <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
           <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
             <div className="max-w-xl mx-auto w-full flex flex-col flex-1">
@@ -2920,7 +2927,7 @@ const Index = () => {
       ];
       return (
         <div className="relative min-h-screen w-full overflow-hidden">
-          <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1503264116251-35a269479413?auto=format&fit=crop&w=1400&q=60')" }} />
+          <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
           <div className="relative z-10 flex flex-col min-h-screen px-6 pt-16 pb-4">
             <div className="max-w-xl mx-auto w-full flex flex-col flex-1">
@@ -3126,7 +3133,7 @@ const Index = () => {
     if (isAnnual && annualStarted && annualFinished) {
       return (
         <div className="relative min-h-screen w-full overflow-hidden animate-fadeIn">
-          <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1503264116251-35a269479413?auto=format&fit=crop&w=1400&q=60')" }} />
+          <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
           <div className="relative z-10 flex flex-col items-center justify-center min-h-screen px-6 text-center">
             <div className="max-w-xl w-full space-y-10">
@@ -3256,7 +3263,7 @@ const Index = () => {
 
       return (
         <div className="relative min-h-screen w-full overflow-hidden animate-fadeIn">
-          <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1503264116251-35a269479413?auto=format&fit=crop&w=1400&q=60')" }} />
+          <div className="absolute inset-0 bg-cover bg-center" style={annualBgStyle()} />
             <div className="absolute inset-0 bg-black/55 backdrop-blur-sm" />
             <div className="relative z-10 min-h-screen px-4 pt-16 pb-10 flex flex-col">
               <div className="max-w-xl mx-auto w-full flex-1 flex flex-col">
