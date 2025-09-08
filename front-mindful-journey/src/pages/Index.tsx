@@ -1019,15 +1019,6 @@ const Index = () => {
           )}
         </Button>
         <Button 
-          onClick={() => setCurrentView('suggestions')}
-          className="h-16 bg-gradient-to-br from-purple-500 to-blue-500 hover:opacity-90 text-white rounded-2xl"
-        >
-          <div className="text-center">
-            <Sparkles className="h-6 w-6 mx-auto mb-1" />
-            <div className="text-sm font-medium">Suggestions Personnalisées</div>
-          </div>
-        </Button>
-        <Button 
           onClick={() => setCurrentView('appointments')}
           className="h-16 bg-gradient-to-br from-green-500 to-emerald-600 hover:opacity-90 text-white rounded-2xl"
         >
