@@ -92,7 +92,7 @@ class RecommendationController extends Controller
     {
         $suggestions = [
             'challenges' => $this->generateChallenges($context),
-            'practitioners' => $this->generatePractitionerRecommendations($context),
+            'practitioners' => $this->generatePractitionerRecommendations($user, $context),
             'content' => $this->generateContentRecommendations($context),
             'immediate_actions' => $this->generateImmediateActions($context)
         ];
@@ -216,11 +216,12 @@ class RecommendationController extends Controller
     /**
      * Générer des recommandations de praticiens
      */
-    private function generatePractitionerRecommendations(array $context): array
+    private function generatePractitionerRecommendations(User $user, array $context): array
     {
         $stress = $context['stress'];
         $mood = $context['mood'];
         $energy = $context['energy'];
+        $diagnostic = $context['diagnostic'] ?? [];
 
         // Ne proposer des praticiens que si les résultats sont « positifs » = faux
         $isPositive = ($stress <= 2) && ($mood >= 4) && ($energy >= 3);
@@ -228,52 +229,122 @@ class RecommendationController extends Controller
             return [];
         }
 
-        // Construire une requête vers la table specialists pour retourner de VRAIS IDs
-        $query = Specialist::query();
+        // Déterminer les spécialités candidates selon le diagnostic + contexte
+        $candidates = $this->determineSpecialtiesFromDiagnostic($diagnostic, $context);
 
-        // Filtrage simple selon le contexte
-        if ($stress >= 4 || $mood <= 2) {
-            $query->where(function ($q) {
-                $q->where('specialty', 'like', '%Psychologue%')
-                  ->orWhere('specialty', 'like', '%Psychiatre%');
+        // Construire une requête vers specialists
+        $query = Specialist::query()
+            // Exclure les psychologues des suggestions personnalisées
+            ->where('specialty', 'not like', '%Psychologue%');
+
+        if (!empty($candidates)) {
+            $query->where(function ($q) use ($candidates) {
+                foreach ($candidates as $spec) {
+                    $q->orWhere('specialty', 'like', "%$spec%");
+                }
             });
-        } elseif ($energy <= 2) {
-            $query->where(function ($q) {
-                $q->where('specialty', 'like', '%généraliste%')
-                  ->orWhere('specialty', 'like', '%Généraliste%');
-            });
+        } else {
+            // Si aucune spécialité précise déduite, fallback basé sur stress/énergie
+            if ($stress >= 4 || $mood <= 2) {
+                $query->where('specialty', 'like', '%Psychiatre%');
+            } elseif ($energy <= 2) {
+                $query->where(function ($q) {
+                    $q->where('specialty', 'like', '%généraliste%')
+                      ->orWhere('specialty', 'like', '%Généraliste%');
+                });
+            }
         }
 
-        $list = $query->orderBy('rating', 'desc')->take(3)->get();
+        // Récupérer un petit pool et choisir un élément de façon stable (rotation quotidienne par utilisateur)
+        $pool = $query->orderBy('rating', 'desc')->take(5)->get();
 
-        // Fallback: si aucun résultat filtré, prendre les mieux notés
-        if ($list->isEmpty()) {
-            $list = Specialist::query()->orderBy('rating', 'desc')->take(3)->get();
+        if ($pool->isEmpty()) {
+            $pool = Specialist::query()
+                ->where('specialty', 'not like', '%Psychologue%')
+                ->orderBy('rating', 'desc')
+                ->take(5)
+                ->get();
         }
+
+        if ($pool->isEmpty()) {
+            return [];
+        }
+
+        $idx = crc32($user->id . '|' . date('Y-m-d')) % max(1, $pool->count());
+        $chosen = $pool->values()->get($idx);
 
         $urgency = ($stress >= 4 || $mood <= 2) ? 'high' : (($energy <= 2) ? 'medium' : 'low');
 
-        $practitioners = $list->map(function (Specialist $s) use ($context, $urgency) {
-            return [
-                'id' => (string) $s->id,
-                'type' => 'specialist',
-                'name' => $s->name,
-                'specialty' => $s->specialty,
-                'rating' => (float) $s->rating,
-                'experience' => $s->experience_years . ' ans',
-                'availability' => $s->availability,
-                // Prix en euros (nombre) – l'UI accepte string|number
-                'price' => intval($s->price_cents / 100),
-                'consultationType' => $s->consultation_type,
-                'reason' => $this->buildPractitionerReason($s, $context),
-                'urgency' => $urgency,
-                'icon' => '�‍⚕️',
-                // Score simple basé sur la note
-                'score' => min(100, intval(($s->rating / 5) * 100)),
-            ];
-        })->values()->all();
+        $one = [
+            'id' => (string) $chosen->id,
+            'type' => 'specialist',
+            'name' => $chosen->name,
+            'specialty' => $chosen->specialty,
+            'rating' => (float) $chosen->rating,
+            'experience' => $chosen->experience_years . ' ans',
+            'availability' => $chosen->availability,
+            'price' => intval($chosen->price_cents / 100),
+            'consultationType' => $chosen->consultation_type,
+            'reason' => $this->buildPractitionerReason($chosen, $context),
+            'urgency' => $urgency,
+            'icon' => '�‍⚕️',
+            'score' => min(100, intval(($chosen->rating / 5) * 100)),
+        ];
 
-        return array_slice($practitioners, 0, 2); // Maximum 2 praticiens
+        return [$one]; // Un seul praticien ciblé
+    }
+
+    /**
+     * Déterminer les spécialités en fonction des réponses de diagnostic/annuel
+     */
+    private function determineSpecialtiesFromDiagnostic(array $diagnostic, array $context): array
+    {
+        $candidates = [];
+
+        // Anxiété / stress élevé -> Psychiatre
+        $anxiety = intval($diagnostic['anxiety_level'] ?? 0);
+        $stress = intval($context['stress'] ?? 0);
+        $mood = intval($context['mood'] ?? 0);
+        if ($anxiety >= 4 || $stress >= 4 || $mood <= 2) {
+            $candidates[] = 'Psychiatre';
+        }
+
+        // Douleurs musculosquelettiques -> Kinésithérapeute / Ostéopathe
+        $pain = intval($diagnostic['pain_level'] ?? 0);
+        $painLoc = strtolower((string)($diagnostic['pain_location'] ?? ''));
+        if ($pain >= 5 || preg_match('/dos|cou|épaule|epaules|lomb/i', $painLoc)) {
+            // Prioriser kiné, puis ostéo
+            $candidates[] = 'Kinésithérapeute';
+            $candidates[] = 'Ostéopathe';
+        }
+
+        // Sommeil bas -> Médecin généraliste (ou ORL si disponible)
+        $sleepQ = intval($diagnostic['sleep_quality'] ?? 0);
+        if ($sleepQ && $sleepQ <= 2) {
+            $candidates[] = 'Médecin généraliste';
+            $candidates[] = 'ORL';
+        }
+
+        // Nutrition bas -> Nutritionniste / Diététicienne
+        $nutrition = intval($diagnostic['nutrition_level'] ?? 0);
+        if ($nutrition && $nutrition <= 2) {
+            $candidates[] = 'Nutritionniste';
+            $candidates[] = 'Diététicienne';
+        }
+
+        // Énergie/fatigue -> Généraliste
+        $energy = intval($context['energy'] ?? 0);
+        $physFatigue = intval($diagnostic['physical_fatigue'] ?? 0);
+        if ($energy <= 2 || $physFatigue >= 4) {
+            $candidates[] = 'Médecin généraliste';
+        }
+
+        // Nettoyer doublons et conserver l'ordre de priorité
+        $uniq = [];
+        foreach ($candidates as $c) {
+            if (!in_array($c, $uniq, true)) $uniq[] = $c;
+        }
+        return $uniq;
     }
 
     private function buildPractitionerReason(Specialist $s, array $context): string
