@@ -48,14 +48,18 @@ const HealthProfessionalsList = ({
   const [selectedSpecialty, setSelectedSpecialty] = useState('all');
   const [selectedConsultationType, setSelectedConsultationType] = useState('all');
   const [sortBy, setSortBy] = useState<'rating' | 'price' | 'experience'>('rating');
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(8);
   // Récupération depuis la base via l'API
   const filters = {
     search: searchTerm || undefined,
     specialty: selectedSpecialty !== 'all' ? selectedSpecialty : undefined,
     consultationType: selectedConsultationType !== 'all' ? selectedConsultationType : undefined,
+    page,
+    perPage,
   } as const;
 
-  const { specialists, isLoading, error } = useSpecialists(filters);
+  const { specialists, pagination, isLoading, error } = useSpecialists(filters);
 
   const specialties = useMemo(
     () => Array.from(new Set((specialists as any[]).map((p: any) => p.specialty))).filter(Boolean),
@@ -64,7 +68,7 @@ const HealthProfessionalsList = ({
 
   const filteredProfessionals: HealthProfessional[] = useMemo(() => {
     const list = (specialists as any[]) as HealthProfessional[];
-    return [...(list || [])].sort((a, b) => {
+    const sorted = [...(list || [])].sort((a, b) => {
       switch (sortBy) {
         case 'rating':
           return (b.rating || 0) - (a.rating || 0);
@@ -76,6 +80,7 @@ const HealthProfessionalsList = ({
           return 0;
       }
     });
+    return sorted;
   }, [specialists, sortBy]);
 
   return (
@@ -163,8 +168,22 @@ const HealthProfessionalsList = ({
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <p className="text-muted-foreground">
-            {filteredProfessionals.length} spécialiste{filteredProfessionals.length > 1 ? 's' : ''} trouvé{filteredProfessionals.length > 1 ? 's' : ''}
+            {pagination?.total ?? filteredProfessionals.length} spécialiste{(pagination?.total ?? filteredProfessionals.length) > 1 ? 's' : ''} trouvé{(pagination?.total ?? filteredProfessionals.length) > 1 ? 's' : ''}
           </p>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Par page</span>
+            <Select value={String(perPage)} onValueChange={(v) => { setPerPage(parseInt(v, 10)); setPage(1); }}>
+              <SelectTrigger className="w-24">
+                <SelectValue placeholder="Par page" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="5">5</SelectItem>
+                <SelectItem value="8">8</SelectItem>
+                <SelectItem value="12">12</SelectItem>
+                <SelectItem value="20">20</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         {!isLoading && filteredProfessionals.length === 0 && (
@@ -173,7 +192,7 @@ const HealthProfessionalsList = ({
           </Card>
         )}
 
-        {filteredProfessionals.map((professional) => (
+  {filteredProfessionals.map((professional) => (
           <Card 
             key={professional.id} 
             className="p-4 glass-card border-0 shadow-lg cursor-pointer hover:shadow-xl transition-shadow"
@@ -246,6 +265,33 @@ const HealthProfessionalsList = ({
             </div>
           </Card>
         ))}
+
+        {/* Pagination Controls */}
+        {pagination && (
+          <div className="flex items-center justify-between pt-2">
+            <div className="text-sm text-muted-foreground">
+              Page {pagination.currentPage} / {pagination.lastPage}
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page <= 1}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+              >
+                Précédent
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={pagination && page >= pagination.lastPage}
+                onClick={() => setPage((p) => p + 1)}
+              >
+                Suivant
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

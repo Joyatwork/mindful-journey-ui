@@ -202,10 +202,16 @@ export const apiService = {
 
   // Spécialistes de santé
   specialists: {
-    getAll: (filters?: any) => {
-      const queryParams = filters ? new URLSearchParams(filters).toString() : '';
+    getAll: (filters?: any & { page?: number; perPage?: number }) => {
+      const params = new URLSearchParams();
+      if (filters) {
+        Object.entries(filters).forEach(([k, v]) => {
+          if (v !== undefined && v !== null && v !== '') params.append(k, String(v));
+        });
+      }
       // Utiliser l'endpoint public pour la liste afin d'éviter une 401 si non connecté
-      return apiRequest(`/specialists/public${queryParams ? `?${queryParams}` : ''}`);
+      const qs = params.toString();
+      return apiRequest(`/specialists/public${qs ? `?${qs}` : ''}`);
     },
     
     getById: (id: string) => apiRequest(`/specialists/${id}`),

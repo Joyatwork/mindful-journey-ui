@@ -101,10 +101,17 @@ export const useSpecialists = (filters?: any) => {
   const specialistsQuery = useQuery({
     queryKey: ['specialists', filters],
     queryFn: () => apiService.specialists.getAll(filters),
+    // For older @tanstack/react-query versions, use placeholderData to avoid empty flashes
+    placeholderData: (previousData) => previousData as any,
   });
 
+  const raw = specialistsQuery.data as any;
+  const list = raw?.data ?? raw ?? [];
+  const pagination = raw?.pagination ?? null;
+
   return {
-  specialists: (specialistsQuery.data as any)?.data ?? specialistsQuery.data ?? [],
+    specialists: list,
+    pagination,
     isLoading: specialistsQuery.isLoading,
     error: specialistsQuery.error,
     refetch: specialistsQuery.refetch,

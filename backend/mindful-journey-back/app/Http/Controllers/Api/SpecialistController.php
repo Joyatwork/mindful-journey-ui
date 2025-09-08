@@ -34,7 +34,16 @@ class SpecialistController extends Controller
             });
         }
 
-        $specialists = $query->orderBy('rating', 'desc')->get()->map(function (Specialist $s) {
+        // Pagination serveur
+        $perPage = (int) $request->get('perPage', 10);
+        $perPage = max(1, min($perPage, 50));
+        $page = (int) $request->get('page', 1);
+
+        $paginator = $query->orderBy('rating', 'desc')
+            ->paginate($perPage, ['*'], 'page', $page);
+
+        // Transformer les éléments paginés pour correspondre au format frontend
+        $mapped = $paginator->getCollection()->map(function (Specialist $s) {
             return [
                 'id' => (string) $s->id,
                 'name' => $s->name,
@@ -52,10 +61,17 @@ class SpecialistController extends Controller
                 'reviewCount' => $s->review_count,
             ];
         });
+        $paginator->setCollection($mapped);
 
         return response()->json([
             'success' => true,
-            'data' => $specialists,
+            'data' => $paginator->items(),
+            'pagination' => [
+                'currentPage' => $paginator->currentPage(),
+                'perPage' => $paginator->perPage(),
+                'total' => $paginator->total(),
+                'lastPage' => $paginator->lastPage(),
+            ],
         ]);
     }
 
@@ -140,8 +156,9 @@ class SpecialistController extends Controller
     /**
      * Liste publique des spécialistes (sans authentification)
      */
-    public function publicIndex(): JsonResponse
+    public function publicIndex(Request $request): JsonResponse
     {
-        return $this->index(new Request());
+        // Passer la requête telle quelle pour conserver filtres et pagination
+        return $this->index($request);
     }
 }
