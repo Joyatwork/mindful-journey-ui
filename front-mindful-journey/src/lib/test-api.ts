@@ -191,6 +191,9 @@ const testApiService = {
       },
       body: JSON.stringify(profileData)
     }),
+    toggle2FA: (endpoint: '/auth/enable-2fa' | '/auth/disable-2fa') => testApiRequest(endpoint, {
+      method: 'POST',
+    }),
     testLogin: (credentials: any) => testApiRequest('/test/login', {
       method: 'POST',
       body: JSON.stringify(credentials)

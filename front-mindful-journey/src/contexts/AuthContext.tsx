@@ -12,6 +12,7 @@ interface User {
   company?: string;
   bio?: string;
   goals?: string;
+  two_factor_enabled?: boolean;
   created_at: string;
 }
 

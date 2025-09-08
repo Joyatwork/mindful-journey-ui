@@ -62,6 +62,21 @@ class AuthController extends Controller
             ]);
         }
 
+        // Vérifier la préférence 2FA de l'utilisateur (stockée dans preferences)
+        $preferences = is_array($user->preferences) ? $user->preferences : (json_decode($user->preferences ?? '[]', true) ?: []);
+        $twoFactorEnabled = $preferences['two_factor_enabled'] ?? true; // par défaut: activé
+
+        // Si 2FA désactivé pour cet utilisateur -> connexion directe sans OTP
+        if ($twoFactorEnabled === false) {
+            $token = $user->createToken('auth-token')->plainTextToken;
+            return response()->json([
+                'message' => 'Connexion réussie (2FA désactivé pour cet utilisateur)',
+                'user' => $user,
+                'token' => $token,
+                'two_factor' => false,
+            ]);
+        }
+
         // Vérifier que la table login_otps existe (migration appliquée)
         if (!Schema::hasTable('login_otps')) {
             Log::warning('2FA désactivé temporairement: table login_otps absente. Retour au login direct.');
@@ -172,7 +187,7 @@ class AuthController extends Controller
     public function user(Request $request): JsonResponse
     {
         $user = $request->user();
-        $preferences = $user->preferences ? json_decode($user->preferences, true) : [];
+    $preferences = is_array($user->preferences) ? $user->preferences : (json_decode($user->preferences ?? '[]', true) ?: []);
         
         return response()->json([
             'user' => [
@@ -186,6 +201,7 @@ class AuthController extends Controller
                 'company' => $preferences['company'] ?? null,
                 'bio' => $user->bio,
                 'goals' => $preferences['goals'] ?? null,
+        'two_factor_enabled' => $preferences['two_factor_enabled'] ?? true,
                 'created_at' => $user->created_at,
             ]
         ]);
@@ -222,7 +238,7 @@ class AuthController extends Controller
         $user->birth_date = $request->birthDate;
         
         // Récupérer les préférences existantes ou créer un nouveau tableau
-        $preferences = $user->preferences ? json_decode($user->preferences, true) : [];
+    $preferences = is_array($user->preferences) ? $user->preferences : (json_decode($user->preferences ?? '[]', true) ?: []);
         
         // Ajouter les nouvelles données dans les préférences
         $preferences['location'] = $request->location;
@@ -231,7 +247,7 @@ class AuthController extends Controller
         $preferences['goals'] = $request->goals;
         
         // Sauvegarder les préférences en JSON
-        $user->preferences = json_encode($preferences);
+    $user->preferences = $preferences;
         
         Log::info('Utilisateur après modification (avant save):', $user->toArray());
         
@@ -254,8 +270,43 @@ class AuthController extends Controller
                 'company' => $preferences['company'] ?? null,
                 'bio' => $user->bio,
                 'goals' => $preferences['goals'] ?? null,
+                'two_factor_enabled' => $preferences['two_factor_enabled'] ?? true,
                 'created_at' => $user->created_at,
             ]
+        ]);
+    }
+
+    /**
+     * Active la 2FA pour l'utilisateur courant
+     */
+    public function enableTwoFactor(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $preferences = is_array($user->preferences) ? $user->preferences : (json_decode($user->preferences ?? '[]', true) ?: []);
+        $preferences['two_factor_enabled'] = true;
+        $user->preferences = $preferences;
+        $user->save();
+
+        return response()->json([
+            'message' => 'Authentification à deux facteurs activée',
+            'two_factor_enabled' => true,
+        ]);
+    }
+
+    /**
+     * Désactive la 2FA pour l'utilisateur courant
+     */
+    public function disableTwoFactor(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $preferences = is_array($user->preferences) ? $user->preferences : (json_decode($user->preferences ?? '[]', true) ?: []);
+        $preferences['two_factor_enabled'] = false;
+        $user->preferences = $preferences;
+        $user->save();
+
+        return response()->json([
+            'message' => 'Authentification à deux facteurs désactivée',
+            'two_factor_enabled' => false,
         ]);
     }
 }

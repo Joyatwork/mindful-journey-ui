@@ -64,9 +64,10 @@ const LoginPage = () => {
       const result = await login(loginForm.email, loginForm.password);
       if (result.twoFactor) {
         showMessage('success', 'Code envoyé par email');
-      } else {
-        showMessage('success', 'Connexion réussie !');
+        return;
       }
+      // Flux sans 2FA: AuthContext a déjà enregistré user/token
+      showMessage('success', 'Connexion réussie !');
     } catch (error: any) {
       // Utilise le message enrichi de testApiRequest (status, data)
       let msg = error?.message || `La connexion a échoué`;

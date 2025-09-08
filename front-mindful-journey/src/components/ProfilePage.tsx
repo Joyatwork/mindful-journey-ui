@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/contexts/AuthContext';
+import testApiService from '@/lib/test-api';
 import { 
   User, 
   Mail, 
@@ -75,19 +76,30 @@ const ProfilePage = () => {
         bio: user.bio || '',
         goals: user.goals || ''
       }));
+  // init 2FA toggle from user payload if present
+  setDoubleAuth(Boolean(user.two_factor_enabled ?? true));
     }
   }, [user]);
 
   const toggle2FA = async () => {
     try {
-      if (!DoubleAuth) {
-        await fetch('/api/enable-2fa', { method: 'POST' });
-      } else {
-        await fetch('/api/disable-2fa', { method: 'POST' });
-      }
-       setDoubleAuth(prev => !prev);
-    } catch (error) {
-      console.error("Erreur lors du changement de double AUTH", error);
+      const endpoint = DoubleAuth ? '/auth/disable-2fa' : '/auth/enable-2fa';
+      await testApiService.auth.toggle2FA(endpoint);
+      const newVal = !DoubleAuth;
+      setDoubleAuth(newVal);
+      toast({
+        title: newVal ? '2FA activée' : '2FA désactivée',
+        description: newVal
+          ? 'Un code sera demandé lors de vos prochaines connexions.'
+          : 'Le code ne sera plus demandé lors de la connexion.'
+      });
+    } catch (error: any) {
+      console.error('Erreur lors du changement de double AUTH', error);
+      toast({
+        title: 'Erreur',
+        description: error?.message || 'Impossible de mettre à jour la 2FA',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -383,7 +395,7 @@ const ProfilePage = () => {
               <Button onClick={toggle2FA} 
               variant="outline" size="sm" 
               className="border-purple-200 dark:border-purple-700 text-purple-700 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-800">
-              {DoubleAuth ? 'Desactiver' :  'Activer'} 
+              {DoubleAuth ? 'Désactiver' :  'Activer'} 
               </Button>
             </div>
             <Separator className="bg-gray-200 dark:bg-gray-700" />

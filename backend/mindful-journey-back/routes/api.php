@@ -106,6 +106,8 @@ Route::prefix('auth')->group(function () {
     Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
     Route::get('user', [AuthController::class, 'user'])->middleware('auth:sanctum');
     Route::put('profile', [AuthController::class, 'updateProfile'])->middleware('auth:sanctum');
+    Route::post('enable-2fa', [AuthController::class, 'enableTwoFactor'])->middleware('auth:sanctum');
+    Route::post('disable-2fa', [AuthController::class, 'disableTwoFactor'])->middleware('auth:sanctum');
 
     // Routes Google OAuth
     Route::get('google', [GoogleAuthController::class, 'redirectToGoogle']);
