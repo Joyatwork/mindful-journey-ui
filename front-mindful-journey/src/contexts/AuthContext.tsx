@@ -13,6 +13,7 @@ interface User {
   bio?: string;
   goals?: string;
   two_factor_enabled?: boolean;
+  notifications_enabled?: boolean;
   created_at: string;
 }
 

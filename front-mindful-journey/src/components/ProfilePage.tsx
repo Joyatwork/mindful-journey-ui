@@ -47,6 +47,7 @@ const ProfilePage = () => {
   const [showAppointments, setShowAppointments] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [ DoubleAuth, setDoubleAuth] = useState(false);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
 
   const [userInfo, setUserInfo] = useState({
     name: user?.name || 'Utilisateur',
@@ -78,6 +79,8 @@ const ProfilePage = () => {
       }));
   // init 2FA toggle from user payload if present
   setDoubleAuth(Boolean(user.two_factor_enabled ?? true));
+  // init notifications toggle from user payload if present
+  setNotificationsEnabled(Boolean(user.notifications_enabled ?? false));
     }
   }, [user]);
 
@@ -139,6 +142,22 @@ const ProfilePage = () => {
       });
     } finally {
       setIsUpdating(false);
+    }
+  };
+
+  const toggleNotifications = async (next: boolean) => {
+    try {
+      const endpoint = next ? '/auth/enable-notifications' : '/auth/disable-notifications';
+      await testApiService.auth.toggleNotifications(endpoint);
+      setNotificationsEnabled(next);
+      toast({
+        title: next ? 'Notifications activées' : 'Notifications désactivées',
+        description: next
+          ? 'Vous recevrez désormais des notifications.'
+          : 'Vous ne recevrez plus de notifications.'
+      });
+    } catch (error: any) {
+      toast({ title: 'Erreur', description: error?.message || 'Mise à jour impossible', variant: 'destructive' });
     }
   };
 
@@ -348,7 +367,7 @@ const ProfilePage = () => {
             <Separator className="bg-gray-200 dark:bg-gray-700" />
             <div className="flex items-center justify-between">
               <span className="text-gray-700 dark:text-gray-300">Notifications</span>
-              <Switch disabled id="notifications" />
+              <Switch id="notifications" checked={notificationsEnabled} onCheckedChange={toggleNotifications} />
             </div>
           </CardContent>
         </Card>

@@ -194,6 +194,9 @@ const testApiService = {
     toggle2FA: (endpoint: '/auth/enable-2fa' | '/auth/disable-2fa') => testApiRequest(endpoint, {
       method: 'POST',
     }),
+    toggleNotifications: (endpoint: '/auth/enable-notifications' | '/auth/disable-notifications') => testApiRequest(endpoint, {
+      method: 'POST',
+    }),
     testLogin: (credentials: any) => testApiRequest('/test/login', {
       method: 'POST',
       body: JSON.stringify(credentials)

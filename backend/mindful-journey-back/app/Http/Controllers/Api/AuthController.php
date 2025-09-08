@@ -201,7 +201,8 @@ class AuthController extends Controller
                 'company' => $preferences['company'] ?? null,
                 'bio' => $user->bio,
                 'goals' => $preferences['goals'] ?? null,
-        'two_factor_enabled' => $preferences['two_factor_enabled'] ?? true,
+    'two_factor_enabled' => $preferences['two_factor_enabled'] ?? true,
+    'notifications_enabled' => $preferences['notifications_enabled'] ?? false,
                 'created_at' => $user->created_at,
             ]
         ]);
@@ -271,6 +272,7 @@ class AuthController extends Controller
                 'bio' => $user->bio,
                 'goals' => $preferences['goals'] ?? null,
                 'two_factor_enabled' => $preferences['two_factor_enabled'] ?? true,
+                'notifications_enabled' => $preferences['notifications_enabled'] ?? false,
                 'created_at' => $user->created_at,
             ]
         ]);
@@ -307,6 +309,40 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'Authentification à deux facteurs désactivée',
             'two_factor_enabled' => false,
+        ]);
+    }
+
+    /**
+     * Active les notifications pour l'utilisateur courant
+     */
+    public function enableNotifications(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $preferences = is_array($user->preferences) ? $user->preferences : (json_decode($user->preferences ?? '[]', true) ?: []);
+        $preferences['notifications_enabled'] = true;
+        $user->preferences = $preferences;
+        $user->save();
+
+        return response()->json([
+            'message' => 'Notifications activées',
+            'notifications_enabled' => true,
+        ]);
+    }
+
+    /**
+     * Désactive les notifications pour l'utilisateur courant
+     */
+    public function disableNotifications(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $preferences = is_array($user->preferences) ? $user->preferences : (json_decode($user->preferences ?? '[]', true) ?: []);
+        $preferences['notifications_enabled'] = false;
+        $user->preferences = $preferences;
+        $user->save();
+
+        return response()->json([
+            'message' => 'Notifications désactivées',
+            'notifications_enabled' => false,
         ]);
     }
 }
