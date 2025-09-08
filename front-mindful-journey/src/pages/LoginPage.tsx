@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
-import { Heart, Shield, User, Mail } from 'lucide-react';
+import { Heart, Shield, User, Mail, Eye, EyeOff } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 
 const LoginPage = () => {
@@ -38,6 +38,9 @@ const LoginPage = () => {
   const [forgotEmail, setForgotEmail] = useState('');
   const [resetMode, setResetMode] = useState(false); // when user clicks link with token (future integration)
   const [resetData, setResetData] = useState({ token: '', email: '', password: '', password_confirmation: '' });
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showRegisterPassword, setShowRegisterPassword] = useState(false);
+  const [showRegisterPasswordConfirm, setShowRegisterPasswordConfirm] = useState(false);
 
   // Rediriger si déjà connecté
   if (isAuthenticated) {
@@ -258,14 +261,28 @@ const LoginPage = () => {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="login-password">Mot de passe</Label>
-                  <Input
-                    id="login-password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={loginForm.password}
-                    onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
-                    required
-                  />
+                  <div className="relative">
+                    <Input
+                      id="login-password"
+                      type={showLoginPassword ? 'text' : 'password'}
+                      placeholder="••••••••"
+                      value={loginForm.password}
+                      onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
+                      required
+                      autoComplete="current-password"
+                      className="pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowLoginPassword(v => !v)}
+                      className="absolute inset-y-0 right-0 px-3 flex items-center text-gray-500 hover:text-gray-700"
+                      aria-label={showLoginPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                      title={showLoginPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                      aria-pressed={showLoginPassword}
+                    >
+                      {showLoginPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
                   <div className="text-right mt-1">
                     <button type="button" onClick={() => { setShowForgot(true); setForgotEmail(loginForm.email); }} className="text-xs text-indigo-600 hover:underline">
                       Mot de passe oublié ?
@@ -355,25 +372,53 @@ const LoginPage = () => {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="register-password">Mot de passe</Label>
-                  <Input
-                    id="register-password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={registerForm.password}
-                    onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })}
-                    required
-                  />
+                  <div className="relative">
+                    <Input
+                      id="register-password"
+                      type={showRegisterPassword ? 'text' : 'password'}
+                      placeholder="••••••••"
+                      value={registerForm.password}
+                      onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })}
+                      required
+                      autoComplete="new-password"
+                      className="pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowRegisterPassword(v => !v)}
+                      className="absolute inset-y-0 right-0 px-3 flex items-center text-gray-500 hover:text-gray-700"
+                      aria-label={showRegisterPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                      title={showRegisterPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                      aria-pressed={showRegisterPassword}
+                    >
+                      {showRegisterPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="register-password-confirm">Confirmer le mot de passe</Label>
-                  <Input
-                    id="register-password-confirm"
-                    type="password"
-                    placeholder="••••••••"
-                    value={registerForm.password_confirmation}
-                    onChange={(e) => setRegisterForm({ ...registerForm, password_confirmation: e.target.value })}
-                    required
-                  />
+                  <div className="relative">
+                    <Input
+                      id="register-password-confirm"
+                      type={showRegisterPasswordConfirm ? 'text' : 'password'}
+                      placeholder="••••••••"
+                      value={registerForm.password_confirmation}
+                      onChange={(e) => setRegisterForm({ ...registerForm, password_confirmation: e.target.value })}
+                      required
+                      autoComplete="new-password"
+                      className="pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowRegisterPasswordConfirm(v => !v)}
+                      className="absolute inset-y-0 right-0 px-3 flex items-center text-gray-500 hover:text-gray-700"
+                      aria-label={showRegisterPasswordConfirm ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                      title={showRegisterPasswordConfirm ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                      aria-pressed={showRegisterPasswordConfirm}
+                    >
+                      {showRegisterPasswordConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? 'Inscription...' : 'S\'inscrire'}
