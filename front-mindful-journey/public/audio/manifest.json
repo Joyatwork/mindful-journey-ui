@@ -1,0 +1,22 @@
+{
+  "tracks": [
+    {
+  "id": "track-2",
+  "title": "Track 2",
+  "src": "/audio/track-2.m4a",
+  "languages": ["na"]
+    },
+    {
+  "id": "track-3",
+  "title": "Track 3",
+  "src": "/audio/track-3.m4a",
+  "languages": ["na"]
+    },
+    {
+      "id": "meditation-midi",
+  "title": "Meditation midi",
+  "src": "/audio/meditation-midi.m4a",
+      "languages": ["fr"]
+    }
+  ]
+}

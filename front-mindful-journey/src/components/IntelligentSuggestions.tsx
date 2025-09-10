@@ -59,6 +59,14 @@ interface SuggestionGroup {
   immediate_actions: Suggestion[];
 }
 
+interface AppTrack {
+  id: string;
+  title: string;
+  src: string; // e.g. "/audio/guided-default.mp3"
+  languages?: string[];
+  duration?: number; // seconds
+}
+
 interface IntelligentSuggestionsProps {
   userContext: {
     mood?: number;
@@ -81,6 +89,8 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+  // Audios intégrés à l'application
+  const [appTracks, setAppTracks] = useState<AppTrack[]>([]);
   // Etat audio guidé pour les défis
   const [playingChallengeIndex, setPlayingChallengeIndex] = useState<number | null>(null);
   const [playingImmediateIndex, setPlayingImmediateIndex] = useState<number | null>(null);
@@ -88,8 +98,11 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
   const [totalSeconds, setTotalSeconds] = useState<number>(0);
   const [audioLoading, setAudioLoading] = useState(false);
   const [audioError, setAudioError] = useState<string | null>(null);
+  const [currentAudioUrl, setCurrentAudioUrl] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const timerRef = useRef<number | null>(null);
+  // Séquence d'audio courante pour ignorer les callbacks obsolètes (évite lectures multiples)
+  const currentAudioSeqRef = useRef(0);
   // URLs audio personnalisés par index de challenge (ObjectURL)
   const [customAudioUrls, setCustomAudioUrls] = useState<Record<number, string>>({}); // challenges
   const customUrlOriginalNames = useRef<Record<number, string>>({});
@@ -100,6 +113,48 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
   const [openImmediateTexts, setOpenImmediateTexts] = useState<Record<number, boolean>>({});
   const [challengeLangSelections, setChallengeLangSelections] = useState<Record<number, string>>({});
   const [immediateLangSelections, setImmediateLangSelections] = useState<Record<number, string>>({});
+
+  // Génère des variantes d'URL robustes (gère accents NFC/NFD et caractères spéciaux)
+  const buildUrlCandidates = useCallback((src?: string): string[] => {
+    if (!src) return [];
+    if (src.startsWith('blob:')) return [src];
+    try {
+      // Garder l'original en premier
+      const out: string[] = [src];
+      // Ne traite que les chemins /audio/xxx
+      const m = src.match(/^(.*\/)([^\/]+)$/);
+      if (!m) return Array.from(new Set(out));
+      const base = m[1];
+      const file = decodeURIComponent(m[2]);
+      const nfc = file.normalize('NFC');
+      const nfd = file.normalize('NFD');
+      const enc = (name: string) => base + encodeURIComponent(name);
+      out.push(enc(nfc));
+      out.push(enc(nfd));
+      // Variante: remplacer # non encodé
+      if (file.includes('#')) {
+        out.push(base + encodeURIComponent(file.replace('#', '#'))); // redondant mais garde l'intention
+      }
+      return Array.from(new Set(out));
+    } catch {
+      return [src];
+    }
+  }, []);
+
+  // Charger le manifest des audios intégrés (public/audio/manifest.json)
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const res = await fetch('/audio/manifest.json', { cache: 'no-store' });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!cancelled && Array.isArray(data?.tracks)) setAppTracks(data.tracks);
+      } catch {}
+    };
+    load();
+    return () => { cancelled = true; };
+  }, []);
 
   // Parse "5 min" / "10 minutes" / "7m" -> minutes number
   const parseDurationMinutes = (d?: string): number => {
@@ -116,24 +171,34 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
       timerRef.current = null;
     }
     if (audioRef.current) {
-      try { audioRef.current.pause(); } catch {}
-      audioRef.current = null;
+      try {
+        audioRef.current.pause();
+        audioRef.current.loop = false;
+        try { audioRef.current.currentTime = 0; } catch {}
+        try {
+          // Détacher la source pour empêcher toute lecture résiduelle
+          audioRef.current.src = '';
+          audioRef.current.removeAttribute('src');
+          audioRef.current.load();
+        } catch {}
+      } catch {}
+      // Conserver l'élément pour réutilisation, évite des instances multiples
     }
-  setPlayingChallengeIndex(null);
-  setPlayingImmediateIndex(null);
+    setPlayingChallengeIndex(null);
+    setPlayingImmediateIndex(null);
     setRemainingSeconds(0);
     setTotalSeconds(0);
     setAudioLoading(false);
-  setIsPaused(false);
+    setIsPaused(false);
   }, []);
 
   const stopCurrent = useCallback(() => {
     clearAudio();
   }, [clearAudio]);
 
-  const startChallengeAudio = useCallback((index: number, challenge: Suggestion) => {
-    // Si on clique le même -> stop
-    if (playingChallengeIndex === index) {
+  const startChallengeAudio = useCallback((index: number, challenge: Suggestion, overrideSrc?: string, forceRestart: boolean = false) => {
+    // Si on clique le même -> stop, sauf si on force un redémarrage (changement de source/langue)
+    if (!forceRestart && !overrideSrc && playingChallengeIndex === index) {
       stopCurrent();
       return;
     }
@@ -155,12 +220,37 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
       const selected = challengeLangSelections[index];
       variantUrl = (selected && challenge.audio_variants[selected]) || challenge.audio_variants['fr'] || Object.values(challenge.audio_variants)[0];
     }
-    const src = customAudioUrls[index] || variantUrl || challenge.audio_url || '/audio/guided-default.mp3'; // Priorité custom > variant > single > défaut
-  const audio = new Audio(src);
-  audioRef.current = audio;
-  // Support M4A (container MP4 + AAC) et MP3. La boucle ne sera activée qu'en fonction de la durée réelle.
-  audio.preload = 'auto';
-    const onCanPlay = () => {
+    const defaultApp = appTracks[0]?.src;
+    const chosen = overrideSrc || customAudioUrls[index] || variantUrl || challenge.audio_url || defaultApp;
+    if (!chosen) {
+      setAudioLoading(false);
+      setAudioError("Aucune source audio disponible. Sélectionnez un 'Audio intégré'.");
+      return;
+    }
+    // Incrémente la séquence pour invalider les handlers précédents
+    const mySeq = ++currentAudioSeqRef.current;
+    const candidates = buildUrlCandidates(chosen);
+
+    const tryIndex = (ci: number) => {
+      if (mySeq !== currentAudioSeqRef.current) return; // obsolète
+      const url = candidates[ci];
+      setCurrentAudioUrl(url);
+      const audio = audioRef.current ?? new Audio();
+      audioRef.current = audio;
+      // Préparer l'élément unique
+      try {
+        audio.pause();
+        audio.loop = false;
+      } catch {}
+      audio.preload = 'auto';
+      try { audio.src = url; audio.load(); } catch {}
+      const onReady = () => {
+      if (mySeq !== currentAudioSeqRef.current) {
+        try { audio.removeEventListener('canplay', onReady as any); } catch {}
+        try { audio.removeEventListener('loadedmetadata', onReady as any); } catch {}
+        try { audio.removeEventListener('error', onError as any); } catch {}
+        return;
+      }
       // Décider si on loop : uniquement si durée intrinsèque < durée challenge
       try {
         if (isFinite(audio.duration) && audio.duration > 0) {
@@ -185,24 +275,43 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
           return prev - 1;
         });
       }, 1000);
+      };
+      const onError = () => {
+        if (mySeq !== currentAudioSeqRef.current) {
+          try { audio.removeEventListener('canplay', onReady as any); } catch {}
+          try { audio.removeEventListener('loadedmetadata', onReady as any); } catch {}
+          try { audio.removeEventListener('error', onError as any); } catch {}
+          return;
+        }
+        // Essayer la variante suivante
+        if (ci + 1 < candidates.length) {
+          try { audio.removeEventListener('canplay', onReady as any); } catch {}
+          try { audio.removeEventListener('loadedmetadata', onReady as any); } catch {}
+          try { audio.removeEventListener('error', onError as any); } catch {}
+          tryIndex(ci + 1);
+          return;
+        }
+  setAudioError(`Impossible de charger l'audio (${url})`);
+        clearAudio();
+      };
+      audio.addEventListener('canplay', onReady, { once: true });
+      audio.addEventListener('loadedmetadata', onReady, { once: true });
+      // Tentative immédiate (au cas où canplay tarde)
+      try { void audio.play(); } catch {}
+      audio.addEventListener('error', onError, { once: true });
     };
-    const onError = () => {
-      setAudioError('Impossible de charger l\'audio');
-      clearAudio();
-    };
-    audio.addEventListener('canplay', onCanPlay, { once: true });
-    audio.addEventListener('error', onError, { once: true });
+    tryIndex(0);
     // Sécurité: si canplay ne vient pas dans 6s -> erreur
     setTimeout(() => {
-      if (audioLoading) {
+      if (mySeq === currentAudioSeqRef.current && audioLoading) {
         setAudioError('Chargement audio trop long');
         clearAudio();
       }
     }, 6000);
-  }, [audioLoading, clearAudio, playingChallengeIndex, stopCurrent, customAudioUrls, challengeLangSelections]);
+  }, [audioLoading, clearAudio, playingChallengeIndex, stopCurrent, customAudioUrls, challengeLangSelections, appTracks]);
 
-  const startImmediateAudio = useCallback((index: number, action: Suggestion) => {
-    if (playingImmediateIndex === index) {
+  const startImmediateAudio = useCallback((index: number, action: Suggestion, overrideSrc?: string, forceRestart: boolean = false) => {
+    if (!forceRestart && !overrideSrc && playingImmediateIndex === index) {
       stopCurrent();
       return;
     }
@@ -221,11 +330,34 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
       const selected = immediateLangSelections[index];
       variantUrl = (selected && action.audio_variants[selected]) || action.audio_variants['fr'] || Object.values(action.audio_variants)[0];
     }
-    const src = customImmediateAudioUrls[index] || variantUrl || action.audio_url || '/audio/guided-default.mp3';
-    const audio = new Audio(src);
-    audioRef.current = audio;
-    audio.preload = 'auto';
-    const onCanPlay = () => {
+    const defaultAppImm = appTracks[0]?.src;
+    const chosenImm = overrideSrc || customImmediateAudioUrls[index] || variantUrl || action.audio_url || defaultAppImm;
+    if (!chosenImm) {
+      setAudioLoading(false);
+      setAudioError("Aucune source audio disponible. Sélectionnez un 'Audio intégré'.");
+      return;
+    }
+    const mySeq = ++currentAudioSeqRef.current;
+    const candidatesImm = buildUrlCandidates(chosenImm);
+    const tryImm = (ci: number) => {
+      if (mySeq !== currentAudioSeqRef.current) return;
+      const url = candidatesImm[ci];
+      setCurrentAudioUrl(url);
+      const audio = audioRef.current ?? new Audio();
+      audioRef.current = audio;
+      try {
+        audio.pause();
+        audio.loop = false;
+      } catch {}
+      audio.preload = 'auto';
+      try { audio.src = url; audio.load(); } catch {}
+      const onReady = () => {
+      if (mySeq !== currentAudioSeqRef.current) {
+        try { audio.removeEventListener('canplay', onReady as any); } catch {}
+        try { audio.removeEventListener('loadedmetadata', onReady as any); } catch {}
+        try { audio.removeEventListener('error', onError as any); } catch {}
+        return;
+      }
       try {
         if (isFinite(audio.duration) && audio.duration > 0) {
           audio.loop = audio.duration < total - 1;
@@ -247,20 +379,37 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
           return prev - 1;
         });
       }, 1000);
+      };
+      const onError = () => {
+        if (mySeq !== currentAudioSeqRef.current) {
+        try { audio.removeEventListener('canplay', onReady as any); } catch {}
+        try { audio.removeEventListener('loadedmetadata', onReady as any); } catch {}
+          try { audio.removeEventListener('error', onError as any); } catch {}
+          return;
+        }
+        if (ci + 1 < candidatesImm.length) {
+          try { audio.removeEventListener('canplay', onReady as any); } catch {}
+          try { audio.removeEventListener('loadedmetadata', onReady as any); } catch {}
+          try { audio.removeEventListener('error', onError as any); } catch {}
+          tryImm(ci + 1);
+          return;
+        }
+  setAudioError(`Impossible de charger l'audio (${url})`);
+        clearAudio();
+      };
+      audio.addEventListener('canplay', onReady, { once: true });
+      audio.addEventListener('loadedmetadata', onReady, { once: true });
+      try { void audio.play(); } catch {}
+      audio.addEventListener('error', onError, { once: true });
     };
-    const onError = () => {
-      setAudioError('Impossible de charger l\'audio');
-      clearAudio();
-    };
-    audio.addEventListener('canplay', onCanPlay, { once: true });
-    audio.addEventListener('error', onError, { once: true });
+    tryImm(0);
     setTimeout(() => {
-      if (audioLoading) {
+      if (mySeq === currentAudioSeqRef.current && audioLoading) {
         setAudioError('Chargement audio trop long');
         clearAudio();
       }
     }, 6000);
-  }, [audioLoading, clearAudio, playingImmediateIndex, customImmediateAudioUrls, stopCurrent, immediateLangSelections]);
+  }, [audioLoading, clearAudio, playingImmediateIndex, customImmediateAudioUrls, stopCurrent, immediateLangSelections, appTracks]);
 
   // Sélection d'un fichier audio local pour un challenge
   const handleSelectAudio = (index: number, file: File) => {
@@ -276,6 +425,19 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
       startChallengeAudio(index, suggestions!.challenges[index]);
     }
   };
+  // Sélection d'un audio intégré pour un challenge
+  const handleSelectAppAudio = (index: number, track: AppTrack) => {
+    const prev = customAudioUrls[index];
+    if (prev && prev.startsWith('blob:')) {
+      try { URL.revokeObjectURL(prev); } catch {}
+    }
+    setCustomAudioUrls(prevMap => ({ ...prevMap, [index]: track.src }));
+    customUrlOriginalNames.current[index] = `App: ${track.title}`;
+    // Démarrer automatiquement la lecture avec l'audio intégré sélectionné
+    if (suggestions && suggestions.challenges && suggestions.challenges[index]) {
+      startChallengeAudio(index, suggestions.challenges[index], track.src, true);
+    }
+  };
   const handleSelectImmediateAudio = (index: number, file: File) => {
     if (!file || !file.type.startsWith('audio/')) return;
     const prev = customImmediateAudioUrls[index];
@@ -285,6 +447,18 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
     customImmediateUrlOriginalNames.current[index] = file.name;
     if (playingImmediateIndex === index) {
       startImmediateAudio(index, suggestions!.immediate_actions[index]);
+    }
+  };
+  const handleSelectImmediateAppAudio = (index: number, track: AppTrack) => {
+    const prev = customImmediateAudioUrls[index];
+    if (prev && prev.startsWith('blob:')) {
+      try { URL.revokeObjectURL(prev); } catch {}
+    }
+    setCustomImmediateAudioUrls(prevMap => ({ ...prevMap, [index]: track.src }));
+    customImmediateUrlOriginalNames.current[index] = `App: ${track.title}`;
+    // Démarrer automatiquement la lecture avec l'audio intégré sélectionné
+    if (suggestions && suggestions.immediate_actions && suggestions.immediate_actions[index]) {
+      startImmediateAudio(index, suggestions.immediate_actions[index], track.src, true);
     }
   };
 
@@ -478,7 +652,7 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                     </div>
                   </div>
                 )}
-                {audioError && isPlaying && (
+                {audioError && (
                   <p className="mt-1 text-xs text-red-600">{audioError}</p>
                 )}
                 <div className="flex gap-2 flex-wrap">
@@ -493,7 +667,7 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                           setImmediateLangSelections(prev => ({ ...prev, [index]: e.target.value }));
                           if (isPlaying) {
                             // Redémarrer avec nouvelle langue
-                            startImmediateAudio(index, action);
+                            startImmediateAudio(index, action, undefined, true);
                           }
                         }}
                       >
@@ -521,6 +695,26 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                   {isPlaying && audioLoading && (
                     <Button size="sm" disabled className="flex-1">Chargement...</Button>
                   )}
+                  {appTracks.length > 0 && (
+                    <div className="flex items-center gap-1 text-xs">
+                      <label htmlFor={`imm-app-audio-${index}`} className="text-gray-600">Audio intégré:</label>
+                      <select
+                        id={`imm-app-audio-${index}`}
+                        className="border rounded px-1 py-0.5 text-xs"
+                        defaultValue=""
+                        onChange={e => {
+                          const id = e.target.value;
+                          const tr = appTracks.find(t => t.id === id);
+                          if (tr) handleSelectImmediateAppAudio(index, tr);
+                        }}
+                      >
+                        <option value="">Choisir…</option>
+                        {appTracks.map(t => (
+                          <option key={t.id} value={t.id}>{t.title}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
                   <div className="relative">
                     <input
                       id={`file-imm-audio-${index}`}
@@ -538,7 +732,7 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                   </div>
                 </div>
                 {customImmediateAudioUrls[index] && (
-                  <div className="mt-1 text-xs text-gray-500 truncate">Audio local: {customImmediateUrlOriginalNames.current[index]}</div>
+                  <div className="mt-1 text-xs text-gray-500 truncate">{(customImmediateUrlOriginalNames.current[index] || '').startsWith('App:') ? 'Audio intégré: ' : 'Audio local: '}{customImmediateUrlOriginalNames.current[index]}</div>
                 )}
                 {openImmediateTexts[index] && (
                   <div className="mt-2 p-3 rounded border bg-red-50 text-sm max-h-56 overflow-auto space-y-2">
@@ -633,7 +827,7 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                     </div>
                   </div>
                 )}
-                {audioError && isPlaying && (
+                {audioError && (
                   <p className="mt-2 text-xs text-red-600">{audioError}</p>
                 )}
                 <div className="mt-3 flex flex-col gap-2">
@@ -648,7 +842,7 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                           onChange={e => {
                             setChallengeLangSelections(prev => ({ ...prev, [index]: e.target.value }));
                             if (isPlaying) {
-                              startChallengeAudio(index, challenge);
+                              startChallengeAudio(index, challenge, undefined, true);
                             }
                           }}
                         >
@@ -696,6 +890,26 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                     {isPlaying && audioLoading && (
                       <Button size="sm" disabled className="flex-1">Chargement...</Button>
                     )}
+                    {appTracks.length > 0 && (
+                      <div className="flex items-center gap-1 text-xs">
+                        <label htmlFor={`ch-app-audio-${index}`} className="text-gray-600">Audio intégré:</label>
+                        <select
+                          id={`ch-app-audio-${index}`}
+                          className="border rounded px-1 py-0.5 text-xs"
+                          defaultValue=""
+                          onChange={e => {
+                            const id = e.target.value;
+                            const tr = appTracks.find(t => t.id === id);
+                            if (tr) handleSelectAppAudio(index, tr);
+                          }}
+                        >
+                          <option value="">Choisir…</option>
+                          {appTracks.map(t => (
+                            <option key={t.id} value={t.id}>{t.title}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
                     <div className="relative">
                       <input
                         id={`file-audio-${index}`}
@@ -718,7 +932,7 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                     </div>
                   </div>
                   {customAudioUrls[index] && (
-                    <div className="text-xs text-gray-500 truncate">Audio local: {customUrlOriginalNames.current[index]}</div>
+                    <div className="text-xs text-gray-500 truncate">{(customUrlOriginalNames.current[index] || '').startsWith('App:') ? 'Audio intégré: ' : 'Audio local: '}{customUrlOriginalNames.current[index]}</div>
                   )}
                   {openChallengeTexts[index] && (
                     <div className="mt-2 p-3 rounded border bg-orange-50 text-sm max-h-60 overflow-auto space-y-2">
