@@ -260,10 +260,18 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
           audio.loop = true;
         }
       } catch { /* noop */ }
-      audio.play().catch(err => {
+      try {
+        audio.muted = true;
+        audio.play()
+          .then(() => { try { audio.muted = false; } catch {} })
+          .catch(err => {
+            setAudioError('Lecture audio bloquée (interaction requise)');
+            console.warn('Audio play error', err);
+          });
+      } catch (err) {
         setAudioError('Lecture audio bloquée (interaction requise)');
         console.warn('Audio play error', err);
-      });
+      }
       setAudioLoading(false);
       // Démarrer timer
       timerRef.current = window.setInterval(() => {
@@ -294,10 +302,10 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
   setAudioError(`Impossible de charger l'audio (${url})`);
         clearAudio();
       };
-      audio.addEventListener('canplay', onReady, { once: true });
-      audio.addEventListener('loadedmetadata', onReady, { once: true });
-      // Tentative immédiate (au cas où canplay tarde)
-      try { void audio.play(); } catch {}
+  audio.addEventListener('canplay', onReady, { once: true });
+  audio.addEventListener('loadedmetadata', onReady, { once: true });
+  // Tentative immédiate (au cas où canplay tarde)
+  try { audio.muted = true; void audio.play(); } catch {}
       audio.addEventListener('error', onError, { once: true });
     };
     tryIndex(0);
@@ -365,10 +373,18 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
           audio.loop = true;
         }
       } catch {}
-      audio.play().catch(err => {
+      try {
+        audio.muted = true;
+        audio.play()
+          .then(() => { try { audio.muted = false; } catch {} })
+          .catch(err => {
+            setAudioError('Lecture audio bloquée (interaction requise)');
+            console.warn('Audio play error', err);
+          });
+      } catch (err) {
         setAudioError('Lecture audio bloquée (interaction requise)');
         console.warn('Audio play error', err);
-      });
+      }
       setAudioLoading(false);
       timerRef.current = window.setInterval(() => {
         setRemainingSeconds(prev => {
@@ -397,9 +413,9 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
   setAudioError(`Impossible de charger l'audio (${url})`);
         clearAudio();
       };
-      audio.addEventListener('canplay', onReady, { once: true });
-      audio.addEventListener('loadedmetadata', onReady, { once: true });
-      try { void audio.play(); } catch {}
+  audio.addEventListener('canplay', onReady, { once: true });
+  audio.addEventListener('loadedmetadata', onReady, { once: true });
+  try { audio.muted = true; void audio.play(); } catch {}
       audio.addEventListener('error', onError, { once: true });
     };
     tryImm(0);
@@ -653,7 +669,16 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                   </div>
                 )}
                 {audioError && (
-                  <p className="mt-1 text-xs text-red-600">{audioError}</p>
+                  <div className="mt-1 text-xs text-red-600 flex items-center gap-2">
+                    <span>{audioError}</span>
+                    {audioError.includes('interaction requise') && (
+                      <Button size="sm" variant="outline" onClick={() => {
+                        if (!audioRef.current) return;
+                        try { audioRef.current.muted = false; } catch {}
+                        audioRef.current.play().then(() => setAudioError(null)).catch(() => {});
+                      }}>Débloquer</Button>
+                    )}
+                  </div>
                 )}
                 <div className="flex gap-2 flex-wrap">
                   {audioLangs.length > 0 && (
@@ -828,7 +853,16 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                   </div>
                 )}
                 {audioError && (
-                  <p className="mt-2 text-xs text-red-600">{audioError}</p>
+                  <div className="mt-2 text-xs text-red-600 flex items-center gap-2">
+                    <span>{audioError}</span>
+                    {audioError.includes('interaction requise') && (
+                      <Button size="sm" variant="outline" onClick={() => {
+                        if (!audioRef.current) return;
+                        try { audioRef.current.muted = false; } catch {}
+                        audioRef.current.play().then(() => setAudioError(null)).catch(() => {});
+                      }}>Débloquer</Button>
+                    )}
+                  </div>
                 )}
                 <div className="mt-3 flex flex-col gap-2">
                   <div className="flex gap-2 flex-wrap">
@@ -1135,6 +1169,9 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
 
       {/* Praticiens (largeur complète) */}
       {renderPractitioners()}
+
+  {/* Élément audio caché pour compatibilité autoplay (réutilisé via audioRef) */}
+  <audio ref={audioRef} style={{ display: 'none' }} playsInline />
     </div>
   );
 };
