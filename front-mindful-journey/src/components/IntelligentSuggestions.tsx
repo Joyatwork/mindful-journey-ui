@@ -690,7 +690,7 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
               <div
                 key={index}
                 data-imm-card={index}
-                className={`p-4 pb-20 rounded-lg border border-red-200 relative overflow-hidden transition-colors ${isPlaying ? 'ring-2 ring-red-300 bg-transparent' : 'bg-white/60 backdrop-blur-sm'}`}
+                className={`p-4 pb-6 rounded-lg border border-red-200 relative overflow-hidden transition-colors ${isPlaying ? 'ring-2 ring-red-300 bg-transparent' : 'bg-white/60 backdrop-blur-sm'}`}
                 style={isPlaying && lockedImmediateHeights[index] ? { minHeight: lockedImmediateHeights[index] } : undefined}
               >
                 {isPlaying && !audioLoading && (
@@ -698,6 +698,13 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                 )}
                 {isPlaying && (
                   <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/5 to-black/25 pointer-events-none" />
+                )}
+                {isPlaying && (
+                  <div className="absolute top-0 left-0 right-0 pt-4 px-4 text-center z-20 pointer-events-none">
+                    <h4 className="text-white text-sm font-semibold tracking-wide drop-shadow-md truncate max-w-full">
+                      {action.title}
+                    </h4>
+                  </div>
                 )}
                 <div className={isPlaying ? 'relative z-10' : 'relative'}>
                 <div className={isPlaying ? 'invisible pointer-events-none select-none' : ''}>
@@ -727,14 +734,6 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                     )}
                   </>
                 </div>
-                {isPlaying && (
-                  <div className="mb-3">
-                    <div className="h-2 bg-gray-200 rounded overflow-hidden">
-                      <div className="h-full bg-red-400 transition-all duration-500" style={{ width: `${progress * 100}%` }} />
-                    </div>
-                    <div className="mt-1 text-center text-[10px] text-gray-400 tracking-wider">{mm}:{ss}</div>
-                  </div>
-                )}
                 {audioError && (
                   <div className="mt-1 text-xs text-red-600 flex items-center gap-2">
                     <span>{audioError}</span>
@@ -829,28 +828,29 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                 {isPlaying && remainingSeconds === 0 && (
                   <div className="mt-2 text-xs text-green-600 font-medium">Action complétée ✅</div>
                 )}
+                {/* controls moved outside inner wrapper */}
+                </div>
                 {isPlaying && (
-                  <div className="absolute bottom-0 left-0 right-0 px-3 py-3 flex flex-col items-center gap-2 bg-black/55 backdrop-blur-sm border-t border-white/10">
+                  <div className="absolute bottom-0 left-0 right-0 px-3 py-3 flex flex-col items-stretch gap-3 bg-black/60 backdrop-blur-sm border-t border-white/10 z-30">
                     <div className="w-full">
                       <div className="h-2 bg-white/25 rounded overflow-hidden">
                         <div className="h-full bg-red-500 transition-all duration-500" style={{ width: `${progress * 100}%` }} />
                       </div>
-                      <div className="mt-0.5 text-center text-[10px] text-white/80 tracking-wider font-medium">{mm}:{ss}</div>
+                      <div className="mt-0.5 text-right text-[10px] text-white/70 tracking-wider font-medium">{mm}:{ss}</div>
                     </div>
-                    <div className="flex items-center justify-center gap-5 text-white">
+                    <div className="flex items-center justify-center gap-6 text-white">
                       <Button size="sm" variant="ghost" className="text-white disabled:opacity-30" disabled={audioLoading || index === 0} onClick={() => { if (index > 0) startImmediateAudio(index - 1, suggestions!.immediate_actions[index - 1], undefined, true); }} aria-label="Précédent">
-                        <SkipBack className="h-6 w-6" />
+                        <SkipBack className="h-7 w-7" />
                       </Button>
                       <Button size="sm" variant="ghost" className="text-white disabled:opacity-30" disabled={audioLoading} onClick={() => (isPaused ? resumeChallenge() : pauseChallenge())} aria-label={isPaused ? 'Lecture' : 'Pause'}>
-                        {isPaused ? <Play className="h-7 w-7" /> : <Pause className="h-7 w-7" />}
+                        {isPaused ? <Play className="h-8 w-8" /> : <Pause className="h-8 w-8" />}
                       </Button>
                       <Button size="sm" variant="ghost" className="text-white disabled:opacity-30" disabled={audioLoading || index === suggestions!.immediate_actions.length - 1} onClick={() => { if (index < suggestions!.immediate_actions.length - 1) startImmediateAudio(index + 1, suggestions!.immediate_actions[index + 1], undefined, true); }} aria-label="Suivant">
-                        <SkipForward className="h-6 w-6" />
+                        <SkipForward className="h-7 w-7" />
                       </Button>
                     </div>
                   </div>
                 )}
-                </div>
               </div>
             );
           })}
@@ -881,7 +881,7 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
               <div
                 key={index}
                 data-ch-card={index}
-                className={`p-4 pb-20 rounded-lg border relative overflow-hidden transition-colors ${isPlaying ? 'ring-2 ring-orange-300 bg-transparent' : 'bg-white/60 backdrop-blur-sm'}`}
+                className={`p-4 pb-6 rounded-lg border relative overflow-hidden transition-colors ${isPlaying ? 'ring-2 ring-orange-300 bg-transparent' : 'bg-white/60 backdrop-blur-sm'}`}
                 style={isPlaying && lockedChallengeHeights[index] ? { minHeight: lockedChallengeHeights[index] } : undefined}
               >
                 {isPlaying && !audioLoading && (
@@ -889,6 +889,13 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                 )}
                 {isPlaying && (
                   <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/5 to-black/25 pointer-events-none" />
+                )}
+                {isPlaying && (
+                  <div className="absolute top-0 left-0 right-0 pt-4 px-4 text-center z-20 pointer-events-none">
+                    <h4 className="text-white text-sm font-semibold tracking-wide drop-shadow-md truncate max-w-full">
+                      {challenge.title}
+                    </h4>
+                  </div>
                 )}
                 <div className={isPlaying ? 'relative z-10' : 'relative'}>
                 <div className={isPlaying ? 'invisible pointer-events-none select-none' : ''}>
@@ -922,14 +929,6 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                     )}
                   </>
                 </div>
-                {isPlaying && (
-                  <div className="mt-3">
-                    <div className="h-2 bg-gray-200 rounded overflow-hidden">
-                      <div className="h-full bg-orange-400 transition-all duration-500" style={{ width: `${progress * 100}%` }} />
-                    </div>
-                    <div className="mt-1 text-center text-[10px] text-gray-400 tracking-wider">{mm}:{ss}</div>
-                  </div>
-                )}
                 {audioError && (
                   <div className="mt-2 text-xs text-red-600 flex items-center gap-2">
                     <span>{audioError}</span>
@@ -1023,28 +1022,32 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                   {isPlaying && remainingSeconds === 0 && (
                     <div className="mt-2 text-xs text-green-600 font-medium">Défi complété 🎉</div>
                   )}
-                  {isPlaying && (
-                    <div className="absolute bottom-0 left-0 right-0 px-3 py-3 flex flex-col items-center gap-2 bg-black/55 backdrop-blur-sm border-t border-white/10">
-                      <div className="w-full">
-                        <div className="h-2 bg-white/25 rounded overflow-hidden">
-                          <div className="h-full bg-orange-400 transition-all duration-500" style={{ width: `${progress * 100}%` }} />
-                        </div>
-                        <div className="mt-0.5 text-center text-[10px] text-white/80 tracking-wider font-medium">{mm}:{ss}</div>
-                      </div>
-                      <div className="flex items-center justify-center gap-5 text-white">
-                        <Button size="sm" variant="ghost" className="text-white disabled:opacity-30" disabled={audioLoading || index === 0} onClick={() => { if (index > 0) startChallengeAudio(index - 1, suggestions!.challenges[index - 1], undefined, true); }} aria-label="Précédent">
-                          <SkipBack className="h-6 w-6" />
-                        </Button>
-                        <Button size="sm" variant="ghost" className="text-white disabled:opacity-30" disabled={audioLoading} onClick={() => (isPaused ? resumeChallenge() : pauseChallenge())} aria-label={isPaused ? 'Lecture' : 'Pause'}>
-                          {isPaused ? <Play className="h-7 w-7" /> : <Pause className="h-7 w-7" />}
-                        </Button>
-                        <Button size="sm" variant="ghost" className="text-white disabled:opacity-30" disabled={audioLoading || index === suggestions!.challenges.length - 1} onClick={() => { if (index < suggestions!.challenges.length - 1) startChallengeAudio(index + 1, suggestions!.challenges[index + 1], undefined, true); }} aria-label="Suivant">
-                          <SkipForward className="h-6 w-6" />
-                        </Button>
-                      </div>
-                    </div>
-                  )}
+                  {/* controls moved outside inner wrapper */}
                 </div>
+                {isPlaying && (
+                  <div className="absolute bottom-0 left-0 right-0 px-3 py-3 flex flex-col items-stretch gap-3 bg-black/60 backdrop-blur-sm border-t border-white/10 z-30">
+                    <div className="w-full">
+                      <div className="h-2 bg-white/25 rounded overflow-hidden">
+                        <div className="h-full bg-orange-400 transition-all duration-500" style={{ width: `${progress * 100}%` }} />
+                      </div>
+                      <div className="mt-0.5 text-right text-[10px] text-white/70 tracking-wider font-medium">{mm}:{ss}</div>
+                    </div>
+                    <div className="flex items-center justify-center gap-6 text-white">
+                      <Button size="sm" variant="ghost" className="text-white disabled:opacity-30" disabled={audioLoading || index === 0} onClick={() => { if (index > 0) startChallengeAudio(index - 1, suggestions!.challenges[index - 1], undefined, true); }} aria-label="Précédent">
+                        <SkipBack className="h-7 w-7" />
+                      </Button>
+                      <Button size="sm" variant="ghost" className="text-white disabled:opacity-30" disabled={audioLoading} onClick={() => (isPaused ? resumeChallenge() : pauseChallenge())} aria-label={isPaused ? 'Lecture' : 'Pause'}>
+                        {isPaused ? <Play className="h-8 w-8" /> : <Pause className="h-8 w-8" />}
+                      </Button>
+                      <Button size="sm" variant="ghost" className="text-white disabled:opacity-30" disabled={audioLoading || index === suggestions!.challenges.length - 1} onClick={() => { if (index < suggestions!.challenges.length - 1) startChallengeAudio(index + 1, suggestions!.challenges[index + 1], undefined, true); }} aria-label="Suivant">
+                        <SkipForward className="h-7 w-7" />
+                      </Button>
+                    </div>
+                    {remainingSeconds === 0 && (
+                      <div className="text-[11px] text-white/85 font-medium">Défi complété 🎉</div>
+                    )}
+                  </div>
+                )}
                 </div>
               </div>
             );
