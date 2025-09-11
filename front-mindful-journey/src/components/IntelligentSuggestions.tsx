@@ -694,7 +694,7 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                 style={isPlaying && lockedImmediateHeights[index] ? { minHeight: lockedImmediateHeights[index] } : undefined}
               >
                 {isPlaying && !audioLoading && (
-                  <DynamicAudioBackdrop playing darkOverlayOpacity={0.2} className="opacity-100" />
+                  <DynamicAudioBackdrop playing darkOverlayOpacity={0.2} paused={isPaused} className="opacity-100" />
                 )}
                 {isPlaying && (
                   <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/5 to-black/25 pointer-events-none" />
@@ -797,21 +797,7 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                       </div>
                     </div>
                   )}
-                  {isPlaying && (
-                    <div className="flex flex-col items-center gap-3">
-                      <div className="flex items-center justify-center gap-6">
-                        <Button size="sm" variant="ghost" disabled={audioLoading || index === 0} onClick={() => { if (index > 0) startImmediateAudio(index - 1, suggestions!.immediate_actions[index - 1], undefined, true); }} aria-label="Précédent">
-                          <SkipBack className="h-6 w-6" />
-                        </Button>
-                        <Button size="sm" variant="ghost" disabled={audioLoading} onClick={() => (isPaused ? resumeChallenge() : pauseChallenge())} aria-label={isPaused ? 'Lecture' : 'Pause'}>
-                          {isPaused ? <Play className="h-7 w-7" /> : <Pause className="h-7 w-7" />}
-                        </Button>
-                        <Button size="sm" variant="ghost" disabled={audioLoading || index === suggestions!.immediate_actions.length - 1} onClick={() => { if (index < suggestions!.immediate_actions.length - 1) startImmediateAudio(index + 1, suggestions!.immediate_actions[index + 1], undefined, true); }} aria-label="Suivant">
-                          <SkipForward className="h-6 w-6" />
-                        </Button>
-                      </div>
-                    </div>
-                  )}
+                  {isPlaying && <div className="hidden" />}
                 </div>
                 {!isPlaying && customImmediateAudioUrls[index] && (
                   <div className="mt-1 text-xs text-gray-500 truncate">{(customImmediateUrlOriginalNames.current[index] || '').startsWith('App:') ? 'Audio intégré: ' : 'Audio local: '}{customImmediateUrlOriginalNames.current[index]}</div>
@@ -842,6 +828,27 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                 )}
                 {isPlaying && remainingSeconds === 0 && (
                   <div className="mt-2 text-xs text-green-600 font-medium">Action complétée ✅</div>
+                )}
+                {isPlaying && (
+                  <div className="absolute bottom-0 left-0 right-0 px-3 pb-3 pt-5 flex flex-col items-center gap-2 bg-gradient-to-t from-black/60 via-black/30 to-transparent backdrop-blur-sm">
+                    <div className="w-full">
+                      <div className="h-2 bg-white/25 rounded overflow-hidden">
+                        <div className="h-full bg-red-500 transition-all duration-500" style={{ width: `${progress * 100}%` }} />
+                      </div>
+                      <div className="mt-0.5 text-center text-[10px] text-white/80 tracking-wider font-medium">{mm}:{ss}</div>
+                    </div>
+                    <div className="flex items-center justify-center gap-5 text-white">
+                      <Button size="sm" variant="ghost" className="text-white disabled:opacity-30" disabled={audioLoading || index === 0} onClick={() => { if (index > 0) startImmediateAudio(index - 1, suggestions!.immediate_actions[index - 1], undefined, true); }} aria-label="Précédent">
+                        <SkipBack className="h-6 w-6" />
+                      </Button>
+                      <Button size="sm" variant="ghost" className="text-white disabled:opacity-30" disabled={audioLoading} onClick={() => (isPaused ? resumeChallenge() : pauseChallenge())} aria-label={isPaused ? 'Lecture' : 'Pause'}>
+                        {isPaused ? <Play className="h-7 w-7" /> : <Pause className="h-7 w-7" />}
+                      </Button>
+                      <Button size="sm" variant="ghost" className="text-white disabled:opacity-30" disabled={audioLoading || index === suggestions!.immediate_actions.length - 1} onClick={() => { if (index < suggestions!.immediate_actions.length - 1) startImmediateAudio(index + 1, suggestions!.immediate_actions[index + 1], undefined, true); }} aria-label="Suivant">
+                        <SkipForward className="h-6 w-6" />
+                      </Button>
+                    </div>
+                  </div>
                 )}
                 </div>
               </div>
@@ -878,7 +885,7 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                 style={isPlaying && lockedChallengeHeights[index] ? { minHeight: lockedChallengeHeights[index] } : undefined}
               >
                 {isPlaying && !audioLoading && (
-                  <DynamicAudioBackdrop playing darkOverlayOpacity={0.2} className="opacity-100" />
+                  <DynamicAudioBackdrop playing darkOverlayOpacity={0.2} paused={isPaused} className="opacity-100" />
                 )}
                 {isPlaying && (
                   <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/5 to-black/25 pointer-events-none" />
@@ -985,21 +992,7 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                        </div>
                      </div>
                    )}
-                   {isPlaying && (
-                     <div className="flex flex-col items-center gap-3">
-                       <div className="flex items-center justify-center gap-6">
-                         <Button size="sm" variant="ghost" disabled={audioLoading || index === 0} onClick={() => { if (index > 0) startChallengeAudio(index - 1, suggestions!.challenges[index - 1], undefined, true); }} aria-label="Précédent">
-                           <SkipBack className="h-6 w-6" />
-                         </Button>
-                         <Button size="sm" variant="ghost" disabled={audioLoading} onClick={() => (isPaused ? resumeChallenge() : pauseChallenge())} aria-label={isPaused ? 'Lecture' : 'Pause'}>
-                           {isPaused ? <Play className="h-7 w-7" /> : <Pause className="h-7 w-7" />}
-                         </Button>
-                         <Button size="sm" variant="ghost" disabled={audioLoading || index === suggestions!.challenges.length - 1} onClick={() => { if (index < suggestions!.challenges.length - 1) startChallengeAudio(index + 1, suggestions!.challenges[index + 1], undefined, true); }} aria-label="Suivant">
-                           <SkipForward className="h-6 w-6" />
-                         </Button>
-                       </div>
-                     </div>
-                   )}
+                  {isPlaying && <div className="hidden" />}
                   {!isPlaying && customAudioUrls[index] && (
                     <div className="text-xs text-gray-500 truncate">{(customUrlOriginalNames.current[index] || '').startsWith('App:') ? 'Audio intégré: ' : 'Audio local: '}{customUrlOriginalNames.current[index]}</div>
                   )}
@@ -1029,6 +1022,27 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                   )}
                   {isPlaying && remainingSeconds === 0 && (
                     <div className="mt-2 text-xs text-green-600 font-medium">Défi complété 🎉</div>
+                  )}
+                  {isPlaying && (
+                    <div className="absolute bottom-0 left-0 right-0 px-3 pb-3 pt-5 flex flex-col items-center gap-2 bg-gradient-to-t from-black/60 via-black/30 to-transparent backdrop-blur-sm">
+                      <div className="w-full">
+                        <div className="h-2 bg-white/25 rounded overflow-hidden">
+                          <div className="h-full bg-orange-400 transition-all duration-500" style={{ width: `${progress * 100}%` }} />
+                        </div>
+                        <div className="mt-0.5 text-center text-[10px] text-white/80 tracking-wider font-medium">{mm}:{ss}</div>
+                      </div>
+                      <div className="flex items-center justify-center gap-5 text-white">
+                        <Button size="sm" variant="ghost" className="text-white disabled:opacity-30" disabled={audioLoading || index === 0} onClick={() => { if (index > 0) startChallengeAudio(index - 1, suggestions!.challenges[index - 1], undefined, true); }} aria-label="Précédent">
+                          <SkipBack className="h-6 w-6" />
+                        </Button>
+                        <Button size="sm" variant="ghost" className="text-white disabled:opacity-30" disabled={audioLoading} onClick={() => (isPaused ? resumeChallenge() : pauseChallenge())} aria-label={isPaused ? 'Lecture' : 'Pause'}>
+                          {isPaused ? <Play className="h-7 w-7" /> : <Pause className="h-7 w-7" />}
+                        </Button>
+                        <Button size="sm" variant="ghost" className="text-white disabled:opacity-30" disabled={audioLoading || index === suggestions!.challenges.length - 1} onClick={() => { if (index < suggestions!.challenges.length - 1) startChallengeAudio(index + 1, suggestions!.challenges[index + 1], undefined, true); }} aria-label="Suivant">
+                          <SkipForward className="h-6 w-6" />
+                        </Button>
+                      </div>
+                    </div>
                   )}
                 </div>
                 </div>

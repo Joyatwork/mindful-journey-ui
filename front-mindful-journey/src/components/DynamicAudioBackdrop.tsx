@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 interface DynamicAudioBackdropProps {
-  playing: boolean;
+  playing: boolean;            // audio en cours (avance le diaporama)
+  paused?: boolean;            // audio en pause (on fige l'image courante)
   images?: string[];
   intervalMs?: number;       // temps entre deux images
   fadeDurationMs?: number;   // durée de la transition
@@ -13,6 +14,7 @@ interface DynamicAudioBackdropProps {
 // Aucun event interactif; purement décoratif, pointer-events: none.
 const DynamicAudioBackdrop: React.FC<DynamicAudioBackdropProps> = ({
   playing,
+  paused = false,
   images,
   intervalMs = 6000,
   fadeDurationMs = 1200,
@@ -27,7 +29,7 @@ const DynamicAudioBackdrop: React.FC<DynamicAudioBackdropProps> = ({
 
   // Précharger progressivement les images (lazy, pour ne pas geler le thread principal).
   useEffect(() => {
-    if (!playing) return;
+    if (!(playing || paused)) return; // ne précharge que si on a besoin d'afficher
     let cancelled = false;
     const queue = [...defaultImages];
     const loadNext = () => {
@@ -51,8 +53,9 @@ const DynamicAudioBackdrop: React.FC<DynamicAudioBackdropProps> = ({
   }, [playing, defaultImages]);
 
   // Avancer le diaporama quand playing = true.
+  const effectivePlaying = playing && !paused;
   useEffect(() => {
-    if (!playing) {
+    if (!effectivePlaying) {
       if (timerRef.current) {
         clearInterval(timerRef.current);
         timerRef.current = null;
@@ -70,17 +73,17 @@ const DynamicAudioBackdrop: React.FC<DynamicAudioBackdropProps> = ({
         timerRef.current = null;
       }
     };
-  }, [playing, defaultImages.length, intervalMs, currentIndex]);
+  }, [effectivePlaying, defaultImages.length, intervalMs, currentIndex]);
 
   // Reset indices lorsqu'on arrête la lecture.
   useEffect(() => {
-    if (!playing) {
+    if (!playing && !paused) { // arrêt complet
       setPrevIndex(null);
       setCurrentIndex(0);
     }
-  }, [playing]);
-
-  if (!playing || defaultImages.length === 0) return null;
+  }, [playing, paused]);
+  const active = playing || paused;
+  if (!active || defaultImages.length === 0) return null;
 
   const current = defaultImages[currentIndex];
   const previous = prevIndex != null ? defaultImages[prevIndex] : null;
@@ -113,6 +116,8 @@ const DynamicAudioBackdrop: React.FC<DynamicAudioBackdropProps> = ({
           style={{
             opacity: 1,
             animation: `daZoom ${intervalMs + fadeDurationMs}ms linear infinite`,
+            animationPlayState: paused ? 'paused' : 'running',
+            filter: paused ? 'grayscale(30%) brightness(0.85)' : 'none',
             transition: `opacity ${fadeDurationMs}ms ease-in-out`,
           }}
         />
