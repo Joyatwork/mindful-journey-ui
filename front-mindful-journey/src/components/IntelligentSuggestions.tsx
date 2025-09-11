@@ -114,6 +114,8 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
   const [customImmediateAudioUrls, setCustomImmediateAudioUrls] = useState<Record<number, string>>({});
   const customImmediateUrlOriginalNames = useRef<Record<number, string>>({});
   const [isPaused, setIsPaused] = useState(false);
+  // Ref miroir pour accès stable dans les callbacks d'interval
+  const isPausedRef = useRef(false);
   const [openChallengeTexts, setOpenChallengeTexts] = useState<Record<number, boolean>>({});
   const [openImmediateTexts, setOpenImmediateTexts] = useState<Record<number, boolean>>({});
   const [challengeLangSelections, setChallengeLangSelections] = useState<Record<number, string>>({});
@@ -519,6 +521,7 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
       }
     } catch {}
     setIsPaused(true);
+  isPausedRef.current = true;
   };
 
   const resumeChallenge = () => {
@@ -534,6 +537,7 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
       if (!timerRef.current) {
         timerRef.current = window.setInterval(() => {
           setRemainingSeconds(prev => {
+    if (isPausedRef.current) return prev; // protection supplémentaire
             if (prev <= 1) {
               clearAudio();
               return 0;
@@ -543,6 +547,7 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
         }, 1000);
       }
       setIsPaused(false);
+  isPausedRef.current = false;
     }).catch(err => {
       setAudioError('Impossible de reprendre');
       console.warn('Resume error', err);
