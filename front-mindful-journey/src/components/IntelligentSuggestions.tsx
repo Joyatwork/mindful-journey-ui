@@ -118,6 +118,9 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
   const [openImmediateTexts, setOpenImmediateTexts] = useState<Record<number, boolean>>({});
   const [challengeLangSelections, setChallengeLangSelections] = useState<Record<number, string>>({});
   const [immediateLangSelections, setImmediateLangSelections] = useState<Record<number, string>>({});
+  // Hauteurs verrouillées pour empêcher la réduction de la carte pendant la lecture
+  const [lockedImmediateHeights, setLockedImmediateHeights] = useState<Record<number, number>>({});
+  const [lockedChallengeHeights, setLockedChallengeHeights] = useState<Record<number, number>>({});
 
   // Génère des variantes d'URL robustes (gère accents NFC/NFD et caractères spéciaux)
   const buildUrlCandidates = useCallback((src?: string): string[] => {
@@ -207,7 +210,15 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
       stopCurrent();
       return;
     }
-    // Stop précédent
+    // Capturer la hauteur actuelle de la carte avant masquage du contenu
+    try {
+      const el = document.querySelector<HTMLElement>(`[data-ch-card='${index}']`);
+      if (el) {
+        const h = el.getBoundingClientRect().height;
+        setLockedChallengeHeights(prev => ({ ...prev, [index]: h }));
+      }
+    } catch {}
+    // Stop précédent (après mesure)
     stopCurrent();
     setAudioError(null);
     const minutes = parseDurationMinutes(challenge.duration);
@@ -328,6 +339,14 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
       stopCurrent();
       return;
     }
+    // Capturer hauteur avant masquage
+    try {
+      const el = document.querySelector<HTMLElement>(`[data-imm-card='${index}']`);
+      if (el) {
+        const h = el.getBoundingClientRect().height;
+        setLockedImmediateHeights(prev => ({ ...prev, [index]: h }));
+      }
+    } catch {}
     stopCurrent();
     setAudioError(null);
     const minutes = parseDurationMinutes(action.duration);
@@ -596,6 +615,36 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userContext?.mood, userContext?.stress, userContext?.energy]);
 
+  // Capturer les hauteurs de base après chargement des suggestions (avant lecture)
+  useEffect(() => {
+    // Immediate actions
+    try {
+      if (suggestions?.immediate_actions) {
+        suggestions.immediate_actions.forEach((_, idx) => {
+          if (lockedImmediateHeights[idx]) return; // déjà capturé
+          const el = document.querySelector<HTMLElement>(`[data-imm-card='${idx}']`);
+            if (el) {
+              const h = el.getBoundingClientRect().height;
+              if (h > 0) setLockedImmediateHeights(prev => ({ ...prev, [idx]: h }));
+            }
+        });
+      }
+    } catch {}
+    // Challenges
+    try {
+      if (suggestions?.challenges) {
+        suggestions.challenges.forEach((_, idx) => {
+          if (lockedChallengeHeights[idx]) return;
+          const el = document.querySelector<HTMLElement>(`[data-ch-card='${idx}']`);
+          if (el) {
+            const h = el.getBoundingClientRect().height;
+            if (h > 0) setLockedChallengeHeights(prev => ({ ...prev, [idx]: h }));
+          }
+        });
+      }
+    } catch {}
+  }, [suggestions, lockedImmediateHeights, lockedChallengeHeights]);
+
   const getPriorityColor = (priority?: string) => {
     switch (priority) {
       case 'urgent': return 'bg-red-100 text-red-700 border-red-200';
@@ -638,7 +687,12 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
             const ss = (remainingSeconds % 60).toString().padStart(2, '0');
             const audioLangs = action.audio_variants ? Object.keys(action.audio_variants) : [];
             return (
-              <div key={index} className={`p-4 rounded-lg border border-red-200 relative overflow-hidden transition-colors ${isPlaying ? 'ring-2 ring-red-300 bg-transparent' : 'bg-white/60 backdrop-blur-sm'}`}>
+              <div
+                key={index}
+                data-imm-card={index}
+                className={`p-4 rounded-lg border border-red-200 relative overflow-hidden transition-colors ${isPlaying ? 'ring-2 ring-red-300 bg-transparent' : 'bg-white/60 backdrop-blur-sm'}`}
+                style={isPlaying && lockedImmediateHeights[index] ? { minHeight: lockedImmediateHeights[index] } : undefined}
+              >
                 {isPlaying && !audioLoading && (
                   <DynamicAudioBackdrop playing darkOverlayOpacity={0.2} className="opacity-100" />
                 )}
@@ -817,7 +871,12 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
             const ss = (remainingSeconds % 60).toString().padStart(2, '0');
             const audioLangs = challenge.audio_variants ? Object.keys(challenge.audio_variants) : [];
             return (
-              <div key={index} className={`p-4 rounded-lg border relative overflow-hidden transition-colors ${isPlaying ? 'ring-2 ring-orange-300 bg-transparent' : 'bg-white/60 backdrop-blur-sm'}`}>
+              <div
+                key={index}
+                data-ch-card={index}
+                className={`p-4 rounded-lg border relative overflow-hidden transition-colors ${isPlaying ? 'ring-2 ring-orange-300 bg-transparent' : 'bg-white/60 backdrop-blur-sm'}`}
+                style={isPlaying && lockedChallengeHeights[index] ? { minHeight: lockedChallengeHeights[index] } : undefined}
+              >
                 {isPlaying && !audioLoading && (
                   <DynamicAudioBackdrop playing darkOverlayOpacity={0.2} className="opacity-100" />
                 )}
