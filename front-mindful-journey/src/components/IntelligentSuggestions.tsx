@@ -505,31 +505,48 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
   const pauseChallenge = () => {
     if (!audioRef.current) return;
     try { audioRef.current.pause(); } catch {}
+    // Stop interval so countdown freezes
     if (timerRef.current) {
       window.clearInterval(timerRef.current);
       timerRef.current = null;
     }
+    // Recalibrate remaining time based on real audio currentTime if possible
+    try {
+      if (totalSeconds > 0 && audioRef.current && isFinite(audioRef.current.currentTime)) {
+        const elapsed = Math.floor(audioRef.current.currentTime);
+        const newRemaining = Math.max(0, totalSeconds - elapsed);
+        setRemainingSeconds(prev => (Math.abs(prev - newRemaining) > 1 ? newRemaining : prev));
+      }
+    } catch {}
     setIsPaused(true);
   };
 
   const resumeChallenge = () => {
     if (!audioRef.current) return;
-    audioRef.current.play().catch(err => {
+    // Sync remainingSeconds with currentTime in case user scrubbed externally
+    try {
+      if (totalSeconds > 0 && isFinite(audioRef.current.currentTime)) {
+        const elapsed = Math.floor(audioRef.current.currentTime);
+        setRemainingSeconds(Math.max(0, totalSeconds - elapsed));
+      }
+    } catch {}
+    audioRef.current.play().then(() => {
+      if (!timerRef.current) {
+        timerRef.current = window.setInterval(() => {
+          setRemainingSeconds(prev => {
+            if (prev <= 1) {
+              clearAudio();
+              return 0;
+            }
+            return prev - 1;
+          });
+        }, 1000);
+      }
+      setIsPaused(false);
+    }).catch(err => {
       setAudioError('Impossible de reprendre');
       console.warn('Resume error', err);
     });
-    if (!timerRef.current) {
-      timerRef.current = window.setInterval(() => {
-        setRemainingSeconds(prev => {
-          if (prev <= 1) {
-            clearAudio();
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
-    setIsPaused(false);
   };
 
   const toggleChallengeText = (index: number) => setOpenChallengeTexts(p => ({ ...p, [index]: !p[index] }));
