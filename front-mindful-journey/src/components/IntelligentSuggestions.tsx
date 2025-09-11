@@ -638,12 +638,12 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
             const ss = (remainingSeconds % 60).toString().padStart(2, '0');
             const audioLangs = action.audio_variants ? Object.keys(action.audio_variants) : [];
             return (
-              <div key={index} className={`bg-white/70 backdrop-blur-sm p-4 rounded-lg border border-red-200 relative overflow-hidden ${isPlaying ? 'ring-2 ring-red-300' : ''}`}>
+              <div key={index} className={`p-4 rounded-lg border border-red-200 relative overflow-hidden transition-colors ${isPlaying ? 'ring-2 ring-red-300 bg-transparent' : 'bg-white/60 backdrop-blur-sm'}`}>
                 {isPlaying && !audioLoading && (
-                  <DynamicAudioBackdrop playing className="opacity-80" />
+                  <DynamicAudioBackdrop playing darkOverlayOpacity={0.2} className="opacity-100" />
                 )}
                 {isPlaying && (
-                  <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/20 to-black/40 pointer-events-none" />
+                  <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/5 to-black/25 pointer-events-none" />
                 )}
                 <div className={isPlaying ? 'relative z-10' : 'relative'}>
                 {!isPlaying && (
@@ -678,10 +678,7 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                     <div className="h-2 bg-gray-200 rounded overflow-hidden">
                       <div className="h-full bg-red-400 transition-all duration-500" style={{ width: `${progress * 100}%` }} />
                     </div>
-                    <div className="flex justify-between text-xs text-gray-500 mt-1">
-                      <span>Guidage en cours</span>
-                      <span>{mm}:{ss}</span>
-                    </div>
+                    <div className="mt-1 text-center text-[10px] text-gray-400 tracking-wider">{mm}:{ss}</div>
                   </div>
                 )}
                 {audioError && (
@@ -749,30 +746,20 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                   {isPlaying && (
                     <div className="flex flex-col items-center gap-3">
                       <div className="flex items-center justify-center gap-6">
-                        <Button size="sm" variant="ghost" disabled={audioLoading || index === 0} onClick={() => {
-                          if (index > 0) startImmediateAudio(index - 1, suggestions!.immediate_actions[index - 1], undefined, true);
-                        }} aria-label="Précédent">
+                        <Button size="sm" variant="ghost" disabled={audioLoading || index === 0} onClick={() => { if (index > 0) startImmediateAudio(index - 1, suggestions!.immediate_actions[index - 1], undefined, true); }} aria-label="Précédent">
                           <SkipBack className="h-6 w-6" />
                         </Button>
                         <Button size="sm" variant="ghost" disabled={audioLoading} onClick={() => (isPaused ? resumeChallenge() : pauseChallenge())} aria-label={isPaused ? 'Lecture' : 'Pause'}>
                           {isPaused ? <Play className="h-7 w-7" /> : <Pause className="h-7 w-7" />}
                         </Button>
-                        <Button size="sm" variant="ghost" disabled={audioLoading || index === suggestions!.immediate_actions.length - 1} onClick={() => {
-                          if (index < suggestions!.immediate_actions.length - 1) startImmediateAudio(index + 1, suggestions!.immediate_actions[index + 1], undefined, true);
-                        }} aria-label="Suivant">
+                        <Button size="sm" variant="ghost" disabled={audioLoading || index === suggestions!.immediate_actions.length - 1} onClick={() => { if (index < suggestions!.immediate_actions.length - 1) startImmediateAudio(index + 1, suggestions!.immediate_actions[index + 1], undefined, true); }} aria-label="Suivant">
                           <SkipForward className="h-6 w-6" />
                         </Button>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button size="sm" variant={openImmediateTexts[index] ? 'default' : 'outline'} onClick={() => toggleImmediateText(index)}>
-                          {openImmediateTexts[index] ? 'Masquer texte' : 'Texte'}
-                        </Button>
-                        <Button size="sm" variant="outline" onClick={() => stopCurrent()}>Stop</Button>
                       </div>
                     </div>
                   )}
                 </div>
-                {customImmediateAudioUrls[index] && (
+                {!isPlaying && customImmediateAudioUrls[index] && (
                   <div className="mt-1 text-xs text-gray-500 truncate">{(customImmediateUrlOriginalNames.current[index] || '').startsWith('App:') ? 'Audio intégré: ' : 'Audio local: '}{customImmediateUrlOriginalNames.current[index]}</div>
                 )}
                 {openImmediateTexts[index] && (
@@ -830,12 +817,12 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
             const ss = (remainingSeconds % 60).toString().padStart(2, '0');
             const audioLangs = challenge.audio_variants ? Object.keys(challenge.audio_variants) : [];
             return (
-              <div key={index} className={`bg-white/70 backdrop-blur-sm p-4 rounded-lg border relative overflow-hidden ${isPlaying ? 'ring-2 ring-orange-300' : ''}`}>
+              <div key={index} className={`p-4 rounded-lg border relative overflow-hidden transition-colors ${isPlaying ? 'ring-2 ring-orange-300 bg-transparent' : 'bg-white/60 backdrop-blur-sm'}`}>
                 {isPlaying && !audioLoading && (
-                  <DynamicAudioBackdrop playing className="opacity-80" />
+                  <DynamicAudioBackdrop playing darkOverlayOpacity={0.2} className="opacity-100" />
                 )}
                 {isPlaying && (
-                  <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/15 to-black/40 pointer-events-none" />
+                  <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/5 to-black/25 pointer-events-none" />
                 )}
                 <div className={isPlaying ? 'relative z-10' : 'relative'}>
                 {!isPlaying && (
@@ -874,10 +861,7 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                     <div className="h-2 bg-gray-200 rounded overflow-hidden">
                       <div className="h-full bg-orange-400 transition-all duration-500" style={{ width: `${progress * 100}%` }} />
                     </div>
-                    <div className="flex justify-between text-xs text-gray-500 mt-1">
-                      <span>Guidage en cours</span>
-                      <span>{mm}:{ss}</span>
-                    </div>
+                    <div className="mt-1 text-center text-[10px] text-gray-400 tracking-wider">{mm}:{ss}</div>
                   </div>
                 )}
                 {audioError && (
@@ -955,15 +939,9 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                            <SkipForward className="h-6 w-6" />
                          </Button>
                        </div>
-                       <div className="flex gap-2">
-                         <Button size="sm" variant={openChallengeTexts[index] ? 'default' : 'outline'} onClick={() => toggleChallengeText(index)}>
-                           {openChallengeTexts[index] ? 'Masquer texte' : 'Texte'}
-                         </Button>
-                         <Button size="sm" variant="outline" onClick={() => stopCurrent()}>Stop</Button>
-                       </div>
                      </div>
                    )}
-                  {customAudioUrls[index] && (
+                  {!isPlaying && customAudioUrls[index] && (
                     <div className="text-xs text-gray-500 truncate">{(customUrlOriginalNames.current[index] || '').startsWith('App:') ? 'Audio intégré: ' : 'Audio local: '}{customUrlOriginalNames.current[index]}</div>
                   )}
                   {openChallengeTexts[index] && (
