@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import DynamicAudioBackdrop from './DynamicAudioBackdrop';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -633,29 +634,40 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
             const ss = (remainingSeconds % 60).toString().padStart(2, '0');
             const audioLangs = action.audio_variants ? Object.keys(action.audio_variants) : [];
             return (
-              <div key={index} className={`bg-white p-4 rounded-lg border border-red-200 relative ${isPlaying ? 'ring-2 ring-red-300' : ''}`}>
-                <div className="flex items-start justify-between mb-2 gap-2 min-w-0">
-                  <div className="flex items-center gap-2 min-w-0">
-                    {renderEmoji(action.icon)}
-                    <h4 className="font-medium text-red-800 line-clamp-1 break-anywhere">{action.title}</h4>
-                  </div>
-                  <Badge className={getPriorityColor(action.priority)}>
-                    {action.priority}
-                  </Badge>
-                </div>
-                <p className="text-sm text-gray-600 mb-3 line-clamp-2 break-anywhere">{action.description}</p>
-                {action.action_steps && (
-                  <div className="space-y-1 mb-2">
-                    <p className="text-xs font-medium text-gray-700">Étapes :</p>
-                    <ol className="text-xs text-gray-600 space-y-1">
-                      {action.action_steps.map((step, stepIndex) => (
-                        <li key={stepIndex} className="flex items-start gap-2 break-anywhere">
-                          <span className="text-red-500 font-bold">{stepIndex + 1}.</span>
-                          {step}
-                        </li>
-                      ))}
-                    </ol>
-                  </div>
+              <div key={index} className={`bg-white/70 backdrop-blur-sm p-4 rounded-lg border border-red-200 relative overflow-hidden ${isPlaying ? 'ring-2 ring-red-300' : ''}`}>
+                {isPlaying && !audioLoading && (
+                  <DynamicAudioBackdrop playing className="opacity-80" />
+                )}
+                {isPlaying && (
+                  <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/20 to-black/40 pointer-events-none" />
+                )}
+                <div className={isPlaying ? 'relative z-10' : 'relative'}>
+                {!isPlaying && (
+                  <>
+                    <div className="flex items-start justify-between mb-2 gap-2 min-w-0">
+                      <div className="flex items-center gap-2 min-w-0">
+                        {renderEmoji(action.icon)}
+                        <h4 className="font-medium text-red-800 line-clamp-1 break-anywhere">{action.title}</h4>
+                      </div>
+                      <Badge className={getPriorityColor(action.priority)}>
+                        {action.priority}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-gray-600 mb-3 line-clamp-2 break-anywhere">{action.description}</p>
+                    {action.action_steps && (
+                      <div className="space-y-1 mb-2">
+                        <p className="text-xs font-medium text-gray-700">Étapes :</p>
+                        <ol className="text-xs text-gray-600 space-y-1">
+                          {action.action_steps.map((step, stepIndex) => (
+                            <li key={stepIndex} className="flex items-start gap-2 break-anywhere">
+                              <span className="text-red-500 font-bold">{stepIndex + 1}.</span>
+                              {step}
+                            </li>
+                          ))}
+                        </ol>
+                      </div>
+                    )}
+                  </>
                 )}
                 {isPlaying && (
                   <div className="mb-3">
@@ -786,6 +798,7 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                 {isPlaying && remainingSeconds === 0 && (
                   <div className="mt-2 text-xs text-green-600 font-medium">Action complétée ✅</div>
                 )}
+                </div>
               </div>
             );
           })}
@@ -813,33 +826,44 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
             const ss = (remainingSeconds % 60).toString().padStart(2, '0');
             const audioLangs = challenge.audio_variants ? Object.keys(challenge.audio_variants) : [];
             return (
-              <div key={index} className={`bg-white p-4 rounded-lg border relative ${isPlaying ? 'ring-2 ring-orange-300' : ''}`}>
-                <div className="flex items-start justify-between mb-2 gap-2 min-w-0">
-                  <div className="flex items-center gap-2 min-w-0">
-                    {renderEmoji(challenge.icon)}
-                    <h4 className="font-medium line-clamp-1 break-anywhere">{challenge.title}</h4>
-                  </div>
-                  <div className="flex flex-col items-end gap-1 shrink-0">
-                    <Badge variant="outline">{getDifficultyIcon(challenge.difficulty)} {challenge.duration}</Badge>
-                    <Badge variant="secondary">{challenge.category}</Badge>
-                    {challenge.score && (
-                      <div className="flex items-center gap-1 text-xs text-gray-500"><Star className="h-3 w-3" />{challenge.score}% match</div>
+              <div key={index} className={`bg-white/70 backdrop-blur-sm p-4 rounded-lg border relative overflow-hidden ${isPlaying ? 'ring-2 ring-orange-300' : ''}`}>
+                {isPlaying && !audioLoading && (
+                  <DynamicAudioBackdrop playing className="opacity-80" />
+                )}
+                {isPlaying && (
+                  <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/15 to-black/40 pointer-events-none" />
+                )}
+                <div className={isPlaying ? 'relative z-10' : 'relative'}>
+                {!isPlaying && (
+                  <>
+                    <div className="flex items-start justify-between mb-2 gap-2 min-w-0">
+                      <div className="flex items-center gap-2 min-w-0">
+                        {renderEmoji(challenge.icon)}
+                        <h4 className="font-medium line-clamp-1 break-anywhere">{challenge.title}</h4>
+                      </div>
+                      <div className="flex flex-col items-end gap-1 shrink-0">
+                        <Badge variant="outline">{getDifficultyIcon(challenge.difficulty)} {challenge.duration}</Badge>
+                        <Badge variant="secondary">{challenge.category}</Badge>
+                        {challenge.score && (
+                          <div className="flex items-center gap-1 text-xs text-gray-500"><Star className="h-3 w-3" />{challenge.score}% match</div>
+                        )}
+                      </div>
+                    </div>
+                    <p className="text-sm text-gray-600 line-clamp-2 break-anywhere">{challenge.description}</p>
+                    {challenge.action_steps && (
+                      <div className="mt-2 space-y-1">
+                        <p className="text-xs font-medium text-gray-700">Étapes :</p>
+                        <ol className="text-xs text-gray-600 space-y-1">
+                          {challenge.action_steps.map((step, i) => (
+                            <li key={i} className="flex items-start gap-2 break-anywhere">
+                              <span className="text-orange-500 font-bold">{i + 1}.</span>
+                              {step}
+                            </li>
+                          ))}
+                        </ol>
+                      </div>
                     )}
-                  </div>
-                </div>
-                <p className="text-sm text-gray-600 line-clamp-2 break-anywhere">{challenge.description}</p>
-                {challenge.action_steps && (
-                  <div className="mt-2 space-y-1">
-                    <p className="text-xs font-medium text-gray-700">Étapes :</p>
-                    <ol className="text-xs text-gray-600 space-y-1">
-                      {challenge.action_steps.map((step, i) => (
-                        <li key={i} className="flex items-start gap-2 break-anywhere">
-                          <span className="text-orange-500 font-bold">{i + 1}.</span>
-                          {step}
-                        </li>
-                      ))}
-                    </ol>
-                  </div>
+                  </>
                 )}
                 {isPlaying && (
                   <div className="mt-3">
@@ -992,10 +1016,11 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                       )}
                     </div>
                   )}
+                  {isPlaying && remainingSeconds === 0 && (
+                    <div className="mt-2 text-xs text-green-600 font-medium">Défi complété 🎉</div>
+                  )}
                 </div>
-                {isPlaying && remainingSeconds === 0 && (
-                  <div className="mt-2 text-xs text-green-600 font-medium">Défi complété 🎉</div>
-                )}
+                </div>
               </div>
             );
           })}
@@ -1132,8 +1157,10 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
     );
   }
 
+  const anyAudioPlaying = playingChallengeIndex !== null || playingImmediateIndex !== null;
+
   return (
-    <div className="space-y-6">
+  <div className="space-y-6 relative">
       {/* Header avec mise à jour */}
       <div className="flex items-center justify-between">
         <div>
