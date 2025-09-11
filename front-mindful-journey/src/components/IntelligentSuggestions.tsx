@@ -14,7 +14,11 @@ import {
   UserCheck,
   Target,
   RefreshCw,
-  Sparkles
+  Sparkles,
+  SkipBack,
+  SkipForward,
+  Play,
+  Pause
 } from 'lucide-react';
 import apiService from '@/lib/api';
 
@@ -692,81 +696,81 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                     )}
                   </div>
                 )}
-                <div className="flex gap-2 flex-wrap">
-                  {audioLangs.length > 0 && (
-                    <div className="flex items-center gap-1 text-xs">
-                      <label htmlFor={`imm-lang-${index}`} className="text-gray-600">Langue:</label>
-                      <select
-                        id={`imm-lang-${index}`}
-                        className="border rounded px-1 py-0.5 text-xs"
-                        value={immediateLangSelections[index] || ''}
-                        onChange={e => {
-                          setImmediateLangSelections(prev => ({ ...prev, [index]: e.target.value }));
-                          if (isPlaying) {
-                            // Redémarrer avec nouvelle langue
-                            startImmediateAudio(index, action, undefined, true);
-                          }
-                        }}
-                      >
-                        <option value="">Auto</option>
-                        {audioLangs.map(lang => <option key={lang} value={lang}>{lang}</option>)}
-                      </select>
-                    </div>
-                  )}
+                <div className="flex flex-col gap-2">
                   {!isPlaying && (
-                    <Button size="sm" className="flex-1 bg-red-600 hover:bg-red-700" onClick={() => startImmediateAudio(index, action)}>
-                      Commencer avec audio
-                    </Button>
-                  )}
-                  {isPlaying && remainingSeconds > 0 && !audioLoading && (
-                    <Button size="sm" className="flex-1 bg-red-600 hover:bg-red-700" onClick={() => (isPaused ? resumeChallenge() : pauseChallenge())}>
-                      {isPaused ? 'Reprendre' : `Pause (${mm}:${ss})`}
-                    </Button>
+                    <div className="flex gap-2 flex-wrap">
+                      {audioLangs.length > 0 && (
+                        <div className="flex items-center gap-1 text-xs">
+                          <label htmlFor={`imm-lang-${index}`} className="text-gray-600">Langue:</label>
+                          <select
+                            id={`imm-lang-${index}`}
+                            className="border rounded px-1 py-0.5 text-xs"
+                            value={immediateLangSelections[index] || ''}
+                            onChange={e => {
+                              setImmediateLangSelections(prev => ({ ...prev, [index]: e.target.value }));
+                              if (isPlaying) startImmediateAudio(index, action, undefined, true);
+                            }}
+                          >
+                            <option value="">Auto</option>
+                            {audioLangs.map(lang => <option key={lang} value={lang}>{lang}</option>)}
+                          </select>
+                        </div>
+                      )}
+                      <Button size="sm" className="flex-1 bg-red-600 hover:bg-red-700" onClick={() => startImmediateAudio(index, action)}>Commencer avec audio</Button>
+                      <Button size="sm" variant={openImmediateTexts[index] ? 'default' : 'outline'} onClick={() => toggleImmediateText(index)}>
+                        {openImmediateTexts[index] ? 'Masquer texte' : 'Texte'}
+                      </Button>
+                      {appTracks.length > 0 && (
+                        <div className="flex items-center gap-1 text-xs">
+                          <label htmlFor={`imm-app-audio-${index}`} className="text-gray-600">Audio intégré:</label>
+                          <select
+                            id={`imm-app-audio-${index}`}
+                            className="border rounded px-1 py-0.5 text-xs"
+                            defaultValue=""
+                            onChange={e => {
+                              const id = e.target.value;
+                              const tr = appTracks.find(t => t.id === id);
+                              if (tr) handleSelectImmediateAppAudio(index, tr);
+                            }}
+                          >
+                            <option value="">Choisir…</option>
+                            {appTracks.map(t => (
+                              <option key={t.id} value={t.id}>{t.title}</option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+                      <div className="relative">
+                        <input id={`file-imm-audio-${index}`} type="file" accept="audio/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) handleSelectImmediateAudio(index, f); }} />
+                        <Button type="button" size="sm" variant="outline" onClick={() => document.getElementById(`file-imm-audio-${index}`)?.click()}>Choisir audio</Button>
+                      </div>
+                    </div>
                   )}
                   {isPlaying && (
-                    <Button size="sm" variant="outline" onClick={() => stopCurrent()}>Stop</Button>
-                  )}
-                  <Button size="sm" variant={openImmediateTexts[index] ? 'default' : 'outline'} onClick={() => toggleImmediateText(index)}>
-                    {openImmediateTexts[index] ? 'Masquer texte' : 'Texte'}
-                  </Button>
-                  {isPlaying && audioLoading && (
-                    <Button size="sm" disabled className="flex-1">Chargement...</Button>
-                  )}
-                  {appTracks.length > 0 && (
-                    <div className="flex items-center gap-1 text-xs">
-                      <label htmlFor={`imm-app-audio-${index}`} className="text-gray-600">Audio intégré:</label>
-                      <select
-                        id={`imm-app-audio-${index}`}
-                        className="border rounded px-1 py-0.5 text-xs"
-                        defaultValue=""
-                        onChange={e => {
-                          const id = e.target.value;
-                          const tr = appTracks.find(t => t.id === id);
-                          if (tr) handleSelectImmediateAppAudio(index, tr);
-                        }}
-                      >
-                        <option value="">Choisir…</option>
-                        {appTracks.map(t => (
-                          <option key={t.id} value={t.id}>{t.title}</option>
-                        ))}
-                      </select>
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="flex items-center justify-center gap-6">
+                        <Button size="sm" variant="ghost" disabled={audioLoading || index === 0} onClick={() => {
+                          if (index > 0) startImmediateAudio(index - 1, suggestions!.immediate_actions[index - 1], undefined, true);
+                        }} aria-label="Précédent">
+                          <SkipBack className="h-6 w-6" />
+                        </Button>
+                        <Button size="sm" variant="ghost" disabled={audioLoading} onClick={() => (isPaused ? resumeChallenge() : pauseChallenge())} aria-label={isPaused ? 'Lecture' : 'Pause'}>
+                          {isPaused ? <Play className="h-7 w-7" /> : <Pause className="h-7 w-7" />}
+                        </Button>
+                        <Button size="sm" variant="ghost" disabled={audioLoading || index === suggestions!.immediate_actions.length - 1} onClick={() => {
+                          if (index < suggestions!.immediate_actions.length - 1) startImmediateAudio(index + 1, suggestions!.immediate_actions[index + 1], undefined, true);
+                        }} aria-label="Suivant">
+                          <SkipForward className="h-6 w-6" />
+                        </Button>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button size="sm" variant={openImmediateTexts[index] ? 'default' : 'outline'} onClick={() => toggleImmediateText(index)}>
+                          {openImmediateTexts[index] ? 'Masquer texte' : 'Texte'}
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => stopCurrent()}>Stop</Button>
+                      </div>
                     </div>
                   )}
-                  <div className="relative">
-                    <input
-                      id={`file-imm-audio-${index}`}
-                      type="file"
-                      accept="audio/*"
-                      className="hidden"
-                      onChange={e => {
-                        const f = e.target.files?.[0];
-                        if (f) handleSelectImmediateAudio(index, f);
-                      }}
-                    />
-                    <Button type="button" size="sm" variant="outline" onClick={() => document.getElementById(`file-imm-audio-${index}`)?.click()}>
-                      Choisir audio
-                    </Button>
-                  </div>
                 </div>
                 {customImmediateAudioUrls[index] && (
                   <div className="mt-1 text-xs text-gray-500 truncate">{(customImmediateUrlOriginalNames.current[index] || '').startsWith('App:') ? 'Audio intégré: ' : 'Audio local: '}{customImmediateUrlOriginalNames.current[index]}</div>
@@ -888,107 +892,77 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                     )}
                   </div>
                 )}
-                <div className="mt-3 flex flex-col gap-2">
-                  <div className="flex gap-2 flex-wrap">
-                    {audioLangs.length > 0 && (
-                      <div className="flex items-center gap-1 text-xs">
-                        <label htmlFor={`ch-lang-${index}`} className="text-gray-600">Langue:</label>
-                        <select
-                          id={`ch-lang-${index}`}
-                          className="border rounded px-1 py-0.5 text-xs"
-                          value={challengeLangSelections[index] || ''}
-                          onChange={e => {
-                            setChallengeLangSelections(prev => ({ ...prev, [index]: e.target.value }));
-                            if (isPlaying) {
-                              startChallengeAudio(index, challenge, undefined, true);
-                            }
-                          }}
-                        >
-                          <option value="">Auto</option>
-                          {audioLangs.map(lang => <option key={lang} value={lang}>{lang}</option>)}
-                        </select>
-                      </div>
-                    )}
-                    {!isPlaying && (
-                      <Button
-                        size="sm"
-                        className="flex-1"
-                        variant="outline"
-                        onClick={() => startChallengeAudio(index, challenge)}
-                      >
-                        Commencer avec audio
-                      </Button>
-                    )}
-                    {isPlaying && remainingSeconds > 0 && !audioLoading && (
-                      <Button
-                        size="sm"
-                        className="flex-1"
-                        variant="default"
-                        onClick={() => (isPaused ? resumeChallenge() : pauseChallenge())}
-                      >
-                        {isPaused ? 'Reprendre' : `Pause (${mm}:${ss})`}
-                      </Button>
-                    )}
-                    {isPlaying && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => stopCurrent()}
-                      >
-                        Stop
-                      </Button>
-                    )}
-                    <Button
-                      size="sm"
-                      variant={openChallengeTexts[index] ? 'default' : 'outline'}
-                      onClick={() => toggleChallengeText(index)}
-                    >
-                      {openChallengeTexts[index] ? 'Masquer texte' : 'Texte'}
-                    </Button>
-                    {isPlaying && audioLoading && (
-                      <Button size="sm" disabled className="flex-1">Chargement...</Button>
-                    )}
-                    {appTracks.length > 0 && (
-                      <div className="flex items-center gap-1 text-xs">
-                        <label htmlFor={`ch-app-audio-${index}`} className="text-gray-600">Audio intégré:</label>
-                        <select
-                          id={`ch-app-audio-${index}`}
-                          className="border rounded px-1 py-0.5 text-xs"
-                          defaultValue=""
-                          onChange={e => {
-                            const id = e.target.value;
-                            const tr = appTracks.find(t => t.id === id);
-                            if (tr) handleSelectAppAudio(index, tr);
-                          }}
-                        >
-                          <option value="">Choisir…</option>
-                          {appTracks.map(t => (
-                            <option key={t.id} value={t.id}>{t.title}</option>
-                          ))}
-                        </select>
-                      </div>
-                    )}
-                    <div className="relative">
-                      <input
-                        id={`file-audio-${index}`}
-                        type="file"
-                        accept="audio/*"
-                        className="hidden"
-                        onChange={e => {
-                          const f = e.target.files?.[0];
-                          if (f) handleSelectAudio(index, f);
-                        }}
-                      />
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        onClick={() => document.getElementById(`file-audio-${index}`)?.click()}
-                      >
-                        Choisir audio
-                      </Button>
-                    </div>
-                  </div>
+                 <div className="mt-3 flex flex-col gap-2">
+                   {!isPlaying && (
+                     <div className="flex gap-2 flex-wrap">
+                       {audioLangs.length > 0 && (
+                         <div className="flex items-center gap-1 text-xs">
+                           <label htmlFor={`ch-lang-${index}`} className="text-gray-600">Langue:</label>
+                           <select
+                             id={`ch-lang-${index}`}
+                             className="border rounded px-1 py-0.5 text-xs"
+                             value={challengeLangSelections[index] || ''}
+                             onChange={e => {
+                               setChallengeLangSelections(prev => ({ ...prev, [index]: e.target.value }));
+                               if (isPlaying) startChallengeAudio(index, challenge, undefined, true);
+                             }}
+                           >
+                             <option value="">Auto</option>
+                             {audioLangs.map(lang => <option key={lang} value={lang}>{lang}</option>)}
+                           </select>
+                         </div>
+                       )}
+                       <Button size="sm" className="flex-1" variant="outline" onClick={() => startChallengeAudio(index, challenge)}>Commencer avec audio</Button>
+                       <Button size="sm" variant={openChallengeTexts[index] ? 'default' : 'outline'} onClick={() => toggleChallengeText(index)}>
+                         {openChallengeTexts[index] ? 'Masquer texte' : 'Texte'}
+                       </Button>
+                       {appTracks.length > 0 && (
+                         <div className="flex items-center gap-1 text-xs">
+                           <label htmlFor={`ch-app-audio-${index}`} className="text-gray-600">Audio intégré:</label>
+                           <select
+                             id={`ch-app-audio-${index}`}
+                             className="border rounded px-1 py-0.5 text-xs"
+                             defaultValue=""
+                             onChange={e => {
+                               const id = e.target.value;
+                               const tr = appTracks.find(t => t.id === id);
+                               if (tr) handleSelectAppAudio(index, tr);
+                             }}
+                           >
+                             <option value="">Choisir…</option>
+                             {appTracks.map(t => (
+                               <option key={t.id} value={t.id}>{t.title}</option>
+                             ))}
+                           </select>
+                         </div>
+                       )}
+                       <div className="relative">
+                         <input id={`file-audio-${index}`} type="file" accept="audio/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) handleSelectAudio(index, f); }} />
+                         <Button type="button" size="sm" variant="outline" onClick={() => document.getElementById(`file-audio-${index}`)?.click()}>Choisir audio</Button>
+                       </div>
+                     </div>
+                   )}
+                   {isPlaying && (
+                     <div className="flex flex-col items-center gap-3">
+                       <div className="flex items-center justify-center gap-6">
+                         <Button size="sm" variant="ghost" disabled={audioLoading || index === 0} onClick={() => { if (index > 0) startChallengeAudio(index - 1, suggestions!.challenges[index - 1], undefined, true); }} aria-label="Précédent">
+                           <SkipBack className="h-6 w-6" />
+                         </Button>
+                         <Button size="sm" variant="ghost" disabled={audioLoading} onClick={() => (isPaused ? resumeChallenge() : pauseChallenge())} aria-label={isPaused ? 'Lecture' : 'Pause'}>
+                           {isPaused ? <Play className="h-7 w-7" /> : <Pause className="h-7 w-7" />}
+                         </Button>
+                         <Button size="sm" variant="ghost" disabled={audioLoading || index === suggestions!.challenges.length - 1} onClick={() => { if (index < suggestions!.challenges.length - 1) startChallengeAudio(index + 1, suggestions!.challenges[index + 1], undefined, true); }} aria-label="Suivant">
+                           <SkipForward className="h-6 w-6" />
+                         </Button>
+                       </div>
+                       <div className="flex gap-2">
+                         <Button size="sm" variant={openChallengeTexts[index] ? 'default' : 'outline'} onClick={() => toggleChallengeText(index)}>
+                           {openChallengeTexts[index] ? 'Masquer texte' : 'Texte'}
+                         </Button>
+                         <Button size="sm" variant="outline" onClick={() => stopCurrent()}>Stop</Button>
+                       </div>
+                     </div>
+                   )}
                   {customAudioUrls[index] && (
                     <div className="text-xs text-gray-500 truncate">{(customUrlOriginalNames.current[index] || '').startsWith('App:') ? 'Audio intégré: ' : 'Audio local: '}{customUrlOriginalNames.current[index]}</div>
                   )}
