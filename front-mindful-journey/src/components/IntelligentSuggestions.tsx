@@ -690,7 +690,7 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
               <div
                 key={index}
                 data-imm-card={index}
-                className={`p-4 rounded-lg border border-red-200 relative overflow-hidden transition-colors ${isPlaying ? 'ring-2 ring-red-300 bg-transparent' : 'bg-white/60 backdrop-blur-sm'}`}
+                className={`p-4 pb-20 rounded-lg border border-red-200 relative overflow-hidden transition-colors ${isPlaying ? 'ring-2 ring-red-300 bg-transparent' : 'bg-white/60 backdrop-blur-sm'}`}
                 style={isPlaying && lockedImmediateHeights[index] ? { minHeight: lockedImmediateHeights[index] } : undefined}
               >
                 {isPlaying && !audioLoading && (
@@ -700,7 +700,7 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                   <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/5 to-black/25 pointer-events-none" />
                 )}
                 <div className={isPlaying ? 'relative z-10' : 'relative'}>
-                {!isPlaying && (
+                <div className={isPlaying ? 'invisible pointer-events-none select-none' : ''}>
                   <>
                     <div className="flex items-start justify-between mb-2 gap-2 min-w-0">
                       <div className="flex items-center gap-2 min-w-0">
@@ -726,7 +726,7 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                       </div>
                     )}
                   </>
-                )}
+                </div>
                 {isPlaying && (
                   <div className="mb-3">
                     <div className="h-2 bg-gray-200 rounded overflow-hidden">
@@ -830,7 +830,7 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                   <div className="mt-2 text-xs text-green-600 font-medium">Action complétée ✅</div>
                 )}
                 {isPlaying && (
-                  <div className="absolute bottom-0 left-0 right-0 px-3 pb-3 pt-5 flex flex-col items-center gap-2 bg-gradient-to-t from-black/60 via-black/30 to-transparent backdrop-blur-sm">
+                  <div className="absolute bottom-0 left-0 right-0 px-3 py-3 flex flex-col items-center gap-2 bg-black/55 backdrop-blur-sm border-t border-white/10">
                     <div className="w-full">
                       <div className="h-2 bg-white/25 rounded overflow-hidden">
                         <div className="h-full bg-red-500 transition-all duration-500" style={{ width: `${progress * 100}%` }} />
@@ -881,7 +881,7 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
               <div
                 key={index}
                 data-ch-card={index}
-                className={`p-4 rounded-lg border relative overflow-hidden transition-colors ${isPlaying ? 'ring-2 ring-orange-300 bg-transparent' : 'bg-white/60 backdrop-blur-sm'}`}
+                className={`p-4 pb-20 rounded-lg border relative overflow-hidden transition-colors ${isPlaying ? 'ring-2 ring-orange-300 bg-transparent' : 'bg-white/60 backdrop-blur-sm'}`}
                 style={isPlaying && lockedChallengeHeights[index] ? { minHeight: lockedChallengeHeights[index] } : undefined}
               >
                 {isPlaying && !audioLoading && (
@@ -891,7 +891,7 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                   <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/5 to-black/25 pointer-events-none" />
                 )}
                 <div className={isPlaying ? 'relative z-10' : 'relative'}>
-                {!isPlaying && (
+                <div className={isPlaying ? 'invisible pointer-events-none select-none' : ''}>
                   <>
                     <div className="flex items-start justify-between mb-2 gap-2 min-w-0">
                       <div className="flex items-center gap-2 min-w-0">
@@ -921,7 +921,7 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                       </div>
                     )}
                   </>
-                )}
+                </div>
                 {isPlaying && (
                   <div className="mt-3">
                     <div className="h-2 bg-gray-200 rounded overflow-hidden">
@@ -1024,7 +1024,7 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                     <div className="mt-2 text-xs text-green-600 font-medium">Défi complété 🎉</div>
                   )}
                   {isPlaying && (
-                    <div className="absolute bottom-0 left-0 right-0 px-3 pb-3 pt-5 flex flex-col items-center gap-2 bg-gradient-to-t from-black/60 via-black/30 to-transparent backdrop-blur-sm">
+                    <div className="absolute bottom-0 left-0 right-0 px-3 py-3 flex flex-col items-center gap-2 bg-black/55 backdrop-blur-sm border-t border-white/10">
                       <div className="w-full">
                         <div className="h-2 bg-white/25 rounded overflow-hidden">
                           <div className="h-full bg-orange-400 transition-all duration-500" style={{ width: `${progress * 100}%` }} />
