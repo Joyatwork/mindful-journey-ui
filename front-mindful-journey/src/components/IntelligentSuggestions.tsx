@@ -242,6 +242,7 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
     setRemainingSeconds(total);
     setPlayingChallengeIndex(index);
     setPlayingImmediateIndex(null);
+  setPlayingContentIndex(null);
     setAudioLoading(true);
   setIsPaused(false);
 
@@ -1022,14 +1023,14 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
               <div
                 key={index}
                 data-ch-card={index}
-                className={`p-4 ${isPlaying ? 'pb-0' : 'pb-6'} rounded-lg border relative overflow-hidden transition-colors ${isPlaying ? 'ring-2 ring-orange-300 bg-transparent' : 'bg-white/60 backdrop-blur-sm'}`}
-                style={isPlaying ? { minHeight: Math.max(lockedChallengeHeights[index] || 0, 260) } : undefined}
+                className={`p-4 ${isPlaying ? 'pb-0' : 'pb-6'} rounded-lg border relative overflow-hidden transition-colors ${isPlaying ? 'ring-2 ring-orange-300 bg-transparent flex flex-col' : 'bg-white/60 backdrop-blur-sm'}`}
+                style={isPlaying ? { height: Math.max(lockedChallengeHeights[index] || 0, 260) } : undefined}
               >
                 {isPlaying && !audioLoading && (
                   <DynamicAudioBackdrop playing darkOverlayOpacity={0.2} paused={isPaused} className="opacity-100" />
                 )}
                 {isPlaying && (
-                  <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/5 to-black/25 pointer-events-none" />
+                  <div className="absolute inset-0 bg-gradient-to-b from-black/15 via-black/5 to-black/30 pointer-events-none" />
                 )}
                 {isPlaying && (
                   <div className="absolute top-0 left-0 right-0 pt-4 px-4 text-center z-20 pointer-events-none">
@@ -1166,7 +1167,7 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                   {/* controls moved outside inner wrapper */}
                 </div>
                 {isPlaying && (
-                  <div className="absolute bottom-0 left-0 right-0 px-3 py-3 flex flex-col items-stretch gap-3 bg-black/60 backdrop-blur-sm border-t border-white/10 z-30">
+                  <div className="mt-auto px-3 py-3 flex flex-col items-stretch gap-3 bg-black/60 backdrop-blur-sm border-t border-white/10 z-30 relative rounded-b-lg">
                     <div className="w-full">
                       <div className="h-2 bg-white/25 rounded overflow-hidden">
                         <div className="h-full bg-orange-400 transition-all duration-500" style={{ width: `${progress * 100}%` }} />
