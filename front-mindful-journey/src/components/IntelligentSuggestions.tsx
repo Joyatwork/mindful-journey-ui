@@ -99,6 +99,7 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
   // Etat audio guidé pour les défis
   const [playingChallengeIndex, setPlayingChallengeIndex] = useState<number | null>(null);
   const [playingImmediateIndex, setPlayingImmediateIndex] = useState<number | null>(null);
+  const [playingContentIndex, setPlayingContentIndex] = useState<number | null>(null);
   const [remainingSeconds, setRemainingSeconds] = useState<number>(0);
   const [totalSeconds, setTotalSeconds] = useState<number>(0);
   const [audioLoading, setAudioLoading] = useState(false);
@@ -123,6 +124,7 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
   // Hauteurs verrouillées pour empêcher la réduction de la carte pendant la lecture
   const [lockedImmediateHeights, setLockedImmediateHeights] = useState<Record<number, number>>({});
   const [lockedChallengeHeights, setLockedChallengeHeights] = useState<Record<number, number>>({});
+  const [lockedContentHeights, setLockedContentHeights] = useState<Record<number, number>>({});
 
   // Génère des variantes d'URL robustes (gère accents NFC/NFD et caractères spéciaux)
   const buildUrlCandidates = useCallback((src?: string): string[] => {
@@ -196,6 +198,7 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
     }
     setPlayingChallengeIndex(null);
     setPlayingImmediateIndex(null);
+  setPlayingContentIndex(null);
     setRemainingSeconds(0);
     setTotalSeconds(0);
     setAudioLoading(false);
@@ -217,8 +220,18 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
       const el = document.querySelector<HTMLElement>(`[data-ch-card='${index}']`);
       if (el) {
         const h = el.getBoundingClientRect().height;
-        setLockedChallengeHeights(prev => ({ ...prev, [index]: h }));
+        if (h > 0) setLockedChallengeHeights(prev => ({ ...prev, [index]: h }));
       }
+      // Remesure post-layout pour stabiliser la hauteur avant overlay
+      setTimeout(() => {
+        try {
+          const el2 = document.querySelector<HTMLElement>(`[data-ch-card='${index}']`);
+          if (el2) {
+            const h2 = el2.getBoundingClientRect().height;
+            if (h2 > 0) setLockedChallengeHeights(prev => ({ ...prev, [index]: Math.max(prev[index] || 0, h2) }));
+          }
+        } catch {}
+      }, 80);
     } catch {}
     // Stop précédent (après mesure)
     stopCurrent();
@@ -453,6 +466,99 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
     }, 6000);
   }, [audioLoading, clearAudio, playingImmediateIndex, customImmediateAudioUrls, stopCurrent, immediateLangSelections, appTracks]);
 
+  // Lecture audio pour un contenu (style identique aux autres)
+  const startContentAudio = useCallback((index: number, item: Suggestion, overrideSrc?: string, forceRestart: boolean = false) => {
+    if (!forceRestart && !overrideSrc && playingContentIndex === index) {
+      stopCurrent();
+      return;
+    }
+    try {
+      const el = document.querySelector<HTMLElement>(`[data-co-card='${index}']`);
+      if (el) {
+        const h = el.getBoundingClientRect().height;
+        setLockedContentHeights(prev => ({ ...prev, [index]: h }));
+      }
+    } catch {}
+    stopCurrent();
+    setAudioError(null);
+    const minutes = parseDurationMinutes(item.duration);
+    const total = minutes * 60;
+    setTotalSeconds(total);
+    setRemainingSeconds(total);
+    setPlayingContentIndex(index);
+    setPlayingImmediateIndex(null);
+    setPlayingChallengeIndex(null);
+    setAudioLoading(true);
+    setIsPaused(false);
+    const chosen = overrideSrc || item.audio_url || appTracks[0]?.src;
+    if (!chosen) {
+      setAudioLoading(false);
+      setAudioError("Aucune source audio disponible pour ce contenu.");
+      return;
+    }
+    const mySeq = ++currentAudioSeqRef.current;
+    const candidates = buildUrlCandidates(chosen);
+    const tryIndex = (ci: number) => {
+      if (mySeq !== currentAudioSeqRef.current) return;
+      const url = candidates[ci];
+      setCurrentAudioUrl(url);
+      const audio = audioRef.current ?? new Audio();
+      audioRef.current = audio;
+      try { audio.pause(); audio.loop = false; } catch {}
+      audio.preload = 'auto';
+      try { audio.src = url; audio.load(); } catch {}
+      const onReady = () => {
+        if (mySeq !== currentAudioSeqRef.current) return;
+        try {
+          if (isFinite(audio.duration) && audio.duration > 0) {
+            audio.loop = audio.duration < total - 1;
+          } else {
+            audio.loop = true;
+          }
+        } catch {}
+        try {
+          audio.muted = true;
+          audio.play().then(() => { try { audio.muted = false; } catch {} }).catch(err => {
+            setAudioError('Lecture audio bloquée (interaction requise)');
+            console.warn('Audio play error', err);
+          });
+        } catch (err) {
+          setAudioError('Lecture audio bloquée (interaction requise)');
+          console.warn('Audio play error', err);
+        }
+        setAudioLoading(false);
+        timerRef.current = window.setInterval(() => {
+          setRemainingSeconds(prev => {
+            if (prev <= 1) {
+              clearAudio();
+              return 0;
+            }
+            return prev - 1;
+          });
+        }, 1000);
+      };
+      const onError = () => {
+        if (mySeq !== currentAudioSeqRef.current) return;
+        if (ci + 1 < candidates.length) {
+          tryIndex(ci + 1); return;
+        }
+        setAudioError(`Impossible de charger l'audio (${url})`);
+        clearAudio();
+      };
+      audio.addEventListener('canplay', onReady, { once: true });
+      audio.addEventListener('loadedmetadata', onReady, { once: true });
+      try { audio.muted = true; void audio.play(); } catch {}
+      audio.addEventListener('error', onError, { once: true });
+    };
+    tryIndex(0);
+    setTimeout(() => {
+      if (mySeq === currentAudioSeqRef.current && audioLoading) {
+        setAudioError('Chargement audio trop long');
+        clearAudio();
+      }
+    }, 6000);
+  }, [audioLoading, clearAudio, playingContentIndex, stopCurrent, appTracks]);
+
   // Sélection d'un fichier audio local pour un challenge
   const handleSelectAudio = (index: number, file: File) => {
     if (!file || !file.type.startsWith('audio/')) return;
@@ -665,6 +771,19 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
         });
       }
     } catch {}
+    // Content
+    try {
+      if (suggestions?.content) {
+        suggestions.content.forEach((_, idx) => {
+          if (lockedContentHeights[idx]) return;
+          const el = document.querySelector<HTMLElement>(`[data-co-card='${idx}']`);
+          if (el) {
+            const h = el.getBoundingClientRect().height;
+            if (h > 0) setLockedContentHeights(prev => ({ ...prev, [idx]: h }));
+          }
+        });
+      }
+    } catch {}
   }, [suggestions, lockedImmediateHeights, lockedChallengeHeights]);
 
   const getPriorityColor = (priority?: string) => {
@@ -712,8 +831,8 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
               <div
                 key={index}
                 data-imm-card={index}
-                className={`p-4 pb-6 rounded-lg border border-red-200 relative overflow-hidden transition-colors ${isPlaying ? 'ring-2 ring-red-300 bg-transparent' : 'bg-white/60 backdrop-blur-sm'}`}
-                style={isPlaying && lockedImmediateHeights[index] ? { minHeight: lockedImmediateHeights[index] } : undefined}
+                className={`p-4 ${isPlaying ? 'pb-0' : 'pb-6'} rounded-lg border border-red-200 relative overflow-hidden transition-colors ${isPlaying ? 'ring-2 ring-red-300 bg-transparent' : 'bg-white/60 backdrop-blur-sm'}`}
+                style={isPlaying ? { minHeight: Math.max(lockedImmediateHeights[index] || 0, 260) } : undefined}
               >
                 {isPlaying && !audioLoading && (
                   <DynamicAudioBackdrop playing darkOverlayOpacity={0.2} paused={isPaused} className="opacity-100" />
@@ -903,8 +1022,8 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
               <div
                 key={index}
                 data-ch-card={index}
-                className={`p-4 pb-6 rounded-lg border relative overflow-hidden transition-colors ${isPlaying ? 'ring-2 ring-orange-300 bg-transparent' : 'bg-white/60 backdrop-blur-sm'}`}
-                style={isPlaying && lockedChallengeHeights[index] ? { minHeight: lockedChallengeHeights[index] } : undefined}
+                className={`p-4 ${isPlaying ? 'pb-0' : 'pb-6'} rounded-lg border relative overflow-hidden transition-colors ${isPlaying ? 'ring-2 ring-orange-300 bg-transparent' : 'bg-white/60 backdrop-blur-sm'}`}
+                style={isPlaying ? { minHeight: Math.max(lockedChallengeHeights[index] || 0, 260) } : undefined}
               >
                 {isPlaying && !audioLoading && (
                   <DynamicAudioBackdrop playing darkOverlayOpacity={0.2} paused={isPaused} className="opacity-100" />
@@ -1154,33 +1273,73 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {suggestions.content.map((content, index) => (
-            <div key={index} className="bg-white p-4 rounded-lg border">
-              <div className="flex items-start justify-between mb-2 gap-2 min-w-0">
-                <div className="flex items-center gap-2 min-w-0">
-                  {renderEmoji(content.icon)}
-                  <h4 className="font-medium line-clamp-1 break-anywhere">{content.title}</h4>
+          {suggestions.content.map((content, index) => {
+            const isPlaying = playingContentIndex === index;
+            const progress = isPlaying && totalSeconds > 0 ? (1 - remainingSeconds / totalSeconds) : 0;
+            const mm = Math.floor(remainingSeconds / 60).toString().padStart(2, '0');
+            const ss = (remainingSeconds % 60).toString().padStart(2, '0');
+            return (
+              <div key={index} data-co-card={index} className={`p-4 ${isPlaying ? 'pb-0' : 'pb-6'} rounded-lg border relative overflow-hidden transition-colors ${isPlaying ? 'ring-2 ring-purple-300 bg-transparent' : 'bg-white/60 backdrop-blur-sm'}`} style={isPlaying ? { minHeight: Math.max(lockedContentHeights[index] || 0, 260) } : undefined}>
+                {isPlaying && !audioLoading && (
+                  <DynamicAudioBackdrop playing darkOverlayOpacity={0.25} paused={isPaused} className="opacity-100" />
+                )}
+                {isPlaying && (<div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/5 to-black/25 pointer-events-none" />)}
+                {isPlaying && (
+                  <div className="absolute top-0 left-0 right-0 pt-4 px-4 text-center z-20 pointer-events-none">
+                    <h4 className="text-white text-sm font-semibold tracking-wide drop-shadow-md truncate max-w-full">{content.title}</h4>
+                  </div>
+                )}
+                <div className={isPlaying ? 'relative z-10' : 'relative'}>
+                  <div className={isPlaying ? 'invisible pointer-events-none select-none' : ''}>
+                    <div className="flex items-start justify-between mb-2 gap-2 min-w-0">
+                      <div className="flex items-center gap-2 min-w-0">
+                        {renderEmoji(content.icon)}
+                        <h4 className="font-medium line-clamp-1 break-anywhere">{content.title}</h4>
+                      </div>
+                      <div className="flex flex-col items-end gap-1 shrink-0">
+                        <Badge variant="outline">{content.duration}</Badge>
+                        <Badge variant="secondary">{content.category}</Badge>
+                      </div>
+                    </div>
+                    <p className="text-sm text-gray-600 line-clamp-2 break-anywhere">{content.description}</p>
+                    {content.tags && (
+                      <div className="mt-2 flex gap-1 flex-wrap">
+                        {content.tags.slice(0, 3).map((tag, tagIndex) => (
+                          <span key={tagIndex} className="text-xs bg-gray-100 px-2 py-1 rounded line-clamp-1 break-anywhere">{tag}</span>
+                        ))}
+                      </div>
+                    )}
+                    <div className="mt-3 flex gap-2">
+                      <Button size="sm" className="flex-1" variant="outline" onClick={() => startContentAudio(index, content)}>Commencer avec audio</Button>
+                      <Button size="sm" variant="secondary" className="flex-1" onClick={() => onSuggestionSelect?.(content)}>Ouvrir</Button>
+                    </div>
+                  </div>
+                  {/* controls moved outside inner wrapper */}
                 </div>
-                <div className="flex flex-col items-end gap-1 shrink-0">
-                  <Badge variant="outline">{content.duration}</Badge>
-                  <Badge variant="secondary">{content.category}</Badge>
-                </div>
+                {isPlaying && (
+                  <div className="absolute bottom-0 left-0 right-0 px-3 py-3 flex flex-col items-stretch gap-3 bg-black/60 backdrop-blur-sm border-t border-white/10 z-30">
+                    <div className="w-full">
+                      <div className="h-2 bg-white/25 rounded overflow-hidden">
+                        <div className="h-full bg-purple-400 transition-all duration-500" style={{ width: `${progress * 100}%` }} />
+                      </div>
+                      <div className="mt-0.5 text-right text-[10px] text-white/70 tracking-wider font-medium">{mm}:{ss}</div>
+                    </div>
+                    <div className="flex items-center justify-center gap-6 text-white">
+                      <Button size="sm" variant="ghost" className="text-white disabled:opacity-30" disabled={audioLoading || index === 0} onClick={() => { if (index > 0) startContentAudio(index - 1, suggestions!.content[index - 1], undefined, true); }} aria-label="Précédent">
+                        <SkipBack className="h-7 w-7" />
+                      </Button>
+                      <Button size="sm" variant="ghost" className="text-white disabled:opacity-30" disabled={audioLoading} onClick={() => (isPaused ? resumeChallenge() : pauseChallenge())} aria-label={isPaused ? 'Lecture' : 'Pause'}>
+                        {isPaused ? <Play className="h-8 w-8" /> : <Pause className="h-8 w-8" />}
+                      </Button>
+                      <Button size="sm" variant="ghost" className="text-white disabled:opacity-30" disabled={audioLoading || index === suggestions!.content.length - 1} onClick={() => { if (index < suggestions!.content.length - 1) startContentAudio(index + 1, suggestions!.content[index + 1], undefined, true); }} aria-label="Suivant">
+                        <SkipForward className="h-7 w-7" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
-              <p className="text-sm text-gray-600 line-clamp-2 break-anywhere">{content.description}</p>
-              {content.tags && (
-                <div className="mt-2 flex gap-1 flex-wrap">
-                  {content.tags.slice(0, 3).map((tag, tagIndex) => (
-                    <span key={tagIndex} className="text-xs bg-gray-100 px-2 py-1 rounded line-clamp-1 break-anywhere">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              )}
-              <Button size="sm" variant="outline" className="mt-3 w-full" onClick={() => onSuggestionSelect?.(content)}>
-                Regarder
-              </Button>
-            </div>
-          ))}
+            );
+          })}
         </CardContent>
       </Card>
     );
