@@ -831,7 +831,7 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
               <div
                 key={index}
                 data-imm-card={index}
-                className={`p-4 ${isPlaying ? 'pb-0' : 'pb-6'} rounded-lg border border-red-200 relative overflow-hidden transition-colors ${isPlaying ? 'ring-2 ring-red-300 bg-transparent' : 'bg-white/60 backdrop-blur-sm'}`}
+                className={`${isPlaying ? 'p-0' : 'p-4 pb-6'} rounded-lg border border-red-200 relative overflow-hidden transition-colors ${isPlaying ? 'ring-2 ring-red-300 bg-transparent' : 'bg-white/60 backdrop-blur-sm'}`}
                 style={isPlaying ? { minHeight: Math.max(lockedImmediateHeights[index] || 0, 260) } : undefined}
               >
                 {isPlaying && !audioLoading && (
@@ -847,7 +847,7 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                     </h4>
                   </div>
                 )}
-                <div className={isPlaying ? 'relative z-10' : 'relative'}>
+                <div className={isPlaying ? 'relative z-10 px-4 pt-4' : 'relative'}>
                   <div className={isPlaying ? 'invisible pointer-events-none select-none' : ''}>
                     <>
                       <div className="flex items-start justify-between mb-2 gap-2 min-w-0">
@@ -972,22 +972,19 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                   {/* controls moved outside inner wrapper */}
                 </div>
                 {isPlaying && (
-                  <div className="absolute bottom-0 left-0 right-0 px-3 py-3 flex flex-col items-stretch gap-3 bg-black/60 backdrop-blur-sm border-t border-white/10 z-30">
-                    <div className="w-full">
+                  <div className="absolute bottom-0 left-[-1px] right-[-1px] px-0 py-3 flex flex-col items-stretch gap-3 bg-black/60 backdrop-blur-sm border-t border-white/10 z-30">
+                    <div className="w-full px-4">
                       <div className="h-2 bg-white/25 rounded overflow-hidden">
                         <div className="h-full bg-red-500 transition-all duration-500" style={{ width: `${progress * 100}%` }} />
                       </div>
                       <div className="mt-0.5 text-right text-[10px] text-white/70 tracking-wider font-medium">{mm}:{ss}</div>
                     </div>
-                    <div className="flex items-center justify-center gap-6 text-white">
+                    <div className="flex items-center justify-center gap-6 text-white px-4">
                       <Button size="sm" variant="ghost" className="text-white disabled:opacity-30" disabled={audioLoading || index === 0} onClick={() => { if (index > 0) startImmediateAudio(index - 1, suggestions!.immediate_actions[index - 1], undefined, true); }} aria-label="Précédent">
                         <SkipBack className="h-7 w-7" />
                       </Button>
                       <Button size="sm" variant="ghost" className="text-white disabled:opacity-30" disabled={audioLoading} onClick={() => (isPaused ? resumeChallenge() : pauseChallenge())} aria-label={isPaused ? 'Lecture' : 'Pause'}>
                         {isPaused ? <Play className="h-8 w-8" /> : <Pause className="h-8 w-8" />}
-                      </Button>
-                      <Button size="sm" variant="ghost" className="text-white disabled:opacity-30" disabled={audioLoading || index === suggestions!.immediate_actions.length - 1} onClick={() => { if (index < suggestions!.immediate_actions.length - 1) startImmediateAudio(index + 1, suggestions!.immediate_actions[index + 1], undefined, true); }} aria-label="Suivant">
-                        <SkipForward className="h-7 w-7" />
                       </Button>
                     </div>
                   </div>
@@ -1022,7 +1019,7 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
               <div
                 key={index}
                 data-ch-card={index}
-                className={`p-4 ${isPlaying ? 'pb-0' : 'pb-6'} rounded-lg border relative overflow-hidden transition-colors ${isPlaying ? 'ring-2 ring-orange-300 bg-transparent flex flex-col' : 'bg-white/60 backdrop-blur-sm'}`}
+                className={`${isPlaying ? 'p-0' : 'p-4 pb-6'} rounded-lg border relative overflow-hidden transition-colors ${isPlaying ? 'ring-2 ring-orange-300 bg-transparent flex flex-col' : 'bg-white/60 backdrop-blur-sm'}`}
                 style={isPlaying ? { height: Math.max((lockedChallengeHeights[index] || 0), 300) } : undefined}
               >
                 {isPlaying && !audioLoading && (
@@ -1038,7 +1035,7 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                     </h4>
                   </div>
                 )}
-                <div className={isPlaying ? 'relative z-10 flex-1 flex flex-col' : 'relative'}>
+                <div className={isPlaying ? 'relative z-10 flex-1 flex flex-col px-4 pt-4' : 'relative'}>
                   <div className={isPlaying ? 'invisible pointer-events-none select-none' : ''}>
                     <>
                       <div className="flex items-start justify-between mb-2 gap-2 min-w-0">
@@ -1166,25 +1163,14 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                     {/* controls moved outside inner wrapper */}
                   </div>
                   {isPlaying && (
-                    <div
-                      data-ch-footer
-                      className="mt-auto px-3 py-3 flex flex-col items-stretch gap-3 bg-black/60 backdrop-blur-sm border-t border-fuchsia-400/70 z-30 relative rounded-b-lg outline outline-1 outline-fuchsia-400/70"
-                      ref={(el) => {
-                        if (el) {
-                          try {
-                            const r = el.getBoundingClientRect();
-                            console.log('[DEBUG challenge footer mount]', { top: r.top, bottom: r.bottom, h: r.height });
-                          } catch { }
-                        }
-                      }}
-                    >
-                      <div className="w-full">
+                    <div className="absolute bottom-0 left-[-1px] right-[-1px] px-0 py-3 flex flex-col items-stretch gap-3 bg-black/60 backdrop-blur-sm border-t border-white/10 z-30">
+                      <div className="w-full px-4">
                         <div className="h-2 bg-white/25 rounded overflow-hidden">
                           <div className="h-full bg-orange-400 transition-all duration-500" style={{ width: `${progress * 100}%` }} />
                         </div>
                         <div className="mt-0.5 text-right text-[10px] text-white/70 tracking-wider font-medium">{mm}:{ss}</div>
                       </div>
-                      <div className="flex items-center justify-center gap-6 text-white">
+                      <div className="flex items-center justify-center gap-6 text-white px-4">
                         <Button size="sm" variant="ghost" className="text-white disabled:opacity-30" disabled={audioLoading || index === 0} onClick={() => { if (index > 0) startChallengeAudio(index - 1, suggestions!.challenges[index - 1], undefined, true); }} aria-label="Précédent">
                           <SkipBack className="h-7 w-7" />
                         </Button>
@@ -1328,14 +1314,14 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                   {/* controls moved outside inner wrapper */}
                 </div>
                 {isPlaying && (
-                  <div className="absolute bottom-0 left-0 right-0 px-3 py-3 flex flex-col items-stretch gap-3 bg-black/60 backdrop-blur-sm border-t border-white/10 z-30">
-                    <div className="w-full">
+                  <div className="absolute bottom-0 left-[-1px] right-[-1px] px-0 py-3 flex flex-col items-stretch gap-3 bg-black/60 backdrop-blur-sm border-t border-white/10 z-30">
+                    <div className="w-full px-4">
                       <div className="h-2 bg-white/25 rounded overflow-hidden">
                         <div className="h-full bg-purple-400 transition-all duration-500" style={{ width: `${progress * 100}%` }} />
                       </div>
                       <div className="mt-0.5 text-right text-[10px] text-white/70 tracking-wider font-medium">{mm}:{ss}</div>
                     </div>
-                    <div className="flex items-center justify-center gap-6 text-white">
+                    <div className="flex items-center justify-center gap-6 text-white px-4">
                       <Button size="sm" variant="ghost" className="text-white disabled:opacity-30" disabled={audioLoading || index === 0} onClick={() => { if (index > 0) startContentAudio(index - 1, suggestions!.content[index - 1], undefined, true); }} aria-label="Précédent">
                         <SkipBack className="h-7 w-7" />
                       </Button>
