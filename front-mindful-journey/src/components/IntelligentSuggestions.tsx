@@ -986,6 +986,9 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                       <Button size="sm" variant="ghost" className="text-white disabled:opacity-30" disabled={audioLoading} onClick={() => (isPaused ? resumeChallenge() : pauseChallenge())} aria-label={isPaused ? 'Lecture' : 'Pause'}>
                         {isPaused ? <Play className="h-8 w-8" /> : <Pause className="h-8 w-8" />}
                       </Button>
+                      <Button size="sm" variant="ghost" className="text-white disabled:opacity-30" disabled={audioLoading || index === suggestions!.immediate_actions.length - 1} onClick={() => { if (index < suggestions!.immediate_actions.length - 1) startImmediateAudio(index + 1, suggestions!.immediate_actions[index + 1], undefined, true); }} aria-label="Suivant">
+                        <SkipForward className="h-7 w-7" />
+                      </Button>
                     </div>
                   </div>
                 )}
