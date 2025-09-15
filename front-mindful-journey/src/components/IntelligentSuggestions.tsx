@@ -1024,7 +1024,7 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                 key={index}
                 data-ch-card={index}
                 className={`p-4 ${isPlaying ? 'pb-0' : 'pb-6'} rounded-lg border relative overflow-hidden transition-colors ${isPlaying ? 'ring-2 ring-orange-300 bg-transparent flex flex-col' : 'bg-white/60 backdrop-blur-sm'}`}
-                style={isPlaying ? { height: Math.max(lockedChallengeHeights[index] || 0, 260) } : undefined}
+                style={isPlaying ? { height: Math.max((lockedChallengeHeights[index] || 0), 300) } : undefined}
               >
                 {isPlaying && !audioLoading && (
                   <DynamicAudioBackdrop playing darkOverlayOpacity={0.2} paused={isPaused} className="opacity-100" />
@@ -1039,7 +1039,7 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                     </h4>
                   </div>
                 )}
-                <div className={isPlaying ? 'relative z-10' : 'relative'}>
+                <div className={isPlaying ? 'relative z-10 flex-1 flex flex-col' : 'relative'}>
                 <div className={isPlaying ? 'invisible pointer-events-none select-none' : ''}>
                   <>
                     <div className="flex items-start justify-between mb-2 gap-2 min-w-0">
@@ -1167,7 +1167,18 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                   {/* controls moved outside inner wrapper */}
                 </div>
                 {isPlaying && (
-                  <div className="mt-auto px-3 py-3 flex flex-col items-stretch gap-3 bg-black/60 backdrop-blur-sm border-t border-white/10 z-30 relative rounded-b-lg">
+                  <div
+                    data-ch-footer
+                    className="mt-auto px-3 py-3 flex flex-col items-stretch gap-3 bg-black/60 backdrop-blur-sm border-t border-fuchsia-400/70 z-30 relative rounded-b-lg outline outline-1 outline-fuchsia-400/70"
+                    ref={(el) => {
+                      if (el) {
+                        try {
+                          const r = el.getBoundingClientRect();
+                          console.log('[DEBUG challenge footer mount]', { top: r.top, bottom: r.bottom, h: r.height });
+                        } catch {}
+                      }
+                    }}
+                  >
                     <div className="w-full">
                       <div className="h-2 bg-white/25 rounded overflow-hidden">
                         <div className="h-full bg-orange-400 transition-all duration-500" style={{ width: `${progress * 100}%` }} />
