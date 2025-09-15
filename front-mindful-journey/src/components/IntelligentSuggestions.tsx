@@ -7,9 +7,6 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Brain,
   Heart,
-  Zap,
-  Clock,
-  Star,
   TrendingUp,
   UserCheck,
   Target,
@@ -18,7 +15,9 @@ import {
   SkipBack,
   SkipForward,
   Play,
-  Pause
+  Pause,
+  Zap,
+  Star
 } from 'lucide-react';
 import apiService from '@/lib/api';
 
