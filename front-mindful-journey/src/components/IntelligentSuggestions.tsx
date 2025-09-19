@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import DynamicAudioBackdrop from './DynamicAudioBackdrop';
+import { getBackdropImages } from '@/lib/audioBackdrops';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -41,6 +42,8 @@ interface Suggestion {
   transcription_blocks?: string[];
   // Variantes audio multi-langues: { fr: '/audio/fr.mp3', en: '/audio/en.mp3' }
   audio_variants?: Record<string, string>;
+  // Optionnel: images spécifiques de fond pendant la lecture
+  backdrop_images?: string[];
 }
 
 interface HealthProfessional {
@@ -835,7 +838,13 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                 style={isPlaying ? { minHeight: Math.max(lockedImmediateHeights[index] || 0, 260) } : undefined}
               >
                 {isPlaying && !audioLoading && (
-                  <DynamicAudioBackdrop playing darkOverlayOpacity={0.2} paused={isPaused} className="opacity-100" />
+                  <DynamicAudioBackdrop
+                    playing
+                    darkOverlayOpacity={0.2}
+                    paused={isPaused}
+                    className="opacity-100"
+                    images={action.backdrop_images && action.backdrop_images.length ? action.backdrop_images : getBackdropImages('immediate', action.category)}
+                  />
                 )}
                 {isPlaying && (
                   <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/5 to-black/25 pointer-events-none" />
@@ -1026,7 +1035,13 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                 style={isPlaying ? { height: Math.max((lockedChallengeHeights[index] || 0), 300) } : undefined}
               >
                 {isPlaying && !audioLoading && (
-                  <DynamicAudioBackdrop playing darkOverlayOpacity={0.2} paused={isPaused} className="opacity-100" />
+                  <DynamicAudioBackdrop
+                    playing
+                    darkOverlayOpacity={0.2}
+                    paused={isPaused}
+                    className="opacity-100"
+                    images={challenge.backdrop_images && challenge.backdrop_images.length ? challenge.backdrop_images : getBackdropImages('challenge', challenge.category)}
+                  />
                 )}
                 {isPlaying && (
                   <div className="absolute inset-0 bg-gradient-to-b from-black/15 via-black/5 to-black/30 pointer-events-none" />
@@ -1281,7 +1296,13 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
             return (
               <div key={index} data-co-card={index} className={`p-4 ${isPlaying ? 'pb-0' : 'pb-6'} rounded-lg border relative overflow-hidden transition-colors ${isPlaying ? 'ring-2 ring-purple-300 bg-transparent' : 'bg-white/60 backdrop-blur-sm'}`} style={isPlaying ? { minHeight: Math.max(lockedContentHeights[index] || 0, 260) } : undefined}>
                 {isPlaying && !audioLoading && (
-                  <DynamicAudioBackdrop playing darkOverlayOpacity={0.25} paused={isPaused} className="opacity-100" />
+                  <DynamicAudioBackdrop
+                    playing
+                    darkOverlayOpacity={0.25}
+                    paused={isPaused}
+                    className="opacity-100"
+                    images={content.backdrop_images && content.backdrop_images.length ? content.backdrop_images : getBackdropImages('content', content.category)}
+                  />
                 )}
                 {isPlaying && (<div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/5 to-black/25 pointer-events-none" />)}
                 {isPlaying && (
