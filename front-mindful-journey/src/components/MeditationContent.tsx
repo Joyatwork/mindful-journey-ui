@@ -101,9 +101,9 @@ const MeditationContent = ({ onBack, onComplete }: MeditationContentProps) => {
         el.pause();
         setIsPlaying(false);
       } else {
-        if (el.src !== mp3Src) { try { el.src = mp3Src; el.load(); } catch {} }
-        try { el.muted = false; } catch {}
-        try { el.volume = 1; } catch {}
+        if (el.src !== mp3Src) { try { el.src = mp3Src; el.load(); } catch { } }
+        try { el.muted = false; } catch { }
+        try { el.volume = 1; } catch { }
         try {
           await el.play();
           setIsPlaying(true);
@@ -113,7 +113,7 @@ const MeditationContent = ({ onBack, onComplete }: MeditationContentProps) => {
             el.play().then(() => setIsPlaying(true)).catch(() => setAudioError("Impossible de démarrer la lecture."));
           };
           el.addEventListener('canplay', once, { once: true } as any);
-          try { el.load(); } catch {}
+          try { el.load(); } catch { }
         }
       }
     } catch (e: any) {
@@ -125,8 +125,8 @@ const MeditationContent = ({ onBack, onComplete }: MeditationContentProps) => {
   const handleReset = () => {
     const el = audioRef.current;
     if (el) {
-      try { el.pause(); } catch {}
-      try { el.currentTime = 0; } catch {}
+      try { el.pause(); } catch { }
+      try { el.currentTime = 0; } catch { }
     }
     setIsPlaying(false);
     setIsCompleted(false);
@@ -138,7 +138,7 @@ const MeditationContent = ({ onBack, onComplete }: MeditationContentProps) => {
   const handleReplay = async () => {
     const el = audioRef.current;
     if (!el) return;
-    try { el.pause(); } catch {}
+    try { el.pause(); } catch { }
     el.currentTime = 0;
     setIsCompleted(false);
     setCurrentTime(0);
@@ -169,7 +169,7 @@ const MeditationContent = ({ onBack, onComplete }: MeditationContentProps) => {
     <div className="space-y-6 animate-fadeIn">
       <div className="flex items-center justify-between">
         <Button variant="ghost" onClick={onBack}>← Retour</Button>
-        <Badge className="bg-purple-100 text-purple-800"><Brain className="h-3 w-3 mr-1"/>Mindfulness</Badge>
+        <Badge className="bg-purple-100 text-purple-800"><Brain className="h-3 w-3 mr-1" />Mindfulness</Badge>
       </div>
 
       <Card className="bg-gradient-to-br from-purple-50 to-blue-50 border-0">
@@ -225,7 +225,7 @@ const MeditationContent = ({ onBack, onComplete }: MeditationContentProps) => {
           )}
 
           <div className="flex space-x-3 justify-center">
-            <Button variant="outline" size="icon" onClick={handleReset} className="rounded-full"><RotateCcw className="h-4 w-4"/></Button>
+            <Button variant="outline" size="icon" onClick={handleReset} className="rounded-full"><RotateCcw className="h-4 w-4" /></Button>
 
             {isCompleted ? (
               <>
@@ -234,7 +234,7 @@ const MeditationContent = ({ onBack, onComplete }: MeditationContentProps) => {
               </>
             ) : (
               <Button onClick={handlePlayPause} className="bg-purple-600 hover:bg-purple-700 text-white px-8 rounded-full">
-                {isPlaying ? (<><Pause className="h-4 w-4 mr-2"/>Pause</>) : (<><Play className="h-4 w-4 mr-2"/>Commencer</>)}
+                {isPlaying ? (<><Pause className="h-4 w-4 mr-2" />Pause</>) : (<><Play className="h-4 w-4 mr-2" />Commencer</>)}
               </Button>
             )}
 
