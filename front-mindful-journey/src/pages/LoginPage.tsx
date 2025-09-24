@@ -219,11 +219,11 @@ const LoginPage = () => {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <div className="bg-indigo-100 p-3 rounded-full">
-              <Heart className="h-8 w-8 text-indigo-600" />
+            <div className="w-full flex justify-center">
+              <img src="/visuals/annual/Joyatwork.png" alt="Joyatwork" className="max-h-40 w-auto h-auto object-contain" />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold text-gray-800">Mindful Journey</CardTitle>
+          <CardTitle className="text-2xl font-bold text-gray-800">Joyatwork</CardTitle>
           <p className="text-gray-600">Votre voyage vers le bien-être commence ici</p>
         </CardHeader>
         <CardContent>

@@ -53,6 +53,17 @@ class RecommendationController extends Controller
             $energyLevel = $request->get('energy', 3); // 1-5 échelle
             $timeOfDay = $request->get('time_of_day', date('H')); // Heure actuelle
             $diagnosticData = $request->get('diagnostic', []);
+            // If diagnostic arrives as a JSON-encoded string (query param), decode it to array
+            if (is_string($diagnosticData) && $diagnosticData !== '') {
+                $decoded = json_decode($diagnosticData, true);
+                if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                    $diagnosticData = $decoded;
+                } else {
+                    // Log decode error and fallback to empty array
+                    Log::warning('RecommendationController: failed to decode diagnostic JSON', ['diagnostic_raw' => $diagnosticData, 'json_error' => json_last_error_msg()]);
+                    $diagnosticData = [];
+                }
+            }
 
             // Analyser le profil utilisateur et générer des suggestions
             $suggestions = $this->generateSuggestions($user, [
