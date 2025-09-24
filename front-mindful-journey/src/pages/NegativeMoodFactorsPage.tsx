@@ -54,15 +54,17 @@ const NegativeMoodFactorsPage: React.FC = () => {
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[340px] overflow-auto pr-1">
           {FACTORS.map(f => (
-            <button
+            <div
               key={f.key}
-              type="button"
+              role="button"
+              tabIndex={0}
               onClick={() => toggle(f.key)}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(f.key); } }}
               className={`flex items-center gap-3 rounded-lg border px-3 py-2 text-left transition text-sm select-none ${selected.includes(f.key) ? 'bg-emerald-600 border-emerald-600 text-white shadow' : 'bg-white border-emerald-200 hover:border-emerald-400'} focus:outline-none focus:ring-2 focus:ring-emerald-500`}
             >
               <Checkbox checked={selected.includes(f.key)} onCheckedChange={() => toggle(f.key)} className="pointer-events-none border-white/70 data-[state=checked]:bg-white data-[state=checked]:text-emerald-600" />
               <span className="font-medium leading-snug">{f.label}</span>
-            </button>
+            </div>
           ))}
         </div>
         <div className="flex flex-col sm:flex-row gap-4 pt-2">

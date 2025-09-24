@@ -21,7 +21,10 @@ const MeditationContent = ({ onBack, onComplete }: MeditationContentProps) => {
 
   const [mp3Src, setMp3Src] = useState<string>('/audio/track-4.mp3'); // MP3 source
   const [mp3Presets] = useState<Array<{ key: string; label: string; url: string }>>([
-    { key: 'track-4', label: 'Track 4 (local)', url: '/audio/track-4.mp3' }
+    { key: 'track-4', label: 'Track 4 (local)', url: '/audio/track-4.mp3' },
+    { key: 'track-2', label: 'Track 2 (local)', url: '/audio/track-2.m4a' },
+    { key: 'track-3', label: 'Track 3 (local)', url: '/audio/track-3.m4a' },
+    { key: 'meditation-midi', label: 'Meditation MIDI (local)', url: '/audio/meditation-midi.m4a' },
   ]);
   const [selectedPresetKey, setSelectedPresetKey] = useState<string>('track-4'); // Default preset
 
