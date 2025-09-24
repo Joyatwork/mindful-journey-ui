@@ -86,7 +86,7 @@ const MeditationContent = ({ onBack, onComplete }: MeditationContentProps) => {
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
-  
+
   const effectiveDuration = mode === 'file' ? duration : (ttsContinuous ? ttsDuration : totalDuration);
 
   const progress = useMemo(() => {
@@ -112,10 +112,10 @@ const MeditationContent = ({ onBack, onComplete }: MeditationContentProps) => {
           setIsPlaying(false);
         } else {
           // Assurer que l'élément audio pointe sur la source sélectionnée
-          try { if (el.src !== mp3Src) { el.src = mp3Src; el.load(); } } catch {}
+          try { if (el.src !== mp3Src) { el.src = mp3Src; el.load(); } } catch { }
           // Déverrouille le son et force le volume
-          try { el.muted = false; } catch {}
-          try { el.volume = 1; } catch {}
+          try { el.muted = false; } catch { }
+          try { el.volume = 1; } catch { }
           // Tente la lecture immédiate
           try {
             await el.play();
@@ -131,7 +131,7 @@ const MeditationContent = ({ onBack, onComplete }: MeditationContentProps) => {
             };
             el.addEventListener('canplay', once, { once: true } as any);
             // Force un chargement si nécessaire
-            try { el.load(); } catch {}
+            try { el.load(); } catch { }
           }
         }
       } catch (e: any) {
@@ -152,7 +152,7 @@ const MeditationContent = ({ onBack, onComplete }: MeditationContentProps) => {
       if (isPlaying) {
         // pause
         setIsPlaying(false);
-        try { window.speechSynthesis.cancel(); } catch {}
+        try { window.speechSynthesis.cancel(); } catch { }
         if (timerRef.current) {
           window.clearInterval(timerRef.current);
           timerRef.current = null;
@@ -160,7 +160,7 @@ const MeditationContent = ({ onBack, onComplete }: MeditationContentProps) => {
       } else {
         // play / resume
         setIsPlaying(true);
-        try { window.speechSynthesis.resume(); } catch {}
+        try { window.speechSynthesis.resume(); } catch { }
         if (ttsContinuous) {
           if (currentTime === 0) phraseIndexRef.current = 0;
           speakNextPhrase();
@@ -180,7 +180,7 @@ const MeditationContent = ({ onBack, onComplete }: MeditationContentProps) => {
             if (next >= effectiveDurationRef.current) {
               window.clearInterval(timerRef.current!);
               timerRef.current = null;
-              try { window.speechSynthesis.cancel(); } catch {}
+              try { window.speechSynthesis.cancel(); } catch { }
               handleComplete();
               return effectiveDurationRef.current;
             }
@@ -199,7 +199,7 @@ const MeditationContent = ({ onBack, onComplete }: MeditationContentProps) => {
         el.currentTime = 0;
       }
     } else {
-      try { window.speechSynthesis.cancel(); } catch {}
+      try { window.speechSynthesis.cancel(); } catch { }
       if (timerRef.current) {
         window.clearInterval(timerRef.current);
         timerRef.current = null;
@@ -211,7 +211,7 @@ const MeditationContent = ({ onBack, onComplete }: MeditationContentProps) => {
     setCurrentTime(0);
     setCurrentStep(0);
     lastSpokenStepRef.current = -1;
-  phraseIndexRef.current = 0;
+    phraseIndexRef.current = 0;
   };
 
   const handleComplete = () => {
@@ -289,7 +289,7 @@ const MeditationContent = ({ onBack, onComplete }: MeditationContentProps) => {
         const savedVoice = localStorage.getItem('tts_voice') || '';
         if (savedLang) setSelectedLang(savedLang);
         if (savedVoice) setSelectedVoiceName(savedVoice);
-      } catch {}
+      } catch { }
       if (v.length) {
         // Prefer FR by default if nothing saved
         if (!localStorage.getItem('tts_lang')) {
@@ -309,10 +309,10 @@ const MeditationContent = ({ onBack, onComplete }: MeditationContentProps) => {
   }, []);
 
   useEffect(() => {
-    try { localStorage.setItem('tts_lang', selectedLang); } catch {}
+    try { localStorage.setItem('tts_lang', selectedLang); } catch { }
   }, [selectedLang]);
   useEffect(() => {
-    try { localStorage.setItem('tts_voice', selectedVoiceName); } catch {}
+    try { localStorage.setItem('tts_voice', selectedVoiceName); } catch { }
   }, [selectedVoiceName]);
 
   const languageOptions = useMemo(() => {
@@ -341,7 +341,7 @@ const MeditationContent = ({ onBack, onComplete }: MeditationContentProps) => {
     if (mode === 'file') {
       const el = audioRef.current;
       if (el) {
-        try { el.pause(); } catch {}
+        try { el.pause(); } catch { }
         el.currentTime = 0;
         setIsCompleted(false);
         setCurrentTime(0);
@@ -358,7 +358,7 @@ const MeditationContent = ({ onBack, onComplete }: MeditationContentProps) => {
         }
       }
     } else {
-      try { window.speechSynthesis.cancel(); } catch {}
+      try { window.speechSynthesis.cancel(); } catch { }
       setIsCompleted(false);
       setAudioError(null);
       setCurrentTime(0);
@@ -366,7 +366,7 @@ const MeditationContent = ({ onBack, onComplete }: MeditationContentProps) => {
       lastSpokenStepRef.current = -1;
       phraseIndexRef.current = 0;
       setIsPlaying(true);
-      try { window.speechSynthesis.resume(); } catch {}
+      try { window.speechSynthesis.resume(); } catch { }
       if (ttsContinuous) {
         speakNextPhrase();
       } else {
@@ -382,7 +382,7 @@ const MeditationContent = ({ onBack, onComplete }: MeditationContentProps) => {
           if (next >= effectiveDurationRef.current) {
             window.clearInterval(timerRef.current!);
             timerRef.current = null;
-            try { window.speechSynthesis.cancel(); } catch {}
+            try { window.speechSynthesis.cancel(); } catch { }
             handleComplete();
             return effectiveDurationRef.current;
           }
@@ -459,7 +459,7 @@ const MeditationContent = ({ onBack, onComplete }: MeditationContentProps) => {
       // Stop any current speech before speaking new step
       window.speechSynthesis.cancel();
       const utter = buildUtterance(`${step.title}. ${step.instruction}`);
-      try { window.speechSynthesis.resume(); } catch {}
+      try { window.speechSynthesis.resume(); } catch { }
       window.speechSynthesis.speak(utter);
       lastSpokenStepRef.current = currentStep;
     } catch (e) {
@@ -475,7 +475,7 @@ const MeditationContent = ({ onBack, onComplete }: MeditationContentProps) => {
     try {
       window.speechSynthesis.cancel();
       const utter = buildUtterance('ceci est un teste pour la meditation guidé');
-      try { window.speechSynthesis.resume(); } catch {}
+      try { window.speechSynthesis.resume(); } catch { }
       window.speechSynthesis.speak(utter);
     } catch (e) {
       setAudioError("Échec du test de voix TTS.");
@@ -489,7 +489,7 @@ const MeditationContent = ({ onBack, onComplete }: MeditationContentProps) => {
     if (currentTimeRef.current >= (effectiveDurationRef.current - 0.25)) return;
     try {
       // Ne pas annuler systématiquement pour éviter de bloquer la reprise; s'assurer que la synthèse n'est pas en pause
-      try { window.speechSynthesis.resume(); } catch {}
+      try { window.speechSynthesis.resume(); } catch { }
       const phrase = guidancePhrases[phraseIndexRef.current % guidancePhrases.length];
       const utter = buildUtterance(phrase);
       utter.onend = () => {
@@ -549,7 +549,7 @@ const MeditationContent = ({ onBack, onComplete }: MeditationContentProps) => {
             Une séance de relaxation pour réduire le stress
           </p>
         </CardHeader>
-        
+
         <CardContent className="space-y-6">
           {/* Mode selector: MP3 file vs TTS */}
           <div className="flex flex-wrap items-center justify-center gap-3">
@@ -664,16 +664,16 @@ const MeditationContent = ({ onBack, onComplete }: MeditationContentProps) => {
                   </div>
                   <div className="md:col-span-2 grid grid-cols-3 gap-2">
                     <button
-                      className={`px-2 py-1 text-sm border rounded ${ttsDuration===10*60?'border-purple-500 text-purple-700':'border-gray-300 text-gray-700'}`}
-                      onClick={() => setTtsDuration(10*60)}
+                      className={`px-2 py-1 text-sm border rounded ${ttsDuration === 10 * 60 ? 'border-purple-500 text-purple-700' : 'border-gray-300 text-gray-700'}`}
+                      onClick={() => setTtsDuration(10 * 60)}
                     >10 min</button>
                     <button
-                      className={`px-2 py-1 text-sm border rounded ${ttsDuration===20*60?'border-purple-500 text-purple-700':'border-gray-300 text-gray-700'}`}
-                      onClick={() => setTtsDuration(20*60)}
+                      className={`px-2 py-1 text-sm border rounded ${ttsDuration === 20 * 60 ? 'border-purple-500 text-purple-700' : 'border-gray-300 text-gray-700'}`}
+                      onClick={() => setTtsDuration(20 * 60)}
                     >20 min</button>
                     <button
-                      className={`px-2 py-1 text-sm border rounded ${ttsDuration===30*60?'border-purple-500 text-purple-700':'border-gray-300 text-gray-700'}`}
-                      onClick={() => setTtsDuration(30*60)}
+                      className={`px-2 py-1 text-sm border rounded ${ttsDuration === 30 * 60 ? 'border-purple-500 text-purple-700' : 'border-gray-300 text-gray-700'}`}
+                      onClick={() => setTtsDuration(30 * 60)}
                     >30 min</button>
                   </div>
                 </div>
@@ -742,7 +742,7 @@ const MeditationContent = ({ onBack, onComplete }: MeditationContentProps) => {
             >
               <RotateCcw className="h-4 w-4" />
             </Button>
-            
+
             {isCompleted ? (
               <>
                 <Button
@@ -777,7 +777,7 @@ const MeditationContent = ({ onBack, onComplete }: MeditationContentProps) => {
                 )}
               </Button>
             )}
-            
+
             {!isCompleted && (
               <Button
                 variant="ghost"
