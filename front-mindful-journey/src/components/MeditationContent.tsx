@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Play, Pause, RotateCcw, CheckCircle, Brain } from 'lucide-react';
 
@@ -183,8 +184,8 @@ const MeditationContent = ({ onBack, onComplete }: MeditationContentProps) => {
         <CardContent className="space-y-6">
           {/* audio label removed per request */}
 
-          <audio ref={audioRef} src={mp3Src} preload="none" controls playsInline className="w-full" />
-          <div className="text-xs text-gray-600 mt-1">Lecture: MP3 → {mp3Src}</div>
+          {/* hidden native audio element (controls removed) */}
+          <audio ref={audioRef} src={mp3Src} preload="none" playsInline style={{ display: 'none' }} />
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div className="md:col-span-3">
@@ -195,8 +196,10 @@ const MeditationContent = ({ onBack, onComplete }: MeditationContentProps) => {
             </div>
           </div>
 
-          {/* progress UI removed per request; keep error centered */}
-          {audioError && (<div className="text-xs text-red-600 mt-2 text-center">{audioError}</div>)}
+          <div className="text-center">
+            <Progress value={progress} className="w-full" />
+            {audioError && (<div className="text-xs text-red-600 mt-2">{audioError}</div>)}
+          </div>
 
           {!isCompleted && (
             <Card className="bg-white/70">
