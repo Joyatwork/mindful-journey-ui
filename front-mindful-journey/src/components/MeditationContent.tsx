@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Play, Pause, RotateCcw, CheckCircle, Brain } from 'lucide-react';
 
@@ -196,12 +195,8 @@ const MeditationContent = ({ onBack, onComplete }: MeditationContentProps) => {
             </div>
           </div>
 
-          <div className="text-center">
-            <div className="text-4xl font-bold text-purple-800 mb-2">{formatTime(Math.max(0, Math.round(effectiveDuration - currentTime)))}</div>
-            <Progress value={progress} className="w-full" />
-            {audioError && (<div className="text-xs text-red-600 mt-2">{audioError}</div>)}
-            <div className="text-xs text-gray-500 mt-1">Placez un MP3 libre de droits dans public/audio/ ou utilisez un préréglage.</div>
-          </div>
+          {/* progress UI removed per request; keep error centered */}
+          {audioError && (<div className="text-xs text-red-600 mt-2 text-center">{audioError}</div>)}
 
           {!isCompleted && (
             <Card className="bg-white/70">
