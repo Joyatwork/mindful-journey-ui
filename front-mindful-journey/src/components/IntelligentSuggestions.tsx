@@ -294,21 +294,21 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
             audio.loop = true;
           }
         } catch { /* noop */ }
-          try {
-            audio.muted = true;
-            audio.play()
-              .then(() => { try { audio.muted = false; } catch { } })
-              .catch(err => {
-                if (err && err.name === 'AbortError') return; // interrupted by pause()
-                setAudioError('Lecture audio bloquée (interaction requise)');
-                console.warn('Audio play error', err);
-              });
-          } catch (err) {
-            // Some browsers may throw synchronously; handle gracefully
-            if (err && (err as any).name === 'AbortError') return;
-            setAudioError('Lecture audio bloquée (interaction requise)');
-            console.warn('Audio play error', err);
-          }
+        try {
+          audio.muted = true;
+          audio.play()
+            .then(() => { try { audio.muted = false; } catch { } })
+            .catch(err => {
+              if (err && err.name === 'AbortError') return; // interrupted by pause()
+              setAudioError('Lecture audio bloquée (interaction requise)');
+              console.warn('Audio play error', err);
+            });
+        } catch (err) {
+          // Some browsers may throw synchronously; handle gracefully
+          if (err && (err as any).name === 'AbortError') return;
+          setAudioError('Lecture audio bloquée (interaction requise)');
+          console.warn('Audio play error', err);
+        }
         setAudioLoading(false);
         // Démarrer timer
         timerRef.current = window.setInterval(() => {
@@ -342,7 +342,7 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
       audio.addEventListener('canplay', onReady, { once: true });
       audio.addEventListener('loadedmetadata', onReady, { once: true });
       // Tentative immédiate (au cas où canplay tarde)
-  try { audio.muted = true; void audio.play().catch((err: any) => { if (err && err.name !== 'AbortError') console.warn('play interrupted', err); }); } catch { }
+      try { audio.muted = true; void audio.play().catch((err: any) => { if (err && err.name !== 'AbortError') console.warn('play interrupted', err); }); } catch { }
       audio.addEventListener('error', onError, { once: true });
     };
     tryIndex(0);
@@ -462,7 +462,7 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
       };
       audio.addEventListener('canplay', onReady, { once: true });
       audio.addEventListener('loadedmetadata', onReady, { once: true });
-  try { audio.muted = true; void audio.play().catch((err: any) => { if (err && err.name !== 'AbortError') console.warn('play interrupted', err); }); } catch { }
+      try { audio.muted = true; void audio.play().catch((err: any) => { if (err && err.name !== 'AbortError') console.warn('play interrupted', err); }); } catch { }
       audio.addEventListener('error', onError, { once: true });
     };
     tryImm(0);
@@ -557,7 +557,7 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
       };
       audio.addEventListener('canplay', onReady, { once: true });
       audio.addEventListener('loadedmetadata', onReady, { once: true });
-  try { audio.muted = true; void audio.play().catch((err: any) => { if (err && err.name !== 'AbortError') console.warn('play interrupted', err); }); } catch { }
+      try { audio.muted = true; void audio.play().catch((err: any) => { if (err && err.name !== 'AbortError') console.warn('play interrupted', err); }); } catch { }
       audio.addEventListener('error', onError, { once: true });
     };
     tryIndex(0);
