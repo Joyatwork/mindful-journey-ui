@@ -182,9 +182,7 @@ const MeditationContent = ({ onBack, onComplete }: MeditationContentProps) => {
         </CardHeader>
 
         <CardContent className="space-y-6">
-          <div className="flex flex-wrap items-center justify-center gap-3">
-            <div className="px-3 py-1 rounded-full text-sm border bg-white border-purple-300 text-purple-700">Audio MP3</div>
-          </div>
+          {/* audio label removed per request */}
 
           <audio ref={audioRef} src={mp3Src} preload="none" controls playsInline className="w-full" />
           <div className="text-xs text-gray-600 mt-1">Lecture: MP3 → {mp3Src}</div>
