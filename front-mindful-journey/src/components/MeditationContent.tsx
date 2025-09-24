@@ -28,8 +28,7 @@ const MeditationContent = ({ onBack, onComplete }: MeditationContentProps) => {
   const [pitch, setPitch] = useState<number>(1);
   const timerRef = useRef<number | null>(null); // for TTS progression timer
   const lastSpokenStepRef = useRef<number>(-1); // track last spoken step in TTS
-  const [mp3Src, setMp3Src] = useState<string>('https://assets.mixkit.co/sfx/preview/mixkit-light-rain-loop-2393.mp3');
-  const [pendingMp3Src, setPendingMp3Src] = useState<string>('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3');
+  const [mp3Src, setMp3Src] = useState<string>('/audio/track-4.mp3');
   // TTS: guidage continu
   const [ttsContinuous, setTtsContinuous] = useState<boolean>(true);
   const [ttsDuration, setTtsDuration] = useState<number>(30 * 60); // 30 min par défaut
@@ -39,13 +38,13 @@ const MeditationContent = ({ onBack, onComplete }: MeditationContentProps) => {
   const currentTimeRef = useRef<number>(currentTime);
   const effectiveDurationRef = useRef<number>(0);
 
-  const [mp3Presets, setMp3Presets] = useState<Array<{ key: string; label: string; url: string }>>([
-    { key: 'calm2', label: 'Calme - Ambient (démo)', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3' },
-    { key: 'rain', label: 'Pluie légère (Pixabay)', url: 'https://assets.mixkit.co/sfx/preview/mixkit-light-rain-loop-2393.mp3' },
-    { key: 'forest', label: 'Forêt apaisante (Pixabay)', url: 'https://assets.mixkit.co/sfx/preview/mixkit-forest-birds-chirping-2395.mp3' },
-    { key: 'demo1', label: 'Démo - Song 1', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3' },
+  const [mp3Presets] = useState<Array<{ key: string; label: string; url: string }>>([
+    { key: 'track-4', label: 'Track 4 (local)', url: '/audio/track-4.mp3' },
+    { key: 'track-2', label: 'Track 2 (local)', url: '/audio/track-2.m4a' },
+    { key: 'track-3', label: 'Track 3 (local)', url: '/audio/track-3.m4a' },
+    { key: 'meditation-midi', label: 'Meditation MIDI (local)', url: '/audio/meditation-midi.m4a' },
   ]);
-  const [selectedPresetKey, setSelectedPresetKey] = useState<string>('rain');
+  const [selectedPresetKey, setSelectedPresetKey] = useState<string>('track-4');
 
   const stepsByLang = {
     fr: [
@@ -112,17 +111,8 @@ const MeditationContent = ({ onBack, onComplete }: MeditationContentProps) => {
           el.pause();
           setIsPlaying(false);
         } else {
-          // Si un URL est saisi, l'utiliser automatiquement avant de démarrer
-          const pending = (pendingMp3Src || '').trim();
-          const isValid = pending && (pending.startsWith('http://') || pending.startsWith('https://') || pending.startsWith('/'));
-          if (isValid && pending !== mp3Src) {
-            setAudioError(null);
-            try { el.src = pending; } catch {}
-            try { el.load(); } catch {}
-            // Met à jour l'état pour persister ce choix
-            setMp3Src(pending);
-            try { localStorage.setItem('guided_meditation_mp3', pending); } catch {}
-          }
+          // Assurer que l'élément audio pointe sur la source sélectionnée
+          try { if (el.src !== mp3Src) { el.src = mp3Src; el.load(); } } catch {}
           // Déverrouille le son et force le volume
           try { el.muted = false; } catch {}
           try { el.volume = 1; } catch {}
@@ -268,29 +258,7 @@ const MeditationContent = ({ onBack, onComplete }: MeditationContentProps) => {
     };
     const onError = () => {
       const failing = el.currentSrc || mp3Src;
-      setAudioError(`Erreur de chargement audio: ${failing}. Essayez un préréglage (Pluie/Forêt) ou collez une URL.`);
-      // Fallback auto sur l'URL en attente si elle est valide et différente
-      const pending = (pendingMp3Src || '').trim();
-      const isValid = pending && (pending.startsWith('http://') || pending.startsWith('https://') || pending.startsWith('/'));
-      const tryPlay = (url: string) => {
-        try { el.src = url; } catch {}
-        try { el.load(); } catch {}
-        el.play().then(() => {
-          setMp3Src(url);
-          setAudioError(null);
-          try { localStorage.setItem('guided_meditation_mp3', url); } catch {}
-          setIsPlaying(true);
-        }).catch(() => {});
-      };
-      if (isValid && failing !== pending) {
-        tryPlay(pending);
-        return;
-      }
-      // Fallback vers une piste fiable (SoundHelix)
-      const calm = 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3';
-      if (failing !== calm) {
-        tryPlay(calm);
-      }
+      setAudioError(`Erreur de chargement audio: ${failing}. Essayez un préréglage (Pluie/Forêt).`);
     };
 
     el.addEventListener('loadedmetadata', onLoaded);
@@ -303,7 +271,7 @@ const MeditationContent = ({ onBack, onComplete }: MeditationContentProps) => {
       el.removeEventListener('ended', onEnded);
       el.removeEventListener('error', onError);
     };
-  }, [onComplete, duration, mode, mp3Src, pendingMp3Src]);
+  }, [onComplete, duration, mode, mp3Src]);
 
   // Cancel media and reset when switching mode
   useEffect(() => {
@@ -537,80 +505,28 @@ const MeditationContent = ({ onBack, onComplete }: MeditationContentProps) => {
   };
 
   // Appliquer l'URL saisie dans le champ (et persister)
-  const applyMp3Url = () => {
-    const url = (pendingMp3Src || '').trim();
-    if (!url) return;
-    if (!(url.startsWith('http://') || url.startsWith('https://') || url.startsWith('/'))) {
-      setAudioError("URL invalide. Utilisez http(s):// ou un chemin commençant par /");
-      return;
-    }
-    setAudioError(null);
-    setMp3Src(url);
-    try { localStorage.setItem('guided_meditation_mp3', url); } catch {}
-    // Réinitialise pour recharger la source et partir proprement
-    handleReset();
-  };
+  // Suppression de l'action "Appliquer" : la lecture utilise directement l'URL affichée
 
   // Petit test de son local (bip) via Web Audio API
-  const testBeep = () => {
-    try {
-      const AudioCtx = (window as any).AudioContext || (window as any).webkitAudioContext;
-      if (!AudioCtx) {
-        setAudioError('AudioContext indisponible dans ce navigateur.');
-        return;
-      }
-      const ctx = new AudioCtx();
-      const o = ctx.createOscillator();
-      const g = ctx.createGain();
-      o.type = 'sine';
-      o.frequency.value = 440;
-      g.gain.value = 0.05; // volume doux
-      o.connect(g);
-      g.connect(ctx.destination);
-      o.start();
-      setTimeout(() => { o.stop(); ctx.close(); }, 800);
-    } catch (e) {
-      setAudioError('Échec du test bip audio.');
-    }
-  };
+  // Outil de test bip retiré
 
   useEffect(() => {
-    // Charger des URLs personnalisées pour pluie/forêt si présentes
-    try {
-      const rain = localStorage.getItem('preset_rain_url') || '';
-      const forest = localStorage.getItem('preset_forest_url') || '';
-      if (rain) {
-        setMp3Presets((prev) => prev.map(p => p.key === 'rain' ? { ...p, url: rain } : p));
-      }
-      if (forest) {
-        setMp3Presets((prev) => prev.map(p => p.key === 'forest' ? { ...p, url: forest } : p));
-      }
-      // Défaut: pluie si rien n'est sauvegardé
-      const defaultUrl = rain || 'https://assets.mixkit.co/sfx/preview/mixkit-light-rain-loop-2393.mp3';
-      setSelectedPresetKey('rain');
-      setPendingMp3Src(defaultUrl);
-    } catch {}
+    // Définir par défaut le préréglage sélectionné et utiliser sa source
+    const p = mp3Presets.find(x => x.key === selectedPresetKey) || mp3Presets[0];
+    if (p?.url) {
+      setSelectedPresetKey(p.key);
+      setMp3Src(p.url);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const onPresetChange = (key: string) => {
     setSelectedPresetKey(key);
     const p = mp3Presets.find(x => x.key === key);
-    if (p?.url) setPendingMp3Src(p.url);
+    if (p?.url) setMp3Src(p.url);
   };
 
-  const defineCurrentPresetUrl = () => {
-    const p = mp3Presets.find(x => x.key === selectedPresetKey);
-    if (!p) return;
-    const current = p.url || '';
-    const url = window.prompt('Collez l\'URL MP3 (Pixabay, etc.) pour: ' + p.label, current || 'https://...');
-    if (!url) return;
-    const clean = url.trim();
-    setMp3Presets((prev) => prev.map(x => x.key === p.key ? { ...x, url: clean } : x));
-    if (p.key === 'rain') { try { localStorage.setItem('preset_rain_url', clean); } catch {} }
-    if (p.key === 'forest') { try { localStorage.setItem('preset_forest_url', clean); } catch {} }
-    setPendingMp3Src(clean);
-  };
+  // Suppression de la définition d'URL par préréglage
 
   return (
     <div className="space-y-6 animate-fadeIn">
@@ -655,8 +571,8 @@ const MeditationContent = ({ onBack, onComplete }: MeditationContentProps) => {
                 controls
                 playsInline
               />
-              <div className="text-xs text-gray-600 mt-1">Lecture: MP3 → {mp3Src || pendingMp3Src}</div>
-              <div className="grid grid-cols-1 md:grid-cols-6 gap-3">
+              <div className="text-xs text-gray-600 mt-1">Lecture: MP3 → {mp3Src}</div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div className="md:col-span-3">
                   <label className="block text-sm text-gray-600 mb-1">Préréglages</label>
                   <select
@@ -669,27 +585,7 @@ const MeditationContent = ({ onBack, onComplete }: MeditationContentProps) => {
                     ))}
                   </select>
                 </div>
-                <div className="md:col-span-2 flex items-end">
-                  <Button className="w-full" variant="outline" onClick={defineCurrentPresetUrl}>Définir l’URL du préréglage</Button>
-                </div>
-                <div className="md:col-span-1 flex items-end">
-                  <Button className="w-full" variant="outline" onClick={applyMp3Url}>Appliquer</Button>
-                </div>
-                <div className="md:col-span-6">
-                  <label className="block text-sm text-gray-600 mb-1">URL du MP3 (optionnel)</label>
-                  <input
-                    className="w-full border rounded-md px-3 py-2 bg-white"
-                    placeholder="https://... ou /audio/guided-meditation-fr.mp3"
-                    value={pendingMp3Src}
-                    onChange={(e) => setPendingMp3Src(e.target.value)}
-                  />
-                </div>
-                <div className="md:col-span-6 -mt-2 text-xs text-gray-500">
-                  Astuce: choisissez un préréglage puis cliquez "Définir l’URL" pour coller un lien MP3 libre (Pixabay). Au clic sur Commencer, l’URL sélectionnée sera lue.
-                </div>
-                <div className="md:col-span-6 flex gap-2 items-center">
-                  <Button variant="outline" onClick={testBeep}>Tester le son (bip local)</Button>
-                </div>
+                {/* Champ URL du MP3 et aide supprimés */}
               </div>
             </>
           )}
