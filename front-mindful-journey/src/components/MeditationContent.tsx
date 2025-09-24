@@ -104,7 +104,10 @@ const MeditationContent = ({ onBack, onComplete }: MeditationContentProps) => {
         el.pause();
         setIsPlaying(false);
       } else {
-        if (el.src !== mp3Src) { try { el.src = mp3Src; el.load(); } catch { } }
+        try {
+          const abs = (() => { try { return new URL(mp3Src, window.location.href).href; } catch { return mp3Src; } })();
+          if (!el.src || el.src !== abs) { el.src = abs; try { el.load(); } catch { } }
+        } catch { }
         try { el.muted = false; } catch { }
         try { el.volume = 1; } catch { }
         try {
