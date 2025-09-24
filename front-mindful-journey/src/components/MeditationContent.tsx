@@ -189,7 +189,7 @@ const MeditationContent = ({ onBack, onComplete }: MeditationContentProps) => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div className="md:col-span-3">
-              <label className="block text-sm text-gray-600 mb-1">Préréglages</label>
+              <label className="block text-sm text-gray-600 mb-1">Liste des audios</label>
               <select className="w-full border rounded-md px-3 py-2 bg-white" onChange={(e) => onPresetChange(e.target.value)} value={selectedPresetKey}>
                 {mp3Presets.map((p) => <option key={p.key} value={p.key}>{p.label}</option>)}
               </select>
