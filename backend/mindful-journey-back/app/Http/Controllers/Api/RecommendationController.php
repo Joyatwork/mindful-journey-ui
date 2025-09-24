@@ -20,7 +20,7 @@ class RecommendationController extends Controller
     {
         try {
             $user = Auth::user();
-            
+
             if (!$user) {
                 return response()->json(['message' => 'Utilisateur non authentifié'], 401);
             }
@@ -86,7 +86,6 @@ class RecommendationController extends Controller
                 ],
                 'generated_at' => now()
             ]);
-
         } catch (\Exception $e) {
             Log::error('Erreur lors de la génération des suggestions: ' . $e->getMessage());
             return response()->json([
@@ -261,7 +260,7 @@ class RecommendationController extends Controller
             } elseif ($energy <= 2) {
                 $query->where(function ($q) {
                     $q->where('specialty', 'like', '%généraliste%')
-                      ->orWhere('specialty', 'like', '%Généraliste%');
+                        ->orWhere('specialty', 'like', '%Généraliste%');
                 });
             }
         }
@@ -536,7 +535,7 @@ class RecommendationController extends Controller
     {
         // Trier chaque catégorie par score
         foreach ($suggestions as $category => &$items) {
-            usort($items, function($a, $b) {
+            usort($items, function ($a, $b) {
                 return ($b['score'] ?? 0) <=> ($a['score'] ?? 0);
             });
         }
@@ -551,7 +550,7 @@ class RecommendationController extends Controller
     {
         try {
             $user = Auth::user();
-            
+
             if (!$user) {
                 return response()->json(['message' => 'Utilisateur non authentifié'], 401);
             }
@@ -585,7 +584,6 @@ class RecommendationController extends Controller
                 'suggestions' => $suggestions,
                 'generated_at' => now()
             ]);
-
         } catch (\Exception $e) {
             Log::error('Erreur lors de la récupération des suggestions historiques: ' . $e->getMessage());
             return response()->json([

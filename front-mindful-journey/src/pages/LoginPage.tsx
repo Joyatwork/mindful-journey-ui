@@ -82,7 +82,7 @@ const LoginPage = () => {
           }
         }
       }
-  toast({ title: msg, variant: "destructive" });
+      toast({ title: msg, variant: "destructive" });
       console.error('error', error);
     } finally {
       setLoading(false);
@@ -248,52 +248,52 @@ const LoginPage = () => {
             </TabsList>
             <TabsContent value="login" className="space-y-4">
               {!twoFactorPending && (
-              <form onSubmit={handleLogin} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="login-email">Email</Label>
-                  <Input
-                    id="login-email"
-                    type="email"
-                    placeholder="votre@email.com"
-                    value={loginForm.email}
-                    onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="login-password">Mot de passe</Label>
-                  <div className="relative">
+                <form onSubmit={handleLogin} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="login-email">Email</Label>
                     <Input
-                      id="login-password"
-                      type={showLoginPassword ? 'text' : 'password'}
-                      placeholder="••••••••"
-                      value={loginForm.password}
-                      onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
+                      id="login-email"
+                      type="email"
+                      placeholder="votre@email.com"
+                      value={loginForm.email}
+                      onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
                       required
-                      autoComplete="current-password"
-                      className="pr-10"
                     />
-                    <button
-                      type="button"
-                      onClick={() => setShowLoginPassword(v => !v)}
-                      className="absolute inset-y-0 right-0 px-3 flex items-center text-gray-500 hover:text-gray-700"
-                      aria-label={showLoginPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
-                      title={showLoginPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
-                      aria-pressed={showLoginPassword}
-                    >
-                      {showLoginPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
                   </div>
-                  <div className="text-right mt-1">
-                    <button type="button" onClick={() => { setShowForgot(true); setForgotEmail(loginForm.email); }} className="text-xs text-indigo-600 hover:underline">
-                      Mot de passe oublié ?
-                    </button>
+                  <div className="space-y-2">
+                    <Label htmlFor="login-password">Mot de passe</Label>
+                    <div className="relative">
+                      <Input
+                        id="login-password"
+                        type={showLoginPassword ? 'text' : 'password'}
+                        placeholder="••••••••"
+                        value={loginForm.password}
+                        onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
+                        required
+                        autoComplete="current-password"
+                        className="pr-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowLoginPassword(v => !v)}
+                        className="absolute inset-y-0 right-0 px-3 flex items-center text-gray-500 hover:text-gray-700"
+                        aria-label={showLoginPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                        title={showLoginPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                        aria-pressed={showLoginPassword}
+                      >
+                        {showLoginPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                    <div className="text-right mt-1">
+                      <button type="button" onClick={() => { setShowForgot(true); setForgotEmail(loginForm.email); }} className="text-xs text-indigo-600 hover:underline">
+                        Mot de passe oublié ?
+                      </button>
+                    </div>
                   </div>
-                </div>
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? 'Connexion...' : 'Se connecter'}
-                </Button>
-              </form>
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? 'Connexion...' : 'Se connecter'}
+                  </Button>
+                </form>
               )}
 
               {twoFactorPending && !otpSuccess && (
@@ -306,7 +306,7 @@ const LoginPage = () => {
                       maxLength={5}
                       placeholder="12345"
                       value={otpCode}
-                      onChange={(e) => setOtpCode(e.target.value.replace(/[^0-9]/g, '').slice(0,5))}
+                      onChange={(e) => setOtpCode(e.target.value.replace(/[^0-9]/g, '').slice(0, 5))}
                       className="tracking-widest text-center text-lg"
                       autoFocus
                     />
@@ -317,7 +317,7 @@ const LoginPage = () => {
                   </div>
                   <div className="flex gap-2">
                     <Button type="submit" className="flex-1" disabled={loading}>{loading ? 'Vérification...' : 'Valider'}</Button>
-                    <Button type="button" variant="outline" className="flex-1" disabled={loading} onClick={(e)=>handleLogin(e)}>Renvoyer</Button>
+                    <Button type="button" variant="outline" className="flex-1" disabled={loading} onClick={(e) => handleLogin(e)}>Renvoyer</Button>
                   </div>
                 </form>
               )}
@@ -325,24 +325,24 @@ const LoginPage = () => {
 
               {!twoFactorPending && (
                 <>
-                <div className="relative my-4">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t" />
+                  <div className="relative my-4">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-white px-2 text-muted-foreground">Ou continuer avec</span>
+                    </div>
                   </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-white px-2 text-muted-foreground">Ou continuer avec</span>
-                  </div>
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full"
-                  onClick={handleGoogleLogin}
-                  disabled={loading}
-                >
-                  <Mail className="h-4 w-4 mr-2" />
-                  Continuer avec Google
-                </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full"
+                    onClick={handleGoogleLogin}
+                    disabled={loading}
+                  >
+                    <Mail className="h-4 w-4 mr-2" />
+                    Continuer avec Google
+                  </Button>
                 </>
               )}
             </TabsContent>
