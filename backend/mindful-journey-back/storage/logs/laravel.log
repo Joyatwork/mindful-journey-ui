@@ -3306,3 +3306,15 @@
 [2025-09-30 09:46:25] local.INFO: Utilisateur après modification (avant save): {"id":7,"role_id":null,"google_id":null,"provider":null,"name":"CAMARA","email":"alicamara291@gmail.com","email_verified_at":null,"birth_date":null,"gender":null,"phone":"0100000000","bio":"ccc","avatar":"avatars/CrVgY0nUz6jJBBJosxRtaAELXfKVY3FIka6yFJJI.jpg","avatar_url":"http://localhost:8081/storage/avatars/CrVgY0nUz6jJBBJosxRtaAELXfKVY3FIka6yFJJI.jpg","preferences":{"goals":null,"company":"Non spécifiée","location":null,"job_position":null,"two_factor_enabled":true,"notifications_enabled":false},"health_goals":null,"status":"active","last_login_at":null,"created_at":"2025-09-08T08:00:18.000000Z","updated_at":"2025-09-30T09:44:27.000000Z"} 
 [2025-09-30 09:46:25] local.INFO: Résultat save(): SUCCESS  
 [2025-09-30 09:46:25] local.INFO: Utilisateur après save: {"id":7,"role_id":null,"google_id":null,"provider":null,"name":"CAMARA","email":"alicamara291@gmail.com","email_verified_at":null,"birth_date":null,"gender":null,"phone":"0100000000","bio":"ccc","avatar":"avatars/CrVgY0nUz6jJBBJosxRtaAELXfKVY3FIka6yFJJI.jpg","avatar_url":"http://localhost:8081/storage/avatars/CrVgY0nUz6jJBBJosxRtaAELXfKVY3FIka6yFJJI.jpg","preferences":{"goals":null,"company":"Non spécifiée","location":null,"job_position":null,"two_factor_enabled":true,"notifications_enabled":false},"health_goals":null,"status":"active","last_login_at":null,"created_at":"2025-09-08T08:00:18.000000Z","updated_at":"2025-09-30T09:46:25.000000Z"} 
+[2025-09-30 10:02:27] local.INFO: ProfileController:update - hasFile avatar: yes  
+[2025-09-30 10:02:28] local.INFO: ProfileController:update - avatar path: avatars/hS16pMBJPeAA005DKAHgkSOz6nrnuyGolkE6v7SJ.jpg  
+[2025-09-30 10:02:28] local.INFO: ProfileController:update - user avatar (db): avatars/hS16pMBJPeAA005DKAHgkSOz6nrnuyGolkE6v7SJ.jpg  
+[2025-09-30 10:02:28] local.INFO: ProfileController:update - user avatar_url (accessor): http://localhost:8081/storage/avatars/hS16pMBJPeAA005DKAHgkSOz6nrnuyGolkE6v7SJ.jpg  
+[2025-09-30 10:16:30] local.INFO: ProfileController:update - hasFile avatar: yes  
+[2025-09-30 10:16:30] local.INFO: ProfileController:update - avatar path: avatars/1WzmIiu2gwEGQeBXAnpCj8phRacUwVUmWkX8dYYy.jpg  
+[2025-09-30 10:16:30] local.INFO: ProfileController:update - user avatar (db): avatars/1WzmIiu2gwEGQeBXAnpCj8phRacUwVUmWkX8dYYy.jpg  
+[2025-09-30 10:16:30] local.INFO: ProfileController:update - user avatar_url (accessor): http://localhost:8081/storage/avatars/1WzmIiu2gwEGQeBXAnpCj8phRacUwVUmWkX8dYYy.jpg  
+[2025-09-30 10:44:06] local.INFO: ProfileController:update - hasFile avatar: yes  
+[2025-09-30 10:44:06] local.INFO: ProfileController:update - avatar path: avatars/ny0kFQHOMkXUIszrfGWGm4I57tMHH70zR5rKoE4c.jpg  
+[2025-09-30 10:44:06] local.INFO: ProfileController:update - user avatar (db): avatars/ny0kFQHOMkXUIszrfGWGm4I57tMHH70zR5rKoE4c.jpg  
+[2025-09-30 10:44:06] local.INFO: ProfileController:update - user avatar_url (accessor): http://localhost:8081/storage/avatars/ny0kFQHOMkXUIszrfGWGm4I57tMHH70zR5rKoE4c.jpg  

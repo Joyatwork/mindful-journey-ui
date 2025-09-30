@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Log;
 
 class ProfileController extends Controller
 {
@@ -22,9 +23,10 @@ class ProfileController extends Controller
             ], 401);
         }
 
+        // Return fresh to include appended attributes (e.g. avatar_url)
         return response()->json([
             'success' => true,
-            'data' => $user
+            'data' => $user->fresh()
         ]);
     }
 
@@ -64,6 +66,19 @@ class ProfileController extends Controller
 
         // Mettre à jour réellement l'utilisateur
         $user->update($validated);
+
+        // Debug logs to help trace avatar upload/storage and returned URL
+        try {
+            Log::info('ProfileController:update - hasFile avatar: ' . ($request->hasFile('avatar') ? 'yes' : 'no'));
+            if (isset($path)) {
+                Log::info('ProfileController:update - avatar path: ' . $path);
+            }
+            Log::info('ProfileController:update - user avatar (db): ' . ($user->avatar ?? 'NULL'));
+            Log::info('ProfileController:update - user avatar_url (accessor): ' . ($user->avatar_url ?? 'NULL'));
+        } catch (\Throwable $e) {
+            // don't break normal flow for logging issues
+            Log::warning('ProfileController:update - failed to log avatar info: ' . $e->getMessage());
+        }
 
         return response()->json([
             'success' => true,

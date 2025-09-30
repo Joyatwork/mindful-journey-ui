@@ -260,6 +260,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const returnedUser = response?.user ?? response?.data ?? null;
 
       if (returnedUser) {
+        // If backend returned only 'avatar' (relative path) but not 'avatar_url',
+        // construct a public URL so the UI can immediately display the uploaded image.
+        if (!returnedUser.avatar_url && returnedUser.avatar) {
+          try {
+            const origin = window.location.origin.replace(/:\d+$/,'');
+            // Use '/storage/' path where Laravel stores public files
+            returnedUser.avatar_url = `${window.location.origin}/storage/${returnedUser.avatar}`;
+          } catch (_) {
+            // ignore if window not available
+          }
+        }
         setUser(returnedUser);
         localStorage.setItem('auth_user', JSON.stringify(returnedUser));
       }

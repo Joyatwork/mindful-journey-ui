@@ -52,15 +52,17 @@ const EditProfileForm: React.FC<EditProfileFormProps> = ({ onSave, onCancel, ini
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
   const handleSubmit = (data: UserProfileData) => {
-    // If avatar file present, build FormData
+    // If avatar file present, build FormData (use snake_case keys expected by the backend)
     if (avatarFile) {
       const fd = new FormData();
       fd.append('name', data.name || '');
       fd.append('email', data.email || '');
       fd.append('phone', data.phone || '');
       fd.append('location', data.location || '');
-      fd.append('birthDate', data.birthDate || '');
-      fd.append('jobPosition', data.jobPosition || '');
+      // backend expects birth_date
+      fd.append('birth_date', data.birthDate || '');
+      // backend expects job_position
+      fd.append('job_position', data.jobPosition || '');
       fd.append('company', data.company || '');
       fd.append('bio', data.bio || '');
       fd.append('goals', data.goals || '');
