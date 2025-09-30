@@ -70,17 +70,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       console.log('🔄 Chargement des données utilisateur au démarrage...');
       const savedToken = localStorage.getItem('auth_token');
       const savedUser = localStorage.getItem('auth_user');
-      
+
       console.log('🔑 Token sauvé:', savedToken ? 'Présent' : 'Absent');
       console.log('👤 Utilisateur sauvé:', savedUser ? JSON.parse(savedUser) : 'Absent');
-      
+
       if (savedToken && savedUser) {
         try {
           setToken(savedToken);
           const parsedUser = JSON.parse(savedUser);
           setUser(parsedUser);
           console.log('📱 Données localStorage chargées:', parsedUser);
-          
+
           // Vérifier si le token est encore valide en récupérant les données utilisateur
           try {
             console.log('🔄 Vérification du token et récupération des données fraîches...');
@@ -144,7 +144,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           console.warn('⚠️ Impossible de récupérer les données utilisateur fraîches:', error);
         }
       }
-  return {};
+      return {};
     } catch (error: any) {
       // Rethrow original error to keep status/data for UI handling
       throw error;
@@ -166,15 +166,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const register = async (name: string, email: string, password: string, password_confirmation: string) => {
     try {
-      const response = await testApiService.auth.register({ 
-        name, 
-        email, 
-        password, 
-        password_confirmation 
+      const response = await testApiService.auth.register({
+        name,
+        email,
+        password,
+        password_confirmation
       });
       setUser(response.user);
       setToken(response.token || null);
-      
+
       // Sauvegarder dans localStorage
       if (response.token) {
         localStorage.setItem('auth_token', response.token);
@@ -184,7 +184,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       throw new Error(error.message || 'Erreur d\'inscription');
     }
   };
-  
+
   const forgotPassword = async (email: string) => {
     try {
       await testApiService.auth.forgotPassword(email);
@@ -192,7 +192,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       throw new Error(e?.message || 'Erreur envoi lien de réinitialisation');
     }
   };
-  
+
   const resetPassword = async (data: { email: string; token: string; password: string; password_confirmation: string }) => {
     try {
       await testApiService.auth.resetPassword(data);
@@ -244,7 +244,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       } else {
         console.log('📝 Données à envoyer:', profileData);
       }
-      
+
       // Appel API réel maintenant que le backend fonctionne
       // Si on envoie un FormData (upload d'avatar), utiliser l'endpoint profile.update
       // (gère multipart/form-data via POST+_method=PUT) ; sinon utiliser auth.updateProfile
@@ -264,13 +264,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         localStorage.setItem('auth_user', JSON.stringify(returnedUser));
       }
       console.log('💾 Données mise à jour sauvées dans localStorage:', response.user);
-      
+
       return response;
     } catch (error: any) {
       console.error('❌ Erreur mise à jour profil:', error);
       // Fallback vers la mise à jour locale en cas d'erreur API
       console.warn('Erreur API, utilisation du fallback local:', error);
-      
+
       if (user) {
         const updatedUser = {
           ...user,
@@ -284,13 +284,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           bio: profileData.bio,
           goals: profileData.goals,
         };
-        
+
         setUser(updatedUser);
         localStorage.setItem('auth_user', JSON.stringify(updatedUser));
-        
+
         return { user: updatedUser };
       }
-      
+
       throw new Error(error.message || 'Erreur lors de la mise à jour du profil');
     }
   };
@@ -298,11 +298,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const loginWithGoogle = async () => {
     try {
       console.log('🔄 Début de l\'authentification Google...');
-      
+
       // Obtenir l'URL de redirection Google
       const response = await fetch('/api/auth/google');
       const data = await response.json();
-      
+
       if (data.url) {
         // Rediriger vers Google OAuth
         window.location.href = data.url;
@@ -318,14 +318,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const handleGoogleCallback = async (token: string) => {
     try {
       console.log('🔄 Traitement du callback Google...');
-      
+
       // Utiliser le token reçu pour obtenir les informations utilisateur
       const response = await testApiService.auth.getUser(token);
-      
+
       if (response.user) {
         setUser(response.user);
         setToken(token);
-        
+
         // Sauvegarder dans localStorage
         localStorage.setItem('auth_token', token);
         localStorage.setItem('auth_user', JSON.stringify(response.user));
@@ -342,12 +342,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     token,
     isLoading,
     isAuthenticated,
-  twoFactorPending,
+    twoFactorPending,
     login,
-  verifyOtp,
+    verifyOtp,
     register,
-  forgotPassword,
-  resetPassword,
+    forgotPassword,
+    resetPassword,
     loginWithGoogle,
     handleGoogleCallback,
     logout,

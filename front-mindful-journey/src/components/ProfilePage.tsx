@@ -7,11 +7,11 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/contexts/AuthContext';
 import testApiService from '@/lib/test-api';
-import { 
-  User, 
-  Mail, 
-  Phone, 
-  MapPin, 
+import {
+  User,
+  Mail,
+  Phone,
+  MapPin,
   Calendar,
   Settings,
   Bell,
@@ -69,7 +69,7 @@ const ProfilePage = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [showAppointments, setShowAppointments] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
-  const [ DoubleAuth, setDoubleAuth] = useState(false);
+  const [DoubleAuth, setDoubleAuth] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
 
   const [userInfo, setUserInfo] = useState({
@@ -77,7 +77,7 @@ const ProfilePage = () => {
     email: user?.email || 'email@example.com',
     phone: user?.phone || '',
     location: user?.location || '',
-  birthDate: safeGetBirthDate(user as any),
+    birthDate: safeGetBirthDate(user as any),
     jobPosition: user?.job_position || 'Non spécifié',
     company: user?.company || 'Non spécifiée',
     bio: user?.bio || '',
@@ -94,16 +94,16 @@ const ProfilePage = () => {
         email: user.email,
         phone: user.phone || '',
         location: user.location || '',
-  birthDate: safeGetBirthDate(user as any),
+        birthDate: safeGetBirthDate(user as any),
         jobPosition: user.job_position || 'Non spécifié',
         company: user.company || 'Non spécifiée',
         bio: user.bio || '',
         goals: user.goals || ''
       }));
-  // init 2FA toggle from user payload if present
-  setDoubleAuth(Boolean(user.two_factor_enabled ?? true));
-  // init notifications toggle from user payload if present
-  setNotificationsEnabled(Boolean(user.notifications_enabled ?? false));
+      // init 2FA toggle from user payload if present
+      setDoubleAuth(Boolean(user.two_factor_enabled ?? true));
+      // init notifications toggle from user payload if present
+      setNotificationsEnabled(Boolean(user.notifications_enabled ?? false));
     }
   }, [user]);
 
@@ -137,17 +137,17 @@ const ProfilePage = () => {
       const profilePayload = isForm
         ? newInfo
         : {
-            name: newInfo.name,
-            email: newInfo.email,
-            phone: newInfo.phone,
-            location: newInfo.location,
-            // Normalize birth date to yyyy-MM-dd (Form input gives yyyy-MM-dd)
-            birth_date: newInfo.birthDate ? formatDateForInput(newInfo.birthDate) : (newInfo.birth_date ? formatDateForInput(newInfo.birth_date) : null),
-            job_position: newInfo.jobPosition ?? newInfo.job_position,
-            company: newInfo.company,
-            bio: newInfo.bio,
-            goals: newInfo.goals,
-          };
+          name: newInfo.name,
+          email: newInfo.email,
+          phone: newInfo.phone,
+          location: newInfo.location,
+          // Normalize birth date to yyyy-MM-dd (Form input gives yyyy-MM-dd)
+          birth_date: newInfo.birthDate ? formatDateForInput(newInfo.birthDate) : (newInfo.birth_date ? formatDateForInput(newInfo.birth_date) : null),
+          job_position: newInfo.jobPosition ?? newInfo.job_position,
+          company: newInfo.company,
+          bio: newInfo.bio,
+          goals: newInfo.goals,
+        };
 
       const response = await updateProfile(profilePayload);
 
@@ -246,15 +246,15 @@ const ProfilePage = () => {
                 <Avatar className="w-16 h-16 border-2 border-white shadow-lg flex-shrink-0">
                   <AvatarImage src={user?.avatar_url || '/placeholder.svg'} alt="Photo de profil" />
                   <AvatarFallback className="bg-wellness-gradient text-white text-sm font-semibold">
-                    {user?.name ? user.name.split(' ').map(n=>n[0]).slice(0,2).join('') : 'U'}
+                    {user?.name ? user.name.split(' ').map(n => n[0]).slice(0, 2).join('') : 'U'}
                   </AvatarFallback>
                 </Avatar>
-                
+
                 <div className="text-center sm:text-left flex-grow min-w-0">
                   <h1 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
                     {userInfo.name}
                   </h1>
-                  
+
                   <div className="flex items-center justify-center sm:justify-start gap-2 text-gray-600 dark:text-gray-300 text-sm mb-1">
                     <Briefcase className="w-3 h-3 flex-shrink-0" />
                     <span className="truncate">{userInfo.jobPosition}</span>
@@ -299,7 +299,7 @@ const ProfilePage = () => {
                     Forme: <span className="font-medium">{getWeatherLabel(userInfo.wellnessWeather)}</span>
                   </span>
                 </div>
-                
+
                 {/* Badges centered under wellness indicator */}
                 <div className="flex flex-wrap gap-1.5 justify-center">
                   <Badge variant="secondary" className="bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 text-xs px-2 py-0.5">
@@ -458,10 +458,10 @@ const ProfilePage = () => {
               <span className="text-gray-700 dark:text-gray-300">
                 Authentification à deux facteurs
               </span>
-              <Button onClick={toggle2FA} 
-              variant="outline" size="sm" 
-              className="border-purple-200 dark:border-purple-700 text-purple-700 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-800">
-              {DoubleAuth ? 'Désactiver' :  'Activer'} 
+              <Button onClick={toggle2FA}
+                variant="outline" size="sm"
+                className="border-purple-200 dark:border-purple-700 text-purple-700 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-800">
+                {DoubleAuth ? 'Désactiver' : 'Activer'}
               </Button>
             </div>
             <Separator className="bg-gray-200 dark:bg-gray-700" />

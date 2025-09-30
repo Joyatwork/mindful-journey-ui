@@ -29,12 +29,12 @@ const DatabaseViewer = () => {
   const fetchDatabaseStats = async () => {
     setLoading(true);
     setError(null);
-    
+
     try {
       // Simuler la récupération de tous les utilisateurs via une API
       const response = await fetch('http://localhost:8000/api/test/database-stats');
       const data = await response.json();
-      
+
       setStats(data.stats);
       setUsers(data.users || []);
     } catch (err: any) {
@@ -79,7 +79,7 @@ const DatabaseViewer = () => {
         <p className="text-gray-600 mb-6">
           Visualisation des données stockées dans votre base SQLite
         </p>
-        
+
         <div className="flex gap-4 justify-center mb-6">
           <Card className="p-4">
             <div className="text-2xl font-bold text-blue-600">{stats.totalUsers}</div>
@@ -153,7 +153,7 @@ const DatabaseViewer = () => {
                       )}
                     </div>
                   </div>
-                  
+
                   <div>
                     {user.bio && (
                       <div className="mb-4">
@@ -163,29 +163,29 @@ const DatabaseViewer = () => {
                         </p>
                       </div>
                     )}
-                    
+
                     {user.preferences && (
                       <details className="mb-2">
                         <summary className="cursor-pointer font-semibold text-sm">
                           🎯 Préférences
                         </summary>
                         <pre className="text-xs bg-gray-50 p-2 rounded mt-1 overflow-auto">
-                          {typeof user.preferences === 'string' 
-                            ? user.preferences 
+                          {typeof user.preferences === 'string'
+                            ? user.preferences
                             : JSON.stringify(user.preferences, null, 2)
                           }
                         </pre>
                       </details>
                     )}
-                    
+
                     {user.health_goals && (
                       <details>
                         <summary className="cursor-pointer font-semibold text-sm">
                           🎯 Objectifs santé
                         </summary>
                         <pre className="text-xs bg-gray-50 p-2 rounded mt-1 overflow-auto">
-                          {typeof user.health_goals === 'string' 
-                            ? user.health_goals 
+                          {typeof user.health_goals === 'string'
+                            ? user.health_goals
                             : JSON.stringify(user.health_goals, null, 2)
                           }
                         </pre>
@@ -207,7 +207,7 @@ const DatabaseViewer = () => {
               C:\Users\camar\Bureau\mindful-journey-ui\back-mindful-journey-iu\mindful-journey-back\database\database.sqlite
             </div>
             <p>
-              Vous pouvez ouvrir ce fichier avec des outils comme <strong>DB Browser for SQLite</strong> ou 
+              Vous pouvez ouvrir ce fichier avec des outils comme <strong>DB Browser for SQLite</strong> ou
               l'extension <strong>SQLite Viewer</strong> de VS Code.
             </p>
           </div>

@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { 
+import {
   Form,
   FormControl,
   FormField,
@@ -14,11 +14,11 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { useForm } from 'react-hook-form';
-import { 
-  User, 
-  Mail, 
-  Phone, 
-  MapPin, 
+import {
+  User,
+  Mail,
+  Phone,
+  MapPin,
   Calendar,
   Save,
   X
@@ -78,16 +78,16 @@ const EditProfileForm: React.FC<EditProfileFormProps> = ({ onSave, onCancel, ini
         <div className="relative z-10">
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-xl font-bold">Modifier le profil</h1>
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={onCancel}
               className="text-white hover:bg-white/20"
             >
               <X className="h-5 w-5" />
             </Button>
           </div>
-          
+
           <div className="flex items-center space-x-4">
             <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
               <User className="h-8 w-8 text-white" />
@@ -97,7 +97,7 @@ const EditProfileForm: React.FC<EditProfileFormProps> = ({ onSave, onCancel, ini
             </div>
           </div>
         </div>
-        
+
         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-6 translate-x-6" />
         <div className="absolute bottom-0 right-8 w-20 h-20 bg-white/5 rounded-full" />
       </div>
@@ -106,7 +106,7 @@ const EditProfileForm: React.FC<EditProfileFormProps> = ({ onSave, onCancel, ini
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
           <Card className="p-4">
             <h2 className="text-lg font-semibold mb-4">Informations personnelles</h2>
-            
+
             <div className="space-y-4">
               <FormField
                 control={form.control}
@@ -228,7 +228,7 @@ const EditProfileForm: React.FC<EditProfileFormProps> = ({ onSave, onCancel, ini
 
           <Card className="p-4">
             <h2 className="text-lg font-semibold mb-4">Informations professionnelles</h2>
-            
+
             <div className="space-y-4">
               <FormField
                 control={form.control}
@@ -268,7 +268,7 @@ const EditProfileForm: React.FC<EditProfileFormProps> = ({ onSave, onCancel, ini
 
           <Card className="p-4">
             <h2 className="text-lg font-semibold mb-4">À propos</h2>
-            
+
             <div className="space-y-4">
               <FormField
                 control={form.control}
@@ -277,10 +277,10 @@ const EditProfileForm: React.FC<EditProfileFormProps> = ({ onSave, onCancel, ini
                   <FormItem>
                     <FormLabel>Biographie</FormLabel>
                     <FormControl>
-                      <Textarea 
-                        placeholder="Parlez-nous de vous..." 
+                      <Textarea
+                        placeholder="Parlez-nous de vous..."
                         className="min-h-[100px]"
-                        {...field} 
+                        {...field}
                       />
                     </FormControl>
                     <FormMessage />
@@ -295,10 +295,10 @@ const EditProfileForm: React.FC<EditProfileFormProps> = ({ onSave, onCancel, ini
                   <FormItem>
                     <FormLabel>Objectifs bien-être</FormLabel>
                     <FormControl>
-                      <Textarea 
-                        placeholder="Quels sont vos objectifs de bien-être ?" 
+                      <Textarea
+                        placeholder="Quels sont vos objectifs de bien-être ?"
                         className="min-h-[80px]"
-                        {...field} 
+                        {...field}
                       />
                     </FormControl>
                     <FormMessage />
@@ -309,17 +309,17 @@ const EditProfileForm: React.FC<EditProfileFormProps> = ({ onSave, onCancel, ini
           </Card>
 
           <div className="flex space-x-3">
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               className="flex-1 bg-wellness-gradient hover:opacity-90 text-white"
               disabled={isLoading}
             >
               <Save className="h-4 w-4 mr-2" />
               {isLoading ? 'Sauvegarde...' : 'Sauvegarder'}
             </Button>
-            <Button 
-              type="button" 
-              variant="outline" 
+            <Button
+              type="button"
+              variant="outline"
               onClick={onCancel}
               className="flex-1"
               disabled={isLoading}

@@ -79,7 +79,7 @@ const AuthTestPage = () => {
 
   const handleLogout = async () => {
     if (!token) return;
-    
+
     setLoading(true);
     try {
       const response = await testApiService.auth.logout(token);
@@ -97,7 +97,7 @@ const AuthTestPage = () => {
 
   const handleGetUser = async () => {
     if (!token) return;
-    
+
     setLoading(true);
     try {
       const response = await testApiService.auth.getUser(token);
@@ -114,7 +114,7 @@ const AuthTestPage = () => {
 
   const handleUpdateProfile = async () => {
     if (!token) return;
-    
+
     const profileData = {
       name: user?.name || 'Test User',
       phone: '+33123456789',
@@ -136,7 +136,7 @@ const AuthTestPage = () => {
       const response = await testApiService.profile.update(token, profileData);
       showMessage('success', 'Profil mis à jour avec succès');
       console.log('Profil mis à jour:', response);
-      
+
       // Récupérer le profil mis à jour
       const updatedProfile = await testApiService.profile.get(token);
       console.log('Profil récupéré:', updatedProfile);

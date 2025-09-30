@@ -14,7 +14,7 @@ class ProfileController extends Controller
     public function show(Request $request): JsonResponse
     {
         $user = $request->user();
-        
+
         if (!$user) {
             return response()->json([
                 'success' => false,
@@ -34,7 +34,7 @@ class ProfileController extends Controller
     public function update(Request $request): JsonResponse
     {
         $user = $request->user();
-        
+
         if (!$user) {
             return response()->json([
                 'success' => false,

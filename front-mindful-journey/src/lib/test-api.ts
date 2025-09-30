@@ -27,13 +27,13 @@ async function getCsrfToken() {
 // Fonction helper avec gestion CSRF automatique
 async function testApiRequest(endpoint: string, options: RequestInit = {}) {
   const url = `${API_BASE_URL}${endpoint}`;
-  
+
   // Pour les requêtes POST/PUT/PATCH/DELETE, obtenir d'abord le token CSRF
   const incomingMethod = options.method || 'GET';
   if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(incomingMethod.toString().toUpperCase())) {
     await getCsrfToken();
   }
-  
+
   const headers = new Headers({
     'Accept': 'application/json',
     'X-Requested-With': 'XMLHttpRequest',
@@ -124,7 +124,7 @@ async function testApiRequest(endpoint: string, options: RequestInit = {}) {
 // Service API de test
 const testApiService = {
   challenges: {
-  list: () => testApiRequest('/challenges'),
+    list: () => testApiRequest('/challenges'),
     start: (challengeId: number) => testApiRequest(`/challenges/${challengeId}/start`, {
       method: 'POST'
     }),
