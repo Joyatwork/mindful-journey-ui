@@ -3318,3 +3318,19 @@
 [2025-09-30 10:44:06] local.INFO: ProfileController:update - avatar path: avatars/ny0kFQHOMkXUIszrfGWGm4I57tMHH70zR5rKoE4c.jpg  
 [2025-09-30 10:44:06] local.INFO: ProfileController:update - user avatar (db): avatars/ny0kFQHOMkXUIszrfGWGm4I57tMHH70zR5rKoE4c.jpg  
 [2025-09-30 10:44:06] local.INFO: ProfileController:update - user avatar_url (accessor): http://localhost:8081/storage/avatars/ny0kFQHOMkXUIszrfGWGm4I57tMHH70zR5rKoE4c.jpg  
+[2025-09-30 11:10:51] local.INFO: ProfileController:update - hasFile avatar: yes  
+[2025-09-30 11:10:51] local.INFO: ProfileController:update - avatar path: avatars/Bhp9DzqRx5WWoeglnOyR4TW0R9byCjPrxZ4C4ZGv.jpg  
+[2025-09-30 11:10:51] local.INFO: ProfileController:update - user avatar (db): avatars/Bhp9DzqRx5WWoeglnOyR4TW0R9byCjPrxZ4C4ZGv.jpg  
+[2025-09-30 11:10:51] local.INFO: ProfileController:update - user avatar_url (accessor): http://localhost:8081/storage/avatars/Bhp9DzqRx5WWoeglnOyR4TW0R9byCjPrxZ4C4ZGv.jpg  
+[2025-09-30 11:12:46] local.INFO: ProfileController:update - hasFile avatar: yes  
+[2025-09-30 11:12:46] local.INFO: ProfileController:update - avatar path: avatars/hMasklr23cBkeILDe3XMwFQVmlLTcZyCfVJzfMEj.jpg  
+[2025-09-30 11:12:46] local.INFO: ProfileController:update - user avatar (db): avatars/hMasklr23cBkeILDe3XMwFQVmlLTcZyCfVJzfMEj.jpg  
+[2025-09-30 11:12:46] local.INFO: ProfileController:update - user avatar_url (accessor): http://localhost:8081/storage/avatars/hMasklr23cBkeILDe3XMwFQVmlLTcZyCfVJzfMEj.jpg  
+[2025-09-30 11:14:58] local.INFO: ProfileController:update - hasFile avatar: yes  
+[2025-09-30 11:14:58] local.INFO: ProfileController:update - avatar path: avatars/FSo2USulc03NRxrgPgNiVDkXReXuBTpmh9ia9MR7.jpg  
+[2025-09-30 11:14:58] local.INFO: ProfileController:update - user avatar (db): avatars/FSo2USulc03NRxrgPgNiVDkXReXuBTpmh9ia9MR7.jpg  
+[2025-09-30 11:14:58] local.INFO: ProfileController:update - user avatar_url (accessor): http://localhost:8081/storage/avatars/FSo2USulc03NRxrgPgNiVDkXReXuBTpmh9ia9MR7.jpg  
+[2025-09-30 11:28:50] local.INFO: ProfileController:update - hasFile avatar: yes  
+[2025-09-30 11:28:50] local.INFO: ProfileController:update - avatar path: avatars/u8DPQuJ1MB0bJde3XVdK2BVMKEFYXp5AtuXkPgkO.jpg  
+[2025-09-30 11:28:50] local.INFO: ProfileController:update - user avatar (db): avatars/u8DPQuJ1MB0bJde3XVdK2BVMKEFYXp5AtuXkPgkO.jpg  
+[2025-09-30 11:28:50] local.INFO: ProfileController:update - user avatar_url (accessor): http://localhost:8081/storage/avatars/u8DPQuJ1MB0bJde3XVdK2BVMKEFYXp5AtuXkPgkO.jpg  
