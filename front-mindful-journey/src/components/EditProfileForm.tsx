@@ -48,7 +48,27 @@ const EditProfileForm: React.FC<EditProfileFormProps> = ({ onSave, onCancel, ini
     defaultValues: initialData
   });
 
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+
   const handleSubmit = (data: UserProfileData) => {
+    // If avatar file present, build FormData
+    if (avatarFile) {
+      const fd = new FormData();
+      fd.append('name', data.name || '');
+      fd.append('email', data.email || '');
+      fd.append('phone', data.phone || '');
+      fd.append('location', data.location || '');
+      fd.append('birthDate', data.birthDate || '');
+      fd.append('jobPosition', data.jobPosition || '');
+      fd.append('company', data.company || '');
+      fd.append('bio', data.bio || '');
+      fd.append('goals', data.goals || '');
+      fd.append('avatar', avatarFile);
+      onSave(fd as any);
+      return;
+    }
+
     onSave(data);
   };
 
@@ -172,6 +192,37 @@ const EditProfileForm: React.FC<EditProfileFormProps> = ({ onSave, onCancel, ini
                   </FormItem>
                 )}
               />
+
+              {/* Avatar upload */}
+              <div>
+                <FormLabel>Photo de profil</FormLabel>
+                <div className="flex items-center gap-3 mt-2">
+                  <div className="w-16 h-16 bg-gray-100 rounded-full overflow-hidden flex items-center justify-center">
+                    {avatarPreview ? (
+                      <img src={avatarPreview} alt="Aperçu avatar" className="w-full h-full object-cover" />
+                    ) : (
+                      <User className="h-8 w-8 text-gray-500" />
+                    )}
+                  </div>
+                  <div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const f = e.target.files?.[0] || null;
+                        setAvatarFile(f);
+                        if (f) {
+                          const url = URL.createObjectURL(f);
+                          setAvatarPreview(url);
+                        } else {
+                          setAvatarPreview(null);
+                        }
+                      }}
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Formats: jpg, png, webp — max 5MB</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </Card>
 

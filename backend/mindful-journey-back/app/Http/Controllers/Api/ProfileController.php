@@ -50,8 +50,17 @@ class ProfileController extends Controller
             'gender' => 'nullable|in:male,female,other,prefer_not_to_say',
             'bio' => 'nullable|string|max:1000',
             'preferences' => 'nullable|array',
-            'health_goals' => 'nullable|array'
+            'health_goals' => 'nullable|array',
+            'avatar' => 'nullable|file|image|mimes:jpg,jpeg,png,webp|max:5120' // max 5MB
         ]);
+
+        // Handle avatar upload if present
+        if ($request->hasFile('avatar')) {
+            $file = $request->file('avatar');
+            $path = $file->store('avatars', 'public');
+            // store relative path in DB
+            $validated['avatar'] = $path;
+        }
 
         // Mettre à jour réellement l'utilisateur
         $user->update($validated);

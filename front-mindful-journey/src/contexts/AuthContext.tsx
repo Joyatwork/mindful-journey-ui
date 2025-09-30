@@ -5,6 +5,7 @@ interface User {
   id: number;
   name: string;
   email: string;
+  avatar_url?: string | null;
   phone?: string;
   location?: string;
   birth_date?: string;
@@ -225,16 +226,43 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     try {
       console.log('🔄 Début de la mise à jour du profil...');
-      console.log('📝 Données à envoyer:', profileData);
+      // Si c'est un FormData, lister les paires pour debug (utile pour vérifier nom des champs et présence du fichier)
+      if (typeof FormData !== 'undefined' && profileData instanceof FormData) {
+        console.log('📝 FormData à envoyer:');
+        try {
+          for (const pair of (profileData as FormData).entries()) {
+            const [k, v] = pair as [string, any];
+            if (v instanceof File) {
+              console.log(`  - ${k}: File(name=${v.name}, size=${v.size}, type=${v.type})`);
+            } else {
+              console.log(`  - ${k}: ${v}`);
+            }
+          }
+        } catch (e) {
+          console.log('  (impossible d' + "'" + 'itérer FormData dans cet environnement)', e);
+        }
+      } else {
+        console.log('📝 Données à envoyer:', profileData);
+      }
       
       // Appel API réel maintenant que le backend fonctionne
-      const response = await testApiService.auth.updateProfile(token, profileData);
+      // Si on envoie un FormData (upload d'avatar), utiliser l'endpoint profile.update
+      // (gère multipart/form-data via POST+_method=PUT) ; sinon utiliser auth.updateProfile
+      let response: any;
+      if (typeof FormData !== 'undefined' && profileData instanceof FormData) {
+        response = await testApiService.profile.update(token, profileData);
+      } else {
+        response = await testApiService.auth.updateProfile(token, profileData);
+      }
       console.log('✅ Réponse mise à jour profil:', response);
-      
-      setUser(response.user);
-      
-      // Mettre à jour localStorage
-      localStorage.setItem('auth_user', JSON.stringify(response.user));
+
+      // Le backend peut renvoyer { data: user } ou { user: user }
+      const returnedUser = response?.user ?? response?.data ?? null;
+
+      if (returnedUser) {
+        setUser(returnedUser);
+        localStorage.setItem('auth_user', JSON.stringify(returnedUser));
+      }
       console.log('💾 Données mise à jour sauvées dans localStorage:', response.user);
       
       return response;

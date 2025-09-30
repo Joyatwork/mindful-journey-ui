@@ -76,6 +76,17 @@ class User extends Authenticatable
     }
 
     /**
+     * Accessor to get public URL for avatar if stored.
+     */
+    public function getAvatarUrlAttribute(): ?string
+    {
+        if ($this->avatar) {
+            return asset('storage/' . $this->avatar);
+        }
+        return null;
+    }
+
+    /**
      * Override default password reset notification to point to SPA frontend.
      */
     public function sendPasswordResetNotification($token): void

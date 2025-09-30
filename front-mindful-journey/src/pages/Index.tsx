@@ -14,7 +14,7 @@ import {
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 // import MoodSelector from '@/components/MoodSelector'; // Ancien sélecteur d'humeur déplacé vers la page mood-check
 import WellnessCard from '@/components/WellnessCard';
 import ProgressChart from '@/components/ProgressChart';
@@ -870,9 +870,17 @@ const Index = () => {
       <div className="bg-wellness-gradient rounded-3xl p-6 text-white relative overflow-hidden">
         <div className="relative z-10">
           <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-2xl font-bold mb-1">Bonjour {user?.name || 'Utilisateur'} ! 👋</h1>
-              <p className="text-white/90">Prenons un instant pour votre bien-être aujourd'hui.</p>
+            <div className="flex items-center gap-4">
+              <Avatar className="w-12 h-12">
+                <AvatarImage src={user?.avatar_url || '/placeholder.svg'} alt="Photo de profil" />
+                <AvatarFallback className="bg-wellness-gradient text-white text-sm font-semibold">
+                  {user?.name ? user.name.split(' ').map(n => n[0]).slice(0,2).join('') : 'U'}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <h1 className="text-2xl font-bold mb-1">Bonjour {user?.name || 'Utilisateur'} ! 👋</h1>
+                <p className="text-white/90">Prenons un instant pour votre bien-être aujourd'hui.</p>
+              </div>
             </div>
             <div className="flex space-x-2">
               <DropdownMenu>

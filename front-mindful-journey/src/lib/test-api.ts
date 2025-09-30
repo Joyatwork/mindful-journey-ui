@@ -35,7 +35,6 @@ async function testApiRequest(endpoint: string, options: RequestInit = {}) {
   }
   
   const headers = new Headers({
-    'Content-Type': 'application/json',
     'Accept': 'application/json',
     'X-Requested-With': 'XMLHttpRequest',
   });
@@ -70,7 +69,17 @@ async function testApiRequest(endpoint: string, options: RequestInit = {}) {
     }
   }
 
+  // If the request body is a JSON string (and not a FormData), ensure Content-Type is set
   try {
+    if (config.body && typeof FormData !== 'undefined' && !(config.body instanceof FormData)) {
+      if (typeof config.body === 'string' && config.headers instanceof Headers) {
+        // Only set if not already present
+        if (!config.headers.has('Content-Type')) {
+          config.headers.set('Content-Type', 'application/json');
+        }
+      }
+    }
+
     const response = await fetch(url, config);
 
     if (!response.ok) {
@@ -184,13 +193,32 @@ const testApiService = {
         'Authorization': `Bearer ${token}`
       }
     }),
-    updateProfile: (token: string, profileData: any) => testApiRequest('/auth/profile', {
-      method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify(profileData)
-    }),
+    updateProfile: (token: string, profileData: any) => {
+      const isForm = typeof FormData !== 'undefined' && profileData instanceof FormData;
+      // For multipart/form-data with files, PHP/Laravel doesn't parse PUT bodies reliably.
+      // Use POST + _method=PUT override so Laravel receives form fields and files.
+      if (isForm) {
+        if (!profileData.has('_method')) {
+          profileData.append('_method', 'PUT');
+        }
+        // Use the non-auth-prefixed /profile endpoint which handles multipart avatar uploads
+        return testApiRequest('/profile', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          body: profileData
+        });
+      }
+
+      return testApiRequest('/auth/profile', {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(profileData)
+      });
+    },
     toggle2FA: (endpoint: '/auth/enable-2fa' | '/auth/disable-2fa') => testApiRequest(endpoint, {
       method: 'POST',
     }),
@@ -211,13 +239,29 @@ const testApiService = {
         'Authorization': `Bearer ${token}`
       }
     }),
-    update: (token: string, profileData: any) => testApiRequest('/profile', {
-      method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify(profileData)
-    })
+    update: (token: string, profileData: any) => {
+      const isForm = typeof FormData !== 'undefined' && profileData instanceof FormData;
+      if (isForm) {
+        if (!profileData.has('_method')) {
+          profileData.append('_method', 'PUT');
+        }
+        return testApiRequest('/profile', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          body: profileData
+        });
+      }
+
+      return testApiRequest('/profile', {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(profileData)
+      });
+    }
   }
 };
 

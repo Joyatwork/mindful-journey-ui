@@ -37,6 +37,29 @@ import EditProfileForm from './EditProfileForm';
 import AppointmentManagement from './AppointmentManagement';
 import { useState, useEffect } from 'react';
 
+// Utility: convert various ISO datetime strings to yyyy-MM-dd for <input type="date">
+function formatDateForInput(value: string | undefined | null) {
+  if (!value) return '';
+  // If already in yyyy-MM-dd, return as-is
+  const simpleMatch = value.match(/^\d{4}-\d{2}-\d{2}$/);
+  if (simpleMatch) return value;
+
+  // Parse as Date and format (avoid timezone shifting by using UTC components if ISO provided)
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return '';
+
+  const year = d.getUTCFullYear();
+  const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(d.getUTCDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function safeGetBirthDate(user: any) {
+  if (!user) return '';
+  // prefer snake_case stored value, fallback to camelCase
+  return user.birth_date ? formatDateForInput(user.birth_date) : (user.birthDate ? formatDateForInput(user.birthDate) : '');
+}
+
 const ProfilePage = () => {
   const { isDarkMode, toggleDarkMode } = useTheme();
   const { isInstallable, installPWA } = usePWAInstall();
@@ -54,7 +77,7 @@ const ProfilePage = () => {
     email: user?.email || 'email@example.com',
     phone: user?.phone || '',
     location: user?.location || '',
-    birthDate: user?.birth_date || '',
+  birthDate: safeGetBirthDate(user as any),
     jobPosition: user?.job_position || 'Non spécifié',
     company: user?.company || 'Non spécifiée',
     bio: user?.bio || '',
@@ -71,7 +94,7 @@ const ProfilePage = () => {
         email: user.email,
         phone: user.phone || '',
         location: user.location || '',
-        birthDate: user.birth_date || '',
+  birthDate: safeGetBirthDate(user as any),
         jobPosition: user.job_position || 'Non spécifié',
         company: user.company || 'Non spécifiée',
         bio: user.bio || '',
@@ -109,36 +132,60 @@ const ProfilePage = () => {
   const handleSave = async (newInfo: any) => {
     setIsUpdating(true);
     try {
-      // Préparer les données pour l'API
-      const profileData = {
-        name: newInfo.name,
-        email: newInfo.email,
-        phone: newInfo.phone,
-        location: newInfo.location,
-        birthDate: newInfo.birthDate,
-        jobPosition: newInfo.jobPosition,
-        company: newInfo.company,
-        bio: newInfo.bio,
-        goals: newInfo.goals
-      };
+      // Si newInfo est un FormData (upload avatar), on le passe tel quel
+      const isForm = typeof FormData !== 'undefined' && newInfo instanceof FormData;
+      const profilePayload = isForm
+        ? newInfo
+        : {
+            name: newInfo.name,
+            email: newInfo.email,
+            phone: newInfo.phone,
+            location: newInfo.location,
+            // Normalize birth date to yyyy-MM-dd (Form input gives yyyy-MM-dd)
+            birth_date: newInfo.birthDate ? formatDateForInput(newInfo.birthDate) : (newInfo.birth_date ? formatDateForInput(newInfo.birth_date) : null),
+            job_position: newInfo.jobPosition ?? newInfo.job_position,
+            company: newInfo.company,
+            bio: newInfo.bio,
+            goals: newInfo.goals,
+          };
 
-      await updateProfile(profileData);
-      
-      // Mettre à jour l'état local
-      setUserInfo(newInfo);
+      const response = await updateProfile(profilePayload);
+
+      // response.user devrait contenir l'utilisateur mis à jour (backend)
+      const updatedUser = response?.user ?? user;
+
+      // Mettre à jour l'état local affiché (mapping champs snake_case -> camelCase si besoin)
+      if (updatedUser) {
+        setUserInfo(prev => ({
+          ...prev,
+          name: updatedUser.name || '',
+          email: updatedUser.email || '',
+          phone: updatedUser.phone || '',
+          location: updatedUser.location || '',
+          birthDate: safeGetBirthDate(updatedUser),
+          jobPosition: updatedUser.job_position || updatedUser.jobPosition || '',
+          company: updatedUser.company || '',
+          bio: updatedUser.bio || '',
+          goals: updatedUser.goals || '',
+        }));
+      } else if (!isForm) {
+        // fallback: si la réponse n'a pas retourné d'utilisateur, utiliser newInfo (objet simple)
+        setUserInfo(newInfo);
+      }
+
       setIsEditing(false);
-      
+
       toast({
-        title: "Profil mis à jour",
-        description: "Vos informations ont été sauvegardées avec succès.",
-        variant: "default",
+        title: 'Profil mis à jour',
+        description: 'Vos informations ont été sauvegardées avec succès.',
+        variant: 'default',
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur lors de la mise à jour du profil:', error);
       toast({
-        title: "Erreur",
-        description: "Une erreur est survenue lors de la sauvegarde. Veuillez réessayer.",
-        variant: "destructive",
+        title: 'Erreur',
+        description: error?.message || 'Une erreur est survenue lors de la sauvegarde. Veuillez réessayer.',
+        variant: 'destructive',
       });
     } finally {
       setIsUpdating(false);
@@ -197,9 +244,9 @@ const ProfilePage = () => {
               {/* First Row: Avatar and Basic Info */}
               <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
                 <Avatar className="w-16 h-16 border-2 border-white shadow-lg flex-shrink-0">
-                  <AvatarImage src="/placeholder.svg" alt="Photo de profil" />
+                  <AvatarImage src={user?.avatar_url || '/placeholder.svg'} alt="Photo de profil" />
                   <AvatarFallback className="bg-wellness-gradient text-white text-sm font-semibold">
-                    JS
+                    {user?.name ? user.name.split(' ').map(n=>n[0]).slice(0,2).join('') : 'U'}
                   </AvatarFallback>
                 </Avatar>
                 
