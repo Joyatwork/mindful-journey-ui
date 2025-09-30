@@ -264,7 +264,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         // construct a public URL so the UI can immediately display the uploaded image.
         if (!returnedUser.avatar_url && returnedUser.avatar) {
           try {
-            const origin = window.location.origin.replace(/:\d+$/,'');
+            const origin = window.location.origin.replace(/:\d+$/, '');
             // Use '/storage/' path where Laravel stores public files
             returnedUser.avatar_url = `${window.location.origin}/storage/${returnedUser.avatar}`;
           } catch (_) {

@@ -151,8 +151,8 @@ const ProfilePage = () => {
 
       const response = await updateProfile(profilePayload);
 
-  // response.user ou response.data devrait contenir l'utilisateur mis à jour (backend)
-  const updatedUser = response?.user ?? response?.data ?? user;
+      // response.user ou response.data devrait contenir l'utilisateur mis à jour (backend)
+      const updatedUser = response?.user ?? response?.data ?? user;
 
       // Mettre à jour l'état local affiché (mapping champs snake_case -> camelCase si besoin)
       if (updatedUser) {
