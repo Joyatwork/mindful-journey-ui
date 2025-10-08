@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 class ProfileController extends Controller
 {
@@ -64,26 +65,40 @@ class ProfileController extends Controller
             $validated['avatar'] = $path;
         }
 
-        // Mettre à jour réellement l'utilisateur
-        $user->update($validated);
-
-        // Debug logs to help trace avatar upload/storage and returned URL
+        // Filter validated payload to actual user table columns to avoid SQL errors
         try {
+            $userColumns = Schema::getColumnListing('users');
+            $allowed = array_intersect_key($validated, array_flip($userColumns));
+
+            // Only update allowed fields (columns that exist)
+            $user->update($allowed);
+
+            // Debug logs to help trace avatar upload/storage and returned URL
             Log::info('ProfileController:update - hasFile avatar: ' . ($request->hasFile('avatar') ? 'yes' : 'no'));
             if (isset($path)) {
                 Log::info('ProfileController:update - avatar path: ' . $path);
             }
+                // Refresh the user from DB to log the actual stored values
+                $userFresh = $user->fresh();
             Log::info('ProfileController:update - user avatar (db): ' . ($user->avatar ?? 'NULL'));
             Log::info('ProfileController:update - user avatar_url (accessor): ' . ($user->avatar_url ?? 'NULL'));
-        } catch (\Throwable $e) {
-            // don't break normal flow for logging issues
-            Log::warning('ProfileController:update - failed to log avatar info: ' . $e->getMessage());
-        }
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Profil mis à jour avec succès',
-            'data' => $user->fresh()
-        ]);
+            return response()->json([
+                'success' => true,
+                'message' => 'Profil mis à jour avec succès',
+                    'data' => $userFresh
+            ]);
+        } catch (\Throwable $e) {
+            // Log and return a helpful error so the front-end can surface it
+            Log::error('ProfileController:update - exception during update: ' . $e->getMessage(), [
+                'user_id' => $user->id ?? null,
+                'validated_keys' => array_keys($validated)
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Impossible de mettre à jour le profil. Voir les logs serveur pour plus de détails.'
+            ], 500);
+        }
     }
 }

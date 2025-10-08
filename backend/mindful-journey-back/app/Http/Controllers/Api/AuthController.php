@@ -215,8 +215,9 @@ class AuthController extends Controller
     {
         Log::info('=== DÉBUT UPDATE PROFILE ===');
         Log::info('Données reçues:', $request->all());
-        
-        $request->validate([
+
+        // Use validated data and capture it
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $request->user()->id,
             'phone' => 'nullable|string|max:20',
@@ -226,56 +227,79 @@ class AuthController extends Controller
             'company' => 'nullable|string|max:255',
             'bio' => 'nullable|string|max:1000',
             'goals' => 'nullable|string|max:1000',
+            'avatar' => 'nullable|file|image|mimes:jpg,jpeg,png,webp|max:5120'
         ]);
 
         $user = $request->user();
         Log::info('Utilisateur avant modification:', $user->toArray());
-        
-        // Mettre à jour les champs de base
-        $user->name = $request->name;
-        $user->email = $request->email;
-        $user->phone = $request->phone;
-        $user->bio = $request->bio;
-        $user->birth_date = $request->birthDate;
-        
-        // Récupérer les préférences existantes ou créer un nouveau tableau
-    $preferences = is_array($user->preferences) ? $user->preferences : (json_decode($user->preferences ?? '[]', true) ?: []);
-        
-        // Ajouter les nouvelles données dans les préférences
-        $preferences['location'] = $request->location;
-        $preferences['job_position'] = $request->jobPosition;
-        $preferences['company'] = $request->company;
-        $preferences['goals'] = $request->goals;
-        
-        // Sauvegarder les préférences en JSON
-    $user->preferences = $preferences;
-        
-        Log::info('Utilisateur après modification (avant save):', $user->toArray());
-        
-        $saved = $user->save();
-    // Log status properly (second argument must be an array, avoid previous TypeError)
-    Log::info('Résultat save(): '.($saved ? 'SUCCESS' : 'FAILED'));
-        
-        Log::info('Utilisateur après save:', $user->fresh()->toArray());
 
-        return response()->json([
-            'message' => 'Profil mis à jour avec succès',
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'phone' => $user->phone,
-                'location' => $preferences['location'] ?? null,
-                'birth_date' => $user->birth_date,
-                'job_position' => $preferences['job_position'] ?? null,
-                'company' => $preferences['company'] ?? null,
-                'bio' => $user->bio,
-                'goals' => $preferences['goals'] ?? null,
-                'two_factor_enabled' => $preferences['two_factor_enabled'] ?? true,
-                'notifications_enabled' => $preferences['notifications_enabled'] ?? false,
-                'created_at' => $user->created_at,
-            ]
-        ]);
+        // Handle avatar upload if present (FormData upload)
+        if ($request->hasFile('avatar')) {
+            try {
+                $avatarPath = $request->file('avatar')->store('avatars', 'public');
+                $validated['avatar'] = $avatarPath;
+                Log::info('AuthController:updateProfile - stored avatar: ' . $avatarPath);
+            } catch (\Throwable $e) {
+                Log::error('AuthController:updateProfile - avatar storage failed: ' . $e->getMessage());
+                return response()->json(['success' => false, 'message' => 'Erreur lors de l\'upload de l\'avatar.'], 500);
+            }
+        }
+
+        // Normalize camelCase keys to snake_case used in DB / preferences
+        if (isset($validated['birthDate'])) {
+            $validated['birth_date'] = $validated['birthDate'];
+            unset($validated['birthDate']);
+        }
+        if (isset($validated['jobPosition'])) {
+            $validated['job_position'] = $validated['jobPosition'];
+            unset($validated['jobPosition']);
+        }
+
+        // Merge preferences safely
+        $preferences = is_array($user->preferences) ? $user->preferences : (json_decode($user->preferences ?? '[]', true) ?: []);
+        foreach (['location', 'job_position', 'company', 'goals'] as $prefKey) {
+            if (array_key_exists($prefKey, $validated)) {
+                $preferences[$prefKey] = $validated[$prefKey];
+                unset($validated[$prefKey]);
+            }
+        }
+
+        // Filter validated payload to actual user table columns to avoid SQL errors
+        try {
+            $userColumns = Schema::getColumnListing('users');
+            $allowed = array_intersect_key($validated, array_flip($userColumns));
+
+            // Update allowed user fields
+            if (!empty($allowed)) {
+                $user->update($allowed);
+            }
+
+            // Persist preferences only if the column exists in the users table
+            if (in_array('preferences', $userColumns)) {
+                $user->preferences = $preferences;
+                $user->save();
+            } else {
+                Log::warning('AuthController:updateProfile - preferences column missing, skipping write to users table', ['user_id' => $user->id]);
+            }
+
+            $userFresh = $user->fresh();
+            Log::info('Utilisateur après save:', $userFresh->toArray());
+
+            return response()->json([
+                'message' => 'Profil mis à jour avec succès',
+                'user' => $userFresh
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('AuthController:updateProfile - exception during update: ' . $e->getMessage(), [
+                'user_id' => $user->id ?? null,
+                'validated_keys' => array_keys($validated)
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Impossible de mettre à jour le profil. Voir les logs serveur pour plus de détails.'
+            ], 500);
+        }
     }
 
     /**
