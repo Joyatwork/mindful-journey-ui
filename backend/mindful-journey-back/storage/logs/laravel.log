@@ -3334,3 +3334,7 @@
 [2025-09-30 11:28:50] local.INFO: ProfileController:update - avatar path: avatars/u8DPQuJ1MB0bJde3XVdK2BVMKEFYXp5AtuXkPgkO.jpg  
 [2025-09-30 11:28:50] local.INFO: ProfileController:update - user avatar (db): avatars/u8DPQuJ1MB0bJde3XVdK2BVMKEFYXp5AtuXkPgkO.jpg  
 [2025-09-30 11:28:50] local.INFO: ProfileController:update - user avatar_url (accessor): http://localhost:8081/storage/avatars/u8DPQuJ1MB0bJde3XVdK2BVMKEFYXp5AtuXkPgkO.jpg  
+[2025-09-30 12:15:22] local.INFO: ProfileController:update - hasFile avatar: yes  
+[2025-09-30 12:15:22] local.INFO: ProfileController:update - avatar path: avatars/pv4goPCo1Gxz6YITyXpWBzPPhYBAP8IxCj5m8WsL.jpg  
+[2025-09-30 12:15:22] local.INFO: ProfileController:update - user avatar (db): avatars/pv4goPCo1Gxz6YITyXpWBzPPhYBAP8IxCj5m8WsL.jpg  
+[2025-09-30 12:15:22] local.INFO: ProfileController:update - user avatar_url (accessor): http://localhost:8081/storage/avatars/pv4goPCo1Gxz6YITyXpWBzPPhYBAP8IxCj5m8WsL.jpg  
