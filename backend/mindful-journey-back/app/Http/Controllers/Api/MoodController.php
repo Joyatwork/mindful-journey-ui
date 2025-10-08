@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 class MoodController extends Controller
 {
@@ -88,6 +89,12 @@ class MoodController extends Controller
             }
             if (isset($validated['emotions']) && !is_array($validated['emotions'])) {
                 $validated['emotions'] = (array) $validated['emotions'];
+            }
+
+            // Defensive: if the DB schema doesn't have 'details', remove it from payload
+            if (!Schema::hasColumn('mood_entries', 'details') && isset($validated['details'])) {
+                Log::warning('DB column "details" missing on mood_entries; stripping details from insert/update', ['user_id' => $user->id, 'date' => $validated['date'] ?? null]);
+                unset($validated['details']);
             }
 
             // Vérifier si une entrée existe déjà pour cette date
