@@ -5254,3 +5254,4 @@
 ","validated":{"date":"2025-10-08","mood_level":5,"mood_emoji":"🙂","energy_level":5,"stress_level":3,"sleep_quality":null,"notes":",kjkjk","details":",kjkjk","emotions":[],"activities":["epanoui"]}} 
 [2025-10-08 15:49:59] local.WARNING: DB column "details" missing on mood_entries; stripping details from insert/update {"user_id":3,"date":"2025-10-08"} 
 [2025-10-08 15:50:04] local.WARNING: DB column "details" missing on mood_entries; stripping details from insert/update {"user_id":3,"date":"2025-10-08"} 
+[2025-10-08 15:52:03] local.WARNING: DB column "details" missing on mood_entries; stripping details from insert/update {"user_id":3,"date":"2025-10-08"} 

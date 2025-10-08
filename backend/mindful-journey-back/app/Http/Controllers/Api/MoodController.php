@@ -19,9 +19,9 @@ class MoodController extends Controller
     {
         $user = Auth::user();
         $period = $request->get('period', 'week'); // week, month, year
-        
+
         $query = MoodEntry::where('user_id', $user->id);
-        
+
         switch ($period) {
             case 'week':
                 $query->thisWeek();
@@ -33,9 +33,9 @@ class MoodController extends Controller
                 $query->whereYear('date', now()->year);
                 break;
         }
-        
+
         $entries = $query->orderBy('date', 'desc')->get();
-        
+
         // Statistiques
         $stats = [
             'average_mood' => $entries->avg('mood_level'),
@@ -46,7 +46,7 @@ class MoodController extends Controller
             'best_day' => $entries->sortByDesc('mood_level')->first(),
             'worst_day' => $entries->sortBy('mood_level')->first(),
         ];
-        
+
         return response()->json([
             'success' => true,
             'entries' => $entries,
@@ -61,7 +61,7 @@ class MoodController extends Controller
     public function store(Request $request)
     {
         $user = Auth::user();
-        
+
         $validated = $request->validate([
             'date' => 'required|date',
             'mood_level' => 'required|integer|between:1,10',
@@ -119,7 +119,6 @@ class MoodController extends Controller
                 'message' => $message,
                 'entry' => $entry
             ], 201);
-
         } catch (\Exception $e) {
             Log::error('Erreur lors de l\'enregistrement MoodEntry: ' . $e->getMessage(), [
                 'exception' => $e,
@@ -138,7 +137,7 @@ class MoodController extends Controller
     public function show($id)
     {
         $user = Auth::user();
-        
+
         $entry = MoodEntry::where('user_id', $user->id)
             ->where('id', $id)
             ->first();
@@ -162,7 +161,7 @@ class MoodController extends Controller
     public function today()
     {
         $user = Auth::user();
-        
+
         $entry = MoodEntry::where('user_id', $user->id)
             ->where('date', now()->toDateString())
             ->first();
@@ -180,12 +179,12 @@ class MoodController extends Controller
     public function quickStats()
     {
         $user = Auth::user();
-        
+
         $weeklyAvg = MoodEntry::averageMoodForUser($user->id, 7);
         $monthlyAvg = MoodEntry::averageMoodForUser($user->id, 30);
-        
+
         $streak = $this->calculateStreak($user->id);
-        
+
         $recentEntries = MoodEntry::where('user_id', $user->id)
             ->orderBy('date', 'desc')
             ->limit(7)
@@ -219,7 +218,7 @@ class MoodController extends Controller
 
         $streak = 0;
         $currentDate = now()->toDateString();
-        
+
         foreach ($entries as $entryDate) {
             if ($entryDate === $currentDate) {
                 $streak++;
@@ -243,9 +242,9 @@ class MoodController extends Controller
 
         $recent = $entries->take(3)->avg('mood_level');
         $older = $entries->skip(3)->take(4)->avg('mood_level');
-        
+
         $difference = $recent - $older;
-        
+
         if ($difference > 0.5) {
             return 'improving';
         } elseif ($difference < -0.5) {
