@@ -14,5 +14,3 @@ try {
     echo "ERROR: " . $e->getMessage() . "\n";
     echo $e->getTraceAsString();
 }
-
-

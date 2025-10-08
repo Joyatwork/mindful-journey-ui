@@ -93,7 +93,7 @@ class AuthController extends Controller
         LoginOtp::where('user_id', $user->id)
             ->where(function ($q) {
                 $q->where('expires_at', '<', now())
-                  ->orWhereNotNull('consumed_at');
+                    ->orWhereNotNull('consumed_at');
             })->delete();
 
         $code = str_pad((string) random_int(0, 99999), 5, '0', STR_PAD_LEFT);
@@ -107,9 +107,10 @@ class AuthController extends Controller
         try {
             Mail::to($user->email)->send(new TwoFactorCodeMail($code, config('app.name', 'Mindful Journey')));
         } catch (\Throwable $e) {
-            Log::error('Erreur envoi mail 2FA: '.$e->getMessage());
+            Log::error('Erreur envoi mail 2FA: ' . $e->getMessage());
             return response()->json([
-                'message' => "Erreur lors de l'envoi du code, réessayez plus tard."], 500);
+                'message' => "Erreur lors de l'envoi du code, réessayez plus tard."
+            ], 500);
         }
 
         return response()->json([
@@ -187,8 +188,8 @@ class AuthController extends Controller
     public function user(Request $request): JsonResponse
     {
         $user = $request->user();
-    $preferences = is_array($user->preferences) ? $user->preferences : (json_decode($user->preferences ?? '[]', true) ?: []);
-        
+        $preferences = is_array($user->preferences) ? $user->preferences : (json_decode($user->preferences ?? '[]', true) ?: []);
+
         return response()->json([
             'user' => [
                 'id' => $user->id,
@@ -201,8 +202,8 @@ class AuthController extends Controller
                 'company' => $preferences['company'] ?? null,
                 'bio' => $user->bio,
                 'goals' => $preferences['goals'] ?? null,
-    'two_factor_enabled' => $preferences['two_factor_enabled'] ?? true,
-    'notifications_enabled' => $preferences['notifications_enabled'] ?? false,
+                'two_factor_enabled' => $preferences['two_factor_enabled'] ?? true,
+                'notifications_enabled' => $preferences['notifications_enabled'] ?? false,
                 'created_at' => $user->created_at,
             ]
         ]);

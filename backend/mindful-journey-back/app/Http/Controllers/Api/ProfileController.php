@@ -78,15 +78,15 @@ class ProfileController extends Controller
             if (isset($path)) {
                 Log::info('ProfileController:update - avatar path: ' . $path);
             }
-                // Refresh the user from DB to log the actual stored values
-                $userFresh = $user->fresh();
+            // Refresh the user from DB to log the actual stored values
+            $userFresh = $user->fresh();
             Log::info('ProfileController:update - user avatar (db): ' . ($user->avatar ?? 'NULL'));
             Log::info('ProfileController:update - user avatar_url (accessor): ' . ($user->avatar_url ?? 'NULL'));
 
             return response()->json([
                 'success' => true,
                 'message' => 'Profil mis à jour avec succès',
-                    'data' => $userFresh
+                'data' => $userFresh
             ]);
         } catch (\Throwable $e) {
             // Log and return a helpful error so the front-end can surface it
