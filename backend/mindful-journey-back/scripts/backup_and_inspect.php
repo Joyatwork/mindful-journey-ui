@@ -64,7 +64,6 @@ try {
     }
 
     echo "Inspection complete. Backup kept as: $backup\n";
-
 } catch (PDOException $e) {
     fwrite(STDERR, 'ERROR: ' . $e->getMessage() . "\n");
     exit(1);

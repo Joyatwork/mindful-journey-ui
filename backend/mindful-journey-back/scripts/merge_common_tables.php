@@ -8,10 +8,10 @@ $schemaA = 'JoyAtWork';
 $schemaB = 'mindful_journey';
 $mapDb = 'merge_maps';
 // tables we've already handled and want to skip
-$handled = ['users','challenges','migrations','roles','user_roles','cache','cache_locks','companies','practitioners'];
+$handled = ['users', 'challenges', 'migrations', 'roles', 'user_roles', 'cache', 'cache_locks', 'companies', 'practitioners'];
 try {
     $dsn = "mysql:host=$host;port=$port;dbname=information_schema;charset=utf8mb4";
-    $pdo = new PDO($dsn, $user, $pass, [PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE=>PDO::FETCH_ASSOC]);
+    $pdo = new PDO($dsn, $user, $pass, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]);
     $pdo->exec("SET NAMES 'utf8mb4' COLLATE 'utf8mb4_unicode_ci'");
 
     // find common tables
@@ -19,9 +19,14 @@ try {
     $stmt->execute([$schemaA, $schemaB]);
     $tables = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
-    $toProcess = array_filter($tables, function($t) use ($handled) { return !in_array($t, $handled); });
+    $toProcess = array_filter($tables, function ($t) use ($handled) {
+        return !in_array($t, $handled);
+    });
 
-    if (empty($toProcess)) { echo "No common tables left to merge.\n"; exit(0); }
+    if (empty($toProcess)) {
+        echo "No common tables left to merge.\n";
+        exit(0);
+    }
 
     echo "Tables to process: " . implode(', ', $toProcess) . "\n\n";
 
@@ -31,7 +36,10 @@ try {
         $colStmt = $pdo->prepare('SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? ORDER BY ORDINAL_POSITION');
         $colStmt->execute([$schemaA, $table]);
         $cols = $colStmt->fetchAll(PDO::FETCH_COLUMN);
-        if (empty($cols)) { echo " - no columns, skipping\n"; continue; }
+        if (empty($cols)) {
+            echo " - no columns, skipping\n";
+            continue;
+        }
 
         // build select expression for columns, applying mappings when appropriate
         $selectParts = [];
@@ -49,7 +57,9 @@ try {
             }
         }
 
-        $colsList = implode(', ', array_map(function($c){ return "`$c`"; }, $cols));
+        $colsList = implode(', ', array_map(function ($c) {
+            return "`$c`";
+        }, $cols));
         $selectExpr = implode(', ', $selectParts);
         $joinExpr = implode(' ', $joins);
 
@@ -65,7 +75,7 @@ try {
     }
 
     echo "\nMerge of common tables complete.\n";
-
 } catch (PDOException $e) {
-    fwrite(STDERR, 'ERROR: '.$e->getMessage()."\n"); exit(1);
+    fwrite(STDERR, 'ERROR: ' . $e->getMessage() . "\n");
+    exit(1);
 }

@@ -9,7 +9,7 @@ try {
     $dsn = "mysql:host=$host;port=$port;dbname=information_schema;charset=utf8mb4";
     $pdo = new PDO($dsn, $user, $pass, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]);
 
-    $describe = function($schema) use ($pdo, $host, $port, $user, $pass) {
+    $describe = function ($schema) use ($pdo, $host, $port, $user, $pass) {
         echo "Schema: $schema\n";
         echo str_repeat('-', 40) . "\n";
         $cols = $pdo->prepare('SELECT COLUMN_NAME, COLUMN_TYPE, IS_NULLABLE, COLUMN_DEFAULT FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? ORDER BY ORDINAL_POSITION');
@@ -24,8 +24,8 @@ try {
         }
 
         // sample rows
-    $dataDsn = "mysql:host={$host};port={$port};dbname={$schema};charset=utf8mb4";
-    $pdoSrc = new PDO($dataDsn, $user, $pass, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]);
+        $dataDsn = "mysql:host={$host};port={$port};dbname={$schema};charset=utf8mb4";
+        $pdoSrc = new PDO($dataDsn, $user, $pass, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]);
         $rows = $pdoSrc->query('SELECT * FROM `users` LIMIT 5')->fetchAll();
         echo "\nSample rows:\n";
         if (empty($rows)) {
@@ -41,7 +41,6 @@ try {
 
     $describe($schemaA);
     $describe($schemaB);
-
 } catch (PDOException $e) {
     fwrite(STDERR, 'ERROR: ' . $e->getMessage() . "\n");
     exit(1);

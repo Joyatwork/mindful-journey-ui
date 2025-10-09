@@ -5,7 +5,7 @@ $user = 'Ali_CAMARA';
 $pass = 'AVNS_TaUyL9dsB37NJOKRllf';
 $dbname = 'mindful_journey';
 try {
-    $pdo = new PDO("mysql:host=$host;port=$port;dbname=$dbname;charset=utf8mb4", $user, $pass, [PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE=>PDO::FETCH_ASSOC]);
+    $pdo = new PDO("mysql:host=$host;port=$port;dbname=$dbname;charset=utf8mb4", $user, $pass, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]);
     $file = __DIR__ . '/../tmp_mark_migrations.sql';
     if (!file_exists($file)) {
         echo "tmp_mark_migrations.sql not found at $file\n";

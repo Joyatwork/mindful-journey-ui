@@ -5,7 +5,7 @@ $user = 'Ali_CAMARA';
 $pass = 'AVNS_TaUyL9dsB37NJOKRllf';
 $db = 'mindful_journey';
 try {
-    $pdo = new PDO("mysql:host=$host;port=$port;dbname=$db;charset=utf8mb4", $user, $pass, [PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE=>PDO::FETCH_ASSOC]);
+    $pdo = new PDO("mysql:host=$host;port=$port;dbname=$db;charset=utf8mb4", $user, $pass, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]);
     $pdo->exec("SET NAMES 'utf8mb4' COLLATE 'utf8mb4_unicode_ci'");
 
     // choose a user id that exists (we created mindful_id=4 earlier)
@@ -22,7 +22,6 @@ try {
 
     $row = $pdo->query("SELECT * FROM mood_entries WHERE id = $id")->fetch();
     print_r($row);
-
 } catch (PDOException $e) {
     fwrite(STDERR, "ERROR: " . $e->getMessage() . "\n");
     exit(1);

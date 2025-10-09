@@ -36,7 +36,6 @@ try {
     }
 
     echo "\nRemapping complete. Total rows affected across all tables: $totalAffected\n";
-
 } catch (PDOException $e) {
     fwrite(STDERR, 'ERROR: ' . $e->getMessage() . "\n");
     exit(1);

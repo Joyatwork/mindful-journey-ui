@@ -10,7 +10,7 @@ try {
     $dsn = "mysql:host=$host;port=$port;dbname=information_schema;charset=utf8mb4";
     $pdo = new PDO($dsn, $user, $pass, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]);
 
-    $getTables = function($schema) use ($pdo) {
+    $getTables = function ($schema) use ($pdo) {
         $stmt = $pdo->prepare('SELECT TABLE_NAME, TABLE_ROWS FROM information_schema.TABLES WHERE TABLE_SCHEMA = ? ORDER BY TABLE_NAME');
         $stmt->execute([$schema]);
         return $stmt->fetchAll();
@@ -44,7 +44,6 @@ try {
     foreach ($onlyB as $n) echo " - $n\n";
     echo "\nTables in both schemas (name match):\n";
     foreach ($both as $n) echo " - $n\n";
-
 } catch (PDOException $e) {
     fwrite(STDERR, 'ERROR: ' . $e->getMessage() . "\n");
     exit(1);

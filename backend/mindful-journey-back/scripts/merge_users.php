@@ -33,7 +33,9 @@ try {
     $insertSql = "INSERT INTO `$schemaB`.users (google_id, provider, name, email, email_verified_at, birth_date, gender, phone, bio, avatar, avatar_url, preferences, health_goals, status, last_login_at, password, remember_token, created_at, updated_at) VALUES (:google_id, :provider, :name, :email, :email_verified_at, :birth_date, :gender, :phone, :bio, :avatar, :avatar_url, :preferences, :health_goals, :status, :last_login_at, :password, :remember_token, :created_at, :updated_at)";
     $insertStmt = $pdo->prepare($insertSql);
 
-    $updated = 0; $created = 0; $linkedExisting = 0;
+    $updated = 0;
+    $created = 0;
+    $linkedExisting = 0;
     foreach ($toInsert as $row) {
         $joyId = $row['joy_id'];
         // fetch joy user
@@ -120,7 +122,6 @@ try {
     }
 
     echo "\nMerge complete. Created: $created, linked existing: $linkedExisting, updated/errored: $updated\n";
-
 } catch (PDOException $e) {
     fwrite(STDERR, 'ERROR: ' . $e->getMessage() . "\n");
     exit(1);

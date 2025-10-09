@@ -58,7 +58,6 @@ try {
     }
 
     echo "\nStep 1 complete: Joy-only tables copied and user_id remapped where applicable.\n";
-
 } catch (PDOException $e) {
     fwrite(STDERR, 'ERROR: ' . $e->getMessage() . "\n");
     exit(1);

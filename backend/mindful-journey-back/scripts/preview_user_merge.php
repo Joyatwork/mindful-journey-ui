@@ -16,7 +16,9 @@ try {
     $stmt = $pdo->query($sql);
     $matches = $stmt->fetchAll();
 
-    $matched = 0; $onlyJoy = 0; $onlyMindful = 0;
+    $matched = 0;
+    $onlyJoy = 0;
+    $onlyMindful = 0;
     $joyOnlyList = [];
     foreach ($matches as $row) {
         if ($row['mindful_id']) {
@@ -48,7 +50,6 @@ try {
 
     // Show potential conflicts: emails differing only by case/whitespace are normalized above.
     echo "\nNote: matching is case-insensitive and trims whitespace.\n";
-
 } catch (PDOException $e) {
     fwrite(STDERR, 'ERROR: ' . $e->getMessage() . "\n");
     exit(1);

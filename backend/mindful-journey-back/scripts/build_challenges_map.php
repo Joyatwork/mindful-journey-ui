@@ -16,7 +16,8 @@ try {
     $pdo->exec("CREATE DATABASE IF NOT EXISTS `$mapDb` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
     $pdo->exec("USE `$mapDb`");
     $pdo->exec("DROP TABLE IF EXISTS `challenges_map`");
-    $pdo->exec(<<<'SQL'
+    $pdo->exec(
+        <<<'SQL'
 CREATE TABLE `challenges_map` (
   `joy_id` BIGINT NOT NULL,
   `joy_title` VARCHAR(255) NULL,
@@ -67,7 +68,6 @@ SQL;
     foreach ($rows as $r) echo "Joy {$r['joy_id']} title={$r['joy_title']}\n";
 
     echo "\nchallenges_map built (preview).\n";
-
 } catch (PDOException $e) {
     fwrite(STDERR, 'ERROR: ' . $e->getMessage() . "\n");
     exit(1);

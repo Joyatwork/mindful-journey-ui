@@ -13,7 +13,10 @@ try {
     $pdo->exec("SET NAMES 'utf8mb4' COLLATE 'utf8mb4_unicode_ci'");
 
     $toInsert = $pdo->query("SELECT joy_id FROM `$mapDb`.challenges_map WHERE action='insert_target'")->fetchAll(PDO::FETCH_COLUMN);
-    if (empty($toInsert)) { echo "No Joy-only challenges to insert.\n"; exit(0); }
+    if (empty($toInsert)) {
+        echo "No Joy-only challenges to insert.\n";
+        exit(0);
+    }
 
     // connect to Joy schema for reading
     $dsnJoy = "mysql:host=$host;port=$port;dbname=$schemaA;charset=utf8mb4";
@@ -28,7 +31,10 @@ try {
         $row = $pdoJoy->prepare("SELECT * FROM `challenges` WHERE id = ?");
         $row->execute([$joyId]);
         $c = $row->fetch();
-        if (!$c) { echo "Joy challenge id=$joyId not found, skipping.\n"; continue; }
+        if (!$c) {
+            echo "Joy challenge id=$joyId not found, skipping.\n";
+            continue;
+        }
         $params = [
             ':title' => $c['title'] ?? null,
             ':description' => $c['description'] ?? null,
@@ -61,7 +67,6 @@ try {
     } catch (PDOException $e) {
         echo "Error remapping challenge_id: " . $e->getMessage() . "\n";
     }
-
 } catch (PDOException $e) {
     fwrite(STDERR, 'ERROR: ' . $e->getMessage() . "\n");
     exit(1);

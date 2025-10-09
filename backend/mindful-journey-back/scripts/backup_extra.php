@@ -49,7 +49,6 @@ try {
         $ddl = $ddlStmt->fetch();
         echo $ddl['Create Table'] . "\n\n";
     }
-
 } catch (PDOException $e) {
     fwrite(STDERR, 'ERROR: ' . $e->getMessage() . "\n");
     exit(1);

@@ -7,12 +7,12 @@ $mapDb = 'merge_maps';
 $outDir = __DIR__ . '/exports';
 if (!is_dir($outDir)) mkdir($outDir, 0755, true);
 try {
-    $pdo = new PDO("mysql:host=$host;port=$port;dbname=$mapDb;charset=utf8mb4", $user, $pass, [PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE=>PDO::FETCH_ASSOC]);
-    $tables = ['users_map','challenges_map','roles_map'];
+    $pdo = new PDO("mysql:host=$host;port=$port;dbname=$mapDb;charset=utf8mb4", $user, $pass, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]);
+    $tables = ['users_map', 'challenges_map', 'roles_map'];
     $reportLines = [];
     foreach ($tables as $t) {
         // check exists
-        $res = $pdo->query("SELECT COUNT(*) AS c FROM information_schema.TABLES WHERE TABLE_SCHEMA = '".$mapDb."' AND TABLE_NAME = '$t'")->fetch();
+        $res = $pdo->query("SELECT COUNT(*) AS c FROM information_schema.TABLES WHERE TABLE_SCHEMA = '" . $mapDb . "' AND TABLE_NAME = '$t'")->fetch();
         if ($res['c'] == 0) {
             $reportLines[] = "Table $t: not present\n";
             continue;
@@ -38,7 +38,7 @@ try {
             // add sample of each action
             foreach ($summary as $s) {
                 $act = $s['action'];
-                $sample = $pdo->query("SELECT * FROM `$t` WHERE action = '".addslashes($act)."' LIMIT 10")->fetchAll();
+                $sample = $pdo->query("SELECT * FROM `$t` WHERE action = '" . addslashes($act) . "' LIMIT 10")->fetchAll();
                 $reportLines[] = " Samples for action=$act:";
                 foreach ($sample as $row) $reportLines[] = '   ' . json_encode($row);
             }
@@ -50,7 +50,9 @@ try {
     echo "Exported CSVs and report to: $outDir\n";
     echo "Report file: $reportPath\n";
 } catch (PDOException $e) {
-    fwrite(STDERR, 'DB ERROR: ' . $e->getMessage() . "\n"); exit(1);
+    fwrite(STDERR, 'DB ERROR: ' . $e->getMessage() . "\n");
+    exit(1);
 } catch (Exception $e) {
-    fwrite(STDERR, 'ERROR: ' . $e->getMessage() . "\n"); exit(1);
+    fwrite(STDERR, 'ERROR: ' . $e->getMessage() . "\n");
+    exit(1);
 }

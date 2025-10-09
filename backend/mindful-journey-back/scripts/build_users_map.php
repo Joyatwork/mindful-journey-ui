@@ -18,7 +18,8 @@ try {
     $pdo->exec("CREATE DATABASE IF NOT EXISTS `$mapDb` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
     $pdo->exec("USE `$mapDb`");
     $pdo->exec("DROP TABLE IF EXISTS `users_map`");
-    $pdo->exec(<<<'SQL'
+    $pdo->exec(
+        <<<'SQL'
 CREATE TABLE `users_map` (
     `joy_id` BIGINT NOT NULL,
   `joy_email` VARCHAR(255) NULL,
@@ -48,7 +49,12 @@ FROM `$schemaA`.users j
 JOIN `$schemaB`.users m ON LOWER(TRIM(j.email)) COLLATE utf8mb4_unicode_ci = LOWER(TRIM(m.email)) COLLATE utf8mb4_unicode_ci;
 SQL;
     echo "Executing: INSERT matched...\n";
-    try { $pdo->exec($insertMatched); } catch (PDOException $e) { echo "FAILED query: INSERT matched\n"; throw $e; }
+    try {
+        $pdo->exec($insertMatched);
+    } catch (PDOException $e) {
+        echo "FAILED query: INSERT matched\n";
+        throw $e;
+    }
 
     echo "Populating Joy-only users (candidates to insert into mindful_journey)...\n";
     $insertJoyOnly = <<<SQL
@@ -63,12 +69,22 @@ WHERE NOT EXISTS (
 );
 SQL;
     echo "Executing: INSERT Joy-only...\n";
-    try { $pdo->exec($insertJoyOnly); } catch (PDOException $e) { echo "FAILED query: INSERT Joy-only\n"; throw $e; }
+    try {
+        $pdo->exec($insertJoyOnly);
+    } catch (PDOException $e) {
+        echo "FAILED query: INSERT Joy-only\n";
+        throw $e;
+    }
 
     echo "Populating Mindful-only summary count...\n";
     $countQuery = "SELECT COUNT(*) AS c FROM `$schemaB`.users m WHERE NOT EXISTS (SELECT 1 FROM `$schemaA`.users j WHERE LOWER(TRIM(j.email)) COLLATE utf8mb4_unicode_ci = LOWER(TRIM(m.email)) COLLATE utf8mb4_unicode_ci)";
     echo "Executing: count mindful-only...\n";
-    try { $countMindfulOnly = $pdo->query($countQuery)->fetch()['c']; } catch (PDOException $e) { echo "FAILED query: count mindful-only\n"; throw $e; }
+    try {
+        $countMindfulOnly = $pdo->query($countQuery)->fetch()['c'];
+    } catch (PDOException $e) {
+        echo "FAILED query: count mindful-only\n";
+        throw $e;
+    }
 
     // Summaries
     $totalMatched = $pdo->query("SELECT COUNT(*) AS c FROM `$mapDb`.users_map WHERE action='reuse_target'")->fetch()['c'];
@@ -93,7 +109,6 @@ SQL;
     }
 
     echo "\nTable `merge_maps.users_map` built — this is a preview. No user rows were modified.\n";
-
 } catch (PDOException $e) {
     fwrite(STDERR, 'ERROR: ' . $e->getMessage() . "\n");
     exit(1);

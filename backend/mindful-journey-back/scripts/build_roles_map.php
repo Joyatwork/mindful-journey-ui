@@ -16,7 +16,8 @@ try {
     $pdo->exec("CREATE DATABASE IF NOT EXISTS `$mapDb` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
     $pdo->exec("USE `$mapDb`");
     $pdo->exec("DROP TABLE IF EXISTS `roles_map`");
-    $pdo->exec(<<<'SQL'
+    $pdo->exec(
+        <<<'SQL'
 CREATE TABLE `roles_map` (
   `joy_id` BIGINT NOT NULL,
   `joy_name` VARCHAR(255) NULL,
@@ -41,7 +42,11 @@ FROM `$schemaA`.roles j
 JOIN `$schemaB`.roles m ON LOWER(TRIM(j.name)) COLLATE utf8mb4_unicode_ci = LOWER(TRIM(m.name)) COLLATE utf8mb4_unicode_ci;
 SQL;
     // Execute safely (silently if table missing)
-    try { $pdo->exec($insertMatched); } catch (PDOException $e) { echo "(note) join query failed: " . $e->getMessage() . "\n"; }
+    try {
+        $pdo->exec($insertMatched);
+    } catch (PDOException $e) {
+        echo "(note) join query failed: " . $e->getMessage() . "\n";
+    }
 
     echo "Populating Joy-only roles (to insert)...\n";
     $insertJoyOnly = <<<SQL
@@ -52,12 +57,19 @@ WHERE NOT EXISTS (
   SELECT 1 FROM `$schemaB`.roles m WHERE LOWER(TRIM(m.name)) COLLATE utf8mb4_unicode_ci = LOWER(TRIM(j.name)) COLLATE utf8mb4_unicode_ci
 );
 SQL;
-    try { $pdo->exec($insertJoyOnly); } catch (PDOException $e) { echo "(note) insertJoyOnly failed: " . $e->getMessage() . "\n"; }
+    try {
+        $pdo->exec($insertJoyOnly);
+    } catch (PDOException $e) {
+        echo "(note) insertJoyOnly failed: " . $e->getMessage() . "\n";
+    }
 
     $totalMatched = $pdo->query("SELECT COUNT(*) AS c FROM `$mapDb`.roles_map WHERE action='reuse_target'")->fetch()['c'];
     $totalJoyOnly = $pdo->query("SELECT COUNT(*) AS c FROM `$mapDb`.roles_map WHERE action='insert_target'")->fetch()['c'];
     $countMindfulOnly = 0;
-    try { $countMindfulOnly = $pdo->query("SELECT COUNT(*) AS c FROM `$schemaB`.roles m WHERE NOT EXISTS (SELECT 1 FROM `$schemaA`.roles j WHERE LOWER(TRIM(j.name)) COLLATE utf8mb4_unicode_ci = LOWER(TRIM(m.name)) COLLATE utf8mb4_unicode_ci)")->fetch()['c']; } catch (PDOException $e) { /* ignore */ }
+    try {
+        $countMindfulOnly = $pdo->query("SELECT COUNT(*) AS c FROM `$schemaB`.roles m WHERE NOT EXISTS (SELECT 1 FROM `$schemaA`.roles j WHERE LOWER(TRIM(j.name)) COLLATE utf8mb4_unicode_ci = LOWER(TRIM(m.name)) COLLATE utf8mb4_unicode_ci)")->fetch()['c'];
+    } catch (PDOException $e) { /* ignore */
+    }
 
     echo "\nPreview summary for roles:\n";
     echo " - matched by name: $totalMatched\n";
@@ -69,7 +81,6 @@ SQL;
     foreach ($rows as $r) echo "Joy {$r['joy_id']} name={$r['joy_name']}\n";
 
     echo "\nroles_map built (preview).\n";
-
 } catch (PDOException $e) {
     fwrite(STDERR, 'ERROR: ' . $e->getMessage() . "\n");
     exit(1);
