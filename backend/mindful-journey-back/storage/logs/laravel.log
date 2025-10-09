@@ -5575,3 +5575,7 @@
 #37 C:\\Users\\camar\\Bureau\\mindful-journey-ui\\backend\\mindful-journey-back\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\resources\\server.php(23): require_once('...')
 #38 {main}
 "} 
+[2025-10-09 22:39:16] local.INFO: ProfileController:update - hasFile avatar: yes  
+[2025-10-09 22:39:16] local.INFO: ProfileController:update - avatar path: avatars/jpjCb5wcjdOH3c4ybHrYlYsoHEj0Ack54lrKf2vg.jpg  
+[2025-10-09 22:39:16] local.INFO: ProfileController:update - user avatar (db): avatars/jpjCb5wcjdOH3c4ybHrYlYsoHEj0Ack54lrKf2vg.jpg  
+[2025-10-09 22:39:16] local.INFO: ProfileController:update - user avatar_url (accessor): http://localhost:8081/storage/avatars/jpjCb5wcjdOH3c4ybHrYlYsoHEj0Ack54lrKf2vg.jpg  
