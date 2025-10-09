@@ -1,0 +1,14 @@
+Exported users_map: 1 rows -> C:\Users\camar\Bureau\mindful-journey-ui\backend\mindful-journey-back\scripts/exports/users_map.csv
+Summary for users_map:
+ - reuse_target : 1
+ Samples for action=reuse_target:
+   {"joy_id":1,"joy_email":"test","joy_name":"aa aaa","mindful_id":4,"mindful_email":"test","mindful_name":"aa aaa","action":"reuse_target","notes":null,"created_at":"2025-10-09 10:25:54"}
+
+Exported challenges_map: 1 rows -> C:\Users\camar\Bureau\mindful-journey-ui\backend\mindful-journey-back\scripts/exports/challenges_map.csv
+Summary for challenges_map:
+ - reuse_target : 1
+ Samples for action=reuse_target:
+   {"joy_id":1,"joy_title":"d\u00e9fi bien-\u00eatre 30 jours","mindful_id":4,"mindful_title":"d\u00e9fi bien-\u00eatre 30 jours","action":"reuse_target","notes":null}
+
+Exported roles_map: 0 rows -> C:\Users\camar\Bureau\mindful-journey-ui\backend\mindful-journey-back\scripts/exports/roles_map.csv
+Summary for roles_map:
