@@ -49,7 +49,6 @@ try {
             } else {
                 echo " - no user_id column to remap\n";
             }
-
         } catch (PDOException $e) {
             echo "ERROR processing $table: " . $e->getMessage() . "\n";
         }

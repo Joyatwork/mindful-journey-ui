@@ -6,7 +6,8 @@ $port = 18136;
 $user = 'Ali_CAMARA';
 $pass = 'AVNS_TaUyL9dsB37NJOKRllf';
 
-function db_connect_direct($host, $port, $user, $pass) {
+function db_connect_direct($host, $port, $user, $pass)
+{
     $dsn = "mysql:host=$host;port=$port;dbname=information_schema;charset=utf8mb4";
     $pdo = new PDO($dsn, $user, $pass, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]);
     $pdo->exec("SET NAMES 'utf8mb4' COLLATE 'utf8mb4_unicode_ci'");
@@ -15,7 +16,8 @@ function db_connect_direct($host, $port, $user, $pass) {
     return $pdo;
 }
 
-function print_table($pdo, $table) {
+function print_table($pdo, $table)
+{
     echo "=== $table ===\n";
     try {
         $st = $pdo->query("SELECT * FROM merge_maps.$table");
@@ -28,7 +30,9 @@ function print_table($pdo, $table) {
         $cols = array_keys($rows[0]);
         echo implode(' | ', $cols) . "\n";
         foreach ($rows as $r) {
-            $vals = array_map(function($v){ return $v === null ? '<NULL>' : $v; }, $r);
+            $vals = array_map(function ($v) {
+                return $v === null ? '<NULL>' : $v;
+            }, $r);
             echo implode(' | ', $vals) . "\n";
         }
     } catch (Exception $e) {
