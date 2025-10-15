@@ -11,7 +11,8 @@ return new class extends Migration
         Schema::create('appointments', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->foreignId('specialist_id')->constrained('specialists')->onDelete('cascade');
+            // Constrain to the canonical practitioners table (specialists table removed)
+            $table->foreignId('specialist_id')->constrained('practitioners')->onDelete('cascade');
             $table->dateTime('scheduled_at');
             $table->enum('type', ['video', 'inPerson', 'phone'])->default('video');
             $table->enum('status', ['pending', 'confirmed', 'cancelled'])->default('confirmed');

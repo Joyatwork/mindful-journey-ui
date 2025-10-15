@@ -242,38 +242,56 @@ class RecommendationController extends Controller
         // Déterminer les spécialités candidates selon le diagnostic + contexte
         $candidates = $this->determineSpecialtiesFromDiagnostic($diagnostic, $context);
 
-        // Construire une requête vers specialists
-        $query = Specialist::query()
-            // Exclure les psychologues des suggestions personnalisées
-            ->where('specialty', 'not like', '%Psychologue%');
+        // NOTE: practitioners table stores specializations differently (e.g. JSON `specializations`)
+        // The `Specialist` model exposes a virtual `specialty` accessor. We must avoid SQL references
+        // to a non-existing `specialty` column. Instead, retrieve a small pool by rating and filter in PHP.
 
+        // Get a candidate pool ordered by rating (don't filter on specialty at SQL level)
+        $pool = Specialist::query()->orderBy('rating', 'desc')->take(20)->get();
+
+        // Exclude psychologues at PHP level using the accessor
+        $pool = $pool->filter(function (Specialist $s) {
+            $spec = strtolower((string) $s->specialty);
+            return !str_contains($spec, 'psychologue');
+        })->values();
+
+        // If candidates provided, filter by them (match via accessor or specializations array)
         if (!empty($candidates)) {
-            $query->where(function ($q) use ($candidates) {
-                foreach ($candidates as $spec) {
-                    $q->orWhere('specialty', 'like', "%$spec%");
+            $pool = $pool->filter(function (Specialist $s) use ($candidates) {
+                $candidateMatched = false;
+                $specStr = strtolower((string) $s->specialty);
+                foreach ($candidates as $c) {
+                    if (str_contains($specStr, strtolower($c))) {
+                        $candidateMatched = true;
+                        break;
+                    }
                 }
-            });
+                // also inspect raw specializations array if accessor not helpful
+                if (!$candidateMatched && isset($s->specializations) && is_array($s->specializations)) {
+                    foreach ($s->specializations as $sp) {
+                        if (is_string($sp) && in_array(strtolower($sp), array_map('strtolower', $candidates), true)) {
+                            $candidateMatched = true;
+                            break;
+                        }
+                    }
+                }
+                return $candidateMatched;
+            })->values();
         } else {
-            // Si aucune spécialité précise déduite, fallback basé sur stress/énergie
+            // Apply fallback preferences in PHP
             if ($stress >= 4 || $mood <= 2) {
-                $query->where('specialty', 'like', '%Psychiatre%');
+                $pool = $pool->filter(function (Specialist $s) {
+                    return str_contains(strtolower((string) $s->specialty), 'psychiatre')
+                        || $this->containsInSpecializations($s, 'psychiatre');
+                })->values();
             } elseif ($energy <= 2) {
-                $query->where(function ($q) {
-                    $q->where('specialty', 'like', '%généraliste%')
-                        ->orWhere('specialty', 'like', '%Généraliste%');
-                });
+                $pool = $pool->filter(function (Specialist $s) {
+                    $spec = strtolower((string) $s->specialty);
+                    return str_contains($spec, 'généraliste') || str_contains($spec, 'generaliste')
+                        || $this->containsInSpecializations($s, 'médecin généraliste')
+                        || $this->containsInSpecializations($s, 'generaliste');
+                })->values();
             }
-        }
-
-        // Récupérer un petit pool et choisir un élément de façon stable (rotation quotidienne par utilisateur)
-        $pool = $query->orderBy('rating', 'desc')->take(5)->get();
-
-        if ($pool->isEmpty()) {
-            $pool = Specialist::query()
-                ->where('specialty', 'not like', '%Psychologue%')
-                ->orderBy('rating', 'desc')
-                ->take(5)
-                ->get();
         }
 
         if ($pool->isEmpty()) {
@@ -373,6 +391,27 @@ class RecommendationController extends Controller
             return 'Recommandé selon votre profil récent';
         }
         return 'Recommandé pour: ' . implode(', ', $parts);
+    }
+
+    /**
+     * Helper: check whether a given keyword appears in a Specialist's specializations array
+     */
+    private function containsInSpecializations(Specialist $s, string $keyword): bool
+    {
+        $key = strtolower($keyword);
+        $specs = $s->specializations ?? null;
+        if (!$specs) return false;
+        if (is_string($specs)) {
+            $decoded = json_decode($specs, true);
+            if (is_array($decoded)) $specs = $decoded;
+        }
+        if (is_array($specs)) {
+            foreach ($specs as $sp) {
+                if (!is_string($sp)) continue;
+                if (str_contains(strtolower($sp), $key)) return true;
+            }
+        }
+        return false;
     }
 
     /**

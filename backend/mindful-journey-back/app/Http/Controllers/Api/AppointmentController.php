@@ -50,7 +50,8 @@ class AppointmentController extends Controller
     {
         $user = $request->user();
         $validated = $request->validate([
-            'specialistId' => ['required', Rule::exists('specialists', 'id')],
+            // validate against the canonical practitioners table
+            'specialistId' => ['required', Rule::exists('practitioners', 'id')],
             'date' => 'required|date_format:Y-m-d',
             'time' => 'required|date_format:H:i',
             'type' => 'required|in:video,inPerson,phone',
