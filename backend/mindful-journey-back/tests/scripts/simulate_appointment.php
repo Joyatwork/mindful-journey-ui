@@ -21,7 +21,7 @@ $request = new Illuminate\Http\Request([
     'type' => 'video',
 ]);
 
-$request->setUserResolver(function() use($user) {
+$request->setUserResolver(function () use ($user) {
     return $user;
 });
 

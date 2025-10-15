@@ -6,10 +6,15 @@ $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
 $kernel->bootstrap();
 
 $user = App\Models\User::find(6);
-if (!$user) { echo "User 6 not found\n"; exit(1); }
+if (!$user) {
+    echo "User 6 not found\n";
+    exit(1);
+}
 
 $request = new Illuminate\Http\Request(['mood' => 3, 'stress' => 3, 'energy' => 3, 'time_of_day' => 14]);
-$request->setUserResolver(function() use($user){ return $user; });
+$request->setUserResolver(function () use ($user) {
+    return $user;
+});
 
 $controller = app()->make(App\Http\Controllers\Api\RecommendationController::class);
 try {
