@@ -22,6 +22,7 @@ interface TwoFactorPending {
   otpId: number;
   expiresAt: string; // ISO string
   email: string;
+  devCode?: string; // optionnel: code OTP renvoyé par le backend en local
 }
 
 interface AuthContextType {
@@ -123,7 +124,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (response.two_factor) {
         // Étape 2FA : ne pas définir user/token maintenant
         const expiresAt = new Date(Date.now() + (response.expires_in_seconds || 600) * 1000).toISOString();
-        setTwoFactorPending({ otpId: response.otp_id, expiresAt, email });
+        setTwoFactorPending({ otpId: response.otp_id, expiresAt, email, devCode: (response as any).dev_code });
         return { twoFactor: true };
       }
 

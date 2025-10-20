@@ -108,17 +108,38 @@ class AuthController extends Controller
             Mail::to($user->email)->send(new TwoFactorCodeMail($code, config('app.name', 'Mindful Journey')));
         } catch (\Throwable $e) {
             Log::error('Erreur envoi mail 2FA: ' . $e->getMessage());
+            // En environnement local/test, ne bloque pas la connexion 2FA: retourne le code dans la réponse
+            if (app()->environment('local', 'testing')) {
+                Log::warning('2FA DEV MODE: envoi email échoué, on renvoie le code dans la réponse (ne pas activer en prod).', [
+                    'user_id' => $user->id,
+                    'email' => $user->email,
+                    'code' => $code,
+                ]);
+                return response()->json([
+                    'message' => 'Code généré (mode dev local)',
+                    'two_factor' => true,
+                    'otp_id' => $otp->id,
+                    'expires_in_seconds' => 600,
+                    // Champ d’aide au développement: le code est renvoyé pour tests locaux
+                    'dev_code' => $code,
+                ]);
+            }
             return response()->json([
                 'message' => "Erreur lors de l'envoi du code, réessayez plus tard."
             ], 500);
         }
 
-        return response()->json([
+        $payload = [
             'message' => 'Code envoyé par email',
             'two_factor' => true,
             'otp_id' => $otp->id,
             'expires_in_seconds' => 600,
-        ]);
+        ];
+        // En dev local, aider le front en renvoyant aussi le code pour tests rapides
+        if (app()->environment('local', 'testing')) {
+            $payload['dev_code'] = $code;
+        }
+        return response()->json($payload);
     }
 
     /**

@@ -6680,3 +6680,68 @@ Content-Transfer-Encoding: quoted-printable
 #20 {main}
 "} 
 [2025-10-15 14:43:18] local.ERROR: Erreur lors de la génération des suggestions: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'specialty' in 'where clause' (Connection: mysql, SQL: select * from `practitioners` where `specialty` not like %Psychologue% and (`specialty` like %Psychiatre% or `specialty` like %Médecin généraliste%) order by `rating` desc limit 5)  
+[2025-10-20 11:52:19] local.ERROR: Erreur envoi mail 2FA: Failed to authenticate on SMTP server with username "alicamara291@gmail.com" using the following authenticators: "LOGIN", "PLAIN", "XOAUTH2". Authenticator "LOGIN" returned "Expected response code "235" but got code "535", with message "535-5.7.8 Username and Password not accepted. For more information, go to
+535 5.7.8  https://support.google.com/mail/?p=BadCredentials 5b1f17b1804b1-47154d3843csm141081345e9.11 - gsmtp".". Authenticator "PLAIN" returned "Expected response code "235" but got code "535", with message "535-5.7.8 Username and Password not accepted. For more information, go to
+535 5.7.8  https://support.google.com/mail/?p=BadCredentials 5b1f17b1804b1-47154d3843csm141081345e9.11 - gsmtp".". Authenticator "XOAUTH2" returned "Expected response code "235" but got code "334", with message "334 eyJzdGF0dXMiOiI0MDAiLCJzY2hlbWVzIjoiQmVhcmVyIiwic2NvcGUiOiJodHRwczovL21haWwuZ29vZ2xlLmNvbS8ifQ==".".  
+[2025-10-20 12:05:56] local.DEBUG: From: Example <hello@example.com>
+To: alicamara291@gmail.com
+Subject: Laravel - Votre code de connexion
+MIME-Version: 1.0
+Date: Mon, 20 Oct 2025 12:05:56 +0000
+Message-ID: <9a0a6bb9831cf0f1f0e00706259b122f@example.com>
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <title>Code de connexion</title>
+    <style>
+        body { font-family: Arial, sans-serif; color:#222; }
+        .code { font-size: 32px; letter-spacing: 8px; font-weight: bold; background:#f5f5f5; padding:12px 18px; display:inline-block; border-radius:8px; }
+        .container { max-width:600px; margin:0 auto; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Laravel - Connexion sécurisée</h2>
+    <p>Voici votre code de vérification (valide 10 minutes) :</p>
+    <p class="code">77026</p>
+    <p>Si vous n'êtes pas à l'origine de cette tentative, vous pouvez ignorer cet email.</p>
+    <p style="font-size:12px;color:#666;">Ne partagez jamais ce code.</p>
+</div>
+</body>
+</html>
+  
+[2025-10-20 12:14:24] local.DEBUG: From: Example <hello@example.com>
+To: ali.camara9@icloud.com
+Subject: Laravel - Votre code de connexion
+MIME-Version: 1.0
+Date: Mon, 20 Oct 2025 12:14:24 +0000
+Message-ID: <36c8599777d60f0550c4ce881639bc7c@example.com>
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <title>Code de connexion</title>
+    <style>
+        body { font-family: Arial, sans-serif; color:#222; }
+        .code { font-size: 32px; letter-spacing: 8px; font-weight: bold; background:#f5f5f5; padding:12px 18px; display:inline-block; border-radius:8px; }
+        .container { max-width:600px; margin:0 auto; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Laravel - Connexion sécurisée</h2>
+    <p>Voici votre code de vérification (valide 10 minutes) :</p>
+    <p class="code">58415</p>
+    <p>Si vous n'êtes pas à l'origine de cette tentative, vous pouvez ignorer cet email.</p>
+    <p style="font-size:12px;color:#666;">Ne partagez jamais ce code.</p>
+</div>
+</body>
+</html>
+  

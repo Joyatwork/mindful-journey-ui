@@ -312,7 +312,12 @@ const LoginPage = () => {
                     />
                     {otpError && <p className="text-xs text-red-600">{otpError}</p>}
                     {twoFactorPending && (
-                      <p className="text-xs text-gray-500">Code envoyé à {twoFactorPending.email}. Expire dans 10 min.</p>
+                      <>
+                        <p className="text-xs text-gray-500">Code envoyé à {twoFactorPending.email}. Expire dans 10 min.</p>
+                        {twoFactorPending.devCode && (
+                          <p className="text-xs text-amber-600">Astuce dev: code local {twoFactorPending.devCode}</p>
+                        )}
+                      </>
                     )}
                   </div>
                   <div className="flex gap-2">
