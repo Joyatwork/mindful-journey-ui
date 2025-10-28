@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 use App\Models\LoginOtp;
 use App\Mail\TwoFactorCodeMail;
 use Illuminate\Validation\ValidationException;
@@ -22,11 +23,16 @@ class AuthController extends Controller
      */
     public function register(Request $request): JsonResponse
     {
-        $request->validate([
+        $rules = [
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
-        ]);
+        ];
+        // Si la table entreprises existe, rendre le choix d'entreprise obligatoire
+        if (Schema::hasTable('entreprises')) {
+            $rules['entreprise_id'] = 'required|integer|exists:entreprises,id';
+        }
+        $request->validate($rules);
 
         $hashed = Hash::make($request->password);
         $data = [
@@ -51,7 +57,27 @@ class AuthController extends Controller
             // ignore
         }
 
+        // Lier l'entreprise à l'utilisateur si la colonne existe
+        $entrepriseId = null;
+        try {
+            if (Schema::hasTable('entreprises') && $request->filled('entreprise_id')) {
+                $entrepriseId = (int) $request->entreprise_id;
+                if (Schema::hasColumn('users', 'entreprise_id')) {
+                    $data['entreprise_id'] = $entrepriseId;
+                }
+            }
+        } catch (\Throwable $e) { /* ignore */ }
+
         $user = User::create($data);
+
+        // Créer automatiquement le profil employé lié à l'entreprise choisie
+        try {
+            if ($entrepriseId && Schema::hasTable('employees')) {
+                $this->createEmployeeForUser($user->id, $entrepriseId);
+            }
+        } catch (\Throwable $e) {
+            Log::warning('register: création employee échouée', ['user_id' => $user->id, 'entreprise_id' => $entrepriseId, 'error' => $e->getMessage()]);
+        }
 
         // Créer un token Sanctum pour l'utilisateur
         $token = $user->createToken('auth-token')->plainTextToken;
@@ -61,6 +87,115 @@ class AuthController extends Controller
             'user' => $user,
             'token' => $token,
         ], 201);
+    }
+
+    /**
+     * Crée une entrée employees pour l'utilisateur avec l'entreprise donnée, en remplissant les champs requis.
+     */
+    private function createEmployeeForUser(int $userId, int $entrepriseId): void
+    {
+        if (!Schema::hasTable('employees')) return;
+
+        // Ne pas dupliquer si déjà mappé
+        $exists = DB::table('employees')->where('user_id', $userId)->exists();
+        if ($exists) return;
+
+        $empColumns = Schema::getColumnListing('employees');
+        $data = ['user_id' => $userId];
+        if (in_array('entreprise_id', $empColumns, true)) {
+            $data['entreprise_id'] = $entrepriseId;
+        }
+
+        // Lire nullabilité pour remplir défauts sûrs
+        $nullable = [];
+        try {
+            $dbName = DB::selectOne('SELECT DATABASE() AS db')->db ?? null;
+            if ($dbName) {
+                $rows = DB::select('SELECT COLUMN_NAME, IS_NULLABLE, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?', [$dbName, 'employees']);
+                foreach ($rows as $r) {
+                    $nullable[$r->COLUMN_NAME] = [
+                        'nullable' => ($r->IS_NULLABLE === 'YES'),
+                        'type' => $r->DATA_TYPE,
+                    ];
+                }
+            }
+        } catch (\Throwable $e) { /* ignore */ }
+
+        foreach (['first_name','last_name','name'] as $col) {
+            if (in_array($col, $empColumns, true) && (isset($nullable[$col]) && !$nullable[$col]['nullable'])) {
+                $data[$col] = '';
+            }
+        }
+        foreach (['salary','age'] as $col) {
+            if (in_array($col, $empColumns, true) && (isset($nullable[$col]) && !$nullable[$col]['nullable'])) {
+                $data[$col] = 0;
+            }
+        }
+
+        // Champs RH usuels
+        if (in_array('employee_number', $empColumns, true)) {
+            $data['employee_number'] = 'E-' . $userId . '-' . substr((string) time(), -5);
+        }
+        if (in_array('department', $empColumns, true)) {
+            $data['department'] = $data['department'] ?? '';
+        }
+        if (in_array('position_title', $empColumns, true)) {
+            $data['position_title'] = $data['position_title'] ?? '';
+        }
+        if (in_array('employment_status', $empColumns, true)) {
+            $data['employment_status'] = $data['employment_status'] ?? 'active';
+        }
+        if (in_array('current_risk_level', $empColumns, true)) {
+            $data['current_risk_level'] = $data['current_risk_level'] ?? 'stable';
+        }
+        if (in_array('current_risk_score', $empColumns, true)) {
+            $data['current_risk_score'] = $data['current_risk_score'] ?? 0;
+        }
+        if (in_array('date_hired', $empColumns, true)) {
+            $data['date_hired'] = $data['date_hired'] ?? now()->toDateString();
+        }
+        if (in_array('last_activity_at', $empColumns, true)) {
+            $data['last_activity_at'] = $data['last_activity_at'] ?? now();
+        }
+
+        // Tenter de satisfaire d'éventuelles FKs NOT NULL courantes (department_id)
+        if (in_array('department_id', $empColumns, true) && (isset($nullable['department_id']) && !$nullable['department_id']['nullable'])) {
+            $depId = null;
+            foreach (['departments','departements','teams'] as $tbl) {
+                if (Schema::hasTable($tbl)) { $depId = DB::table($tbl)->value('id'); if ($depId) break; }
+            }
+            $data['department_id'] = $depId ?? 1; // dernier recours 1
+        }
+        // FKs possibles
+        if (in_array('site_id', $empColumns, true)) {
+            // Essayer de récupérer un site existant (table sites), sinon 1 en dernier recours si NOT NULL
+            $siteId = null;
+            if (Schema::hasTable('sites')) {
+                $siteId = DB::table('sites')->value('id');
+            }
+            if ($siteId) {
+                $data['site_id'] = $siteId;
+            } elseif (isset($nullable['site_id']) && !$nullable['site_id']['nullable']) {
+                $data['site_id'] = 1;
+            }
+        }
+        if (in_array('manager_id', $empColumns, true)) {
+            // Essayer un manager existant (employees.id), sinon null/1 selon nullabilité
+            $mgr = null;
+            if (Schema::hasTable('employees')) {
+                $mgr = DB::table('employees')->value('id');
+            }
+            if ($mgr) {
+                $data['manager_id'] = $mgr;
+            } elseif (isset($nullable['manager_id']) && !$nullable['manager_id']['nullable']) {
+                $data['manager_id'] = 1;
+            }
+        }
+
+        if (in_array('created_at', $empColumns, true)) $data['created_at'] = now();
+        if (in_array('updated_at', $empColumns, true)) $data['updated_at'] = now();
+
+        DB::table('employees')->insert($data);
     }
 
     /**

@@ -28,8 +28,26 @@ const LoginPage = () => {
     name: '',
     email: '',
     password: '',
-    password_confirmation: ''
+    password_confirmation: '',
+    entreprise_id: '' as string
   });
+  const [entreprises, setEntreprises] = useState<{ id: number; name: string }[]>([]);
+  // Charger les entreprises pour l'onglet inscription
+  React.useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const res = await (await import('@/lib/test-api')).default.entreprises.list();
+        if (!cancelled) {
+          setEntreprises(res.items || []);
+        }
+      } catch (e) {
+        console.warn('Impossible de charger la liste des entreprises', e);
+      }
+    };
+    load();
+    return () => { cancelled = true; };
+  }, []);
 
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -170,7 +188,13 @@ const LoginPage = () => {
 
     setLoading(true);
     try {
-      await register(registerForm.name, registerForm.email, registerForm.password, registerForm.password_confirmation);
+      const entId = registerForm.entreprise_id ? parseInt(registerForm.entreprise_id, 10) : undefined;
+      // Si une liste d'entreprises existe, rendre obligatoire la sélection
+      if (entreprises.length > 0 && !entId) {
+        showMessage('error', 'Veuillez choisir votre entreprise');
+        return;
+      }
+      await register(registerForm.name, registerForm.email, registerForm.password, registerForm.password_confirmation, entId);
       showMessage('success', 'Inscription réussie !');
     } catch (error: any) {
       // Détecter un email déjà utilisé (souvent 409 ou 422 avec message spécifique)
@@ -425,6 +449,22 @@ const LoginPage = () => {
                       {showRegisterPasswordConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
+                </div>
+                {/* Sélection de l'entreprise */}
+                <div className="space-y-2">
+                  <Label htmlFor="register-entreprise">Entreprise</Label>
+                  <select
+                    id="register-entreprise"
+                    className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    value={registerForm.entreprise_id}
+                    onChange={(e) => setRegisterForm({ ...registerForm, entreprise_id: e.target.value })}
+                    required={entreprises.length > 0}
+                  >
+                    <option value="">{entreprises.length > 0 ? 'Sélectionnez votre entreprise' : 'Aucune entreprise disponible'}</option>
+                    {entreprises.map((ent) => (
+                      <option key={ent.id} value={ent.id}>{ent.name}</option>
+                    ))}
+                  </select>
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? 'Inscription...' : 'S\'inscrire'}

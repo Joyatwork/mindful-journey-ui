@@ -386,6 +386,16 @@ class MoodController extends Controller
             }
         }
 
+        // Si users a une entreprise_id, l'utiliser en priorité
+        if (in_array('entreprise_id', $empColumns, true) && Schema::hasColumn('users', 'entreprise_id')) {
+            try {
+                $userEntrepriseId = DB::table('users')->where('id', $userId)->value('entreprise_id');
+                if ($userEntrepriseId) {
+                    $data['entreprise_id'] = $userEntrepriseId;
+                }
+            } catch (\Throwable $e) { /* ignore */ }
+        }
+
         // FKs: entreprise_id / department_id si non nullables, tenter de récupérer une valeur existante
         $fkSources = [
             'entreprise_id' => ['entreprises', 'enterprise', 'companies', 'organizations', 'organisations', 'businesses'],
@@ -393,9 +403,9 @@ class MoodController extends Controller
         ];
         foreach ($fkSources as $fkCol => $candidates) {
             if (in_array($fkCol, $empColumns, true)) {
-                $value = null;
+                $value = $data[$fkCol] ?? null;
                 foreach ($candidates as $table) {
-                    if (Schema::hasTable($table)) {
+                    if (!$value && Schema::hasTable($table)) {
                         $value = DB::table($table)->value('id');
                         if ($value) break;
                     }

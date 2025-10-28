@@ -33,7 +33,7 @@ interface AuthContextType {
   twoFactorPending: TwoFactorPending | null;
   login: (email: string, password: string) => Promise<{ twoFactor?: true }>;
   verifyOtp: (code: string) => Promise<void>;
-  register: (name: string, email: string, password: string, password_confirmation: string) => Promise<void>;
+  register: (name: string, email: string, password: string, password_confirmation: string, entreprise_id?: number) => Promise<void>;
   forgotPassword: (email: string) => Promise<void>;
   resetPassword: (data: { email: string; token: string; password: string; password_confirmation: string }) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
@@ -165,13 +165,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setLastCredentials(null);
   };
 
-  const register = async (name: string, email: string, password: string, password_confirmation: string) => {
+  const register = async (name: string, email: string, password: string, password_confirmation: string, entreprise_id?: number) => {
     try {
       const response = await testApiService.auth.register({
         name,
         email,
         password,
-        password_confirmation
+        password_confirmation,
+        ...(entreprise_id ? { entreprise_id } : {})
       });
       setUser(response.user);
       setToken(response.token || null);
@@ -357,7 +358,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     twoFactorPending,
     login,
     verifyOtp,
-    register,
+  register,
     forgotPassword,
     resetPassword,
     loginWithGoogle,

@@ -318,6 +318,10 @@ class DatabaseController extends Controller
                 $data[$col] = 0;
             }
         }
+        // Utiliser l'entreprise de l'utilisateur si dispo
+        if (in_array('entreprise_id', $empColumns, true) && isset($user->entreprise_id) && $user->entreprise_id) {
+            $data['entreprise_id'] = $user->entreprise_id;
+        }
         // FKs: entreprise_id / department_id
         $fkSources = [
             'entreprise_id' => ['entreprises', 'enterprise', 'companies', 'organizations', 'organisations', 'businesses'],
@@ -325,9 +329,9 @@ class DatabaseController extends Controller
         ];
         foreach ($fkSources as $fkCol => $candidates) {
             if (in_array($fkCol, $empColumns, true)) {
-                $value = null;
+                $value = $data[$fkCol] ?? null;
                 foreach ($candidates as $table) {
-                    if (Schema::hasTable($table)) {
+                    if (!$value && Schema::hasTable($table)) {
                         $value = DB::table($table)->value('id');
                         if ($value) break;
                     }

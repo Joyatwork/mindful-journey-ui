@@ -123,6 +123,12 @@ async function testApiRequest(endpoint: string, options: RequestInit = {}) {
 
 // Service API de test
 const testApiService = {
+  entreprises: {
+    list: (q?: string) => {
+      const qs = q && q.trim().length > 0 ? `?q=${encodeURIComponent(q)}` : '';
+      return testApiRequest(`/entreprises${qs}`);
+    }
+  },
   challenges: {
     list: () => testApiRequest('/challenges'),
     start: (challengeId: number) => testApiRequest(`/challenges/${challengeId}/start`, {

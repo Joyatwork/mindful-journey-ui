@@ -7,6 +7,8 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class User extends Authenticatable
 {
@@ -33,6 +35,7 @@ class User extends Authenticatable
         'preferences',
         'health_goals',
         'status',
+        'entreprise_id',
     ];
 
     /**
@@ -104,5 +107,21 @@ class User extends Authenticatable
         $frontendBase = rtrim(env('FRONTEND_URL', 'http://localhost:8080'), '/');
         $resetUrl = $frontendBase . '/reset-password?token=' . $token . '&email=' . urlencode($this->email);
         $this->notify(new \App\Notifications\CustomResetPasswordNotification($resetUrl));
+    }
+
+    /**
+     * Lien vers l'entreprise (entreprises)
+     */
+    public function entreprise(): BelongsTo
+    {
+        return $this->belongsTo(Entreprise::class, 'entreprise_id');
+    }
+
+    /**
+     * Lien vers le profil employé (employees)
+     */
+    public function employee(): HasOne
+    {
+        return $this->hasOne(Employee::class, 'user_id');
     }
 }

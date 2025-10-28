@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\{
     ChallengeController,
     ChallengeActionController
 };
+    use App\Http\Controllers\Api\EntrepriseController;
 use App\Models\LoginOtp; // utilisé par la route debug locale
 use App\Models\User as DebugUser; // alias pour éviter conflits éventuels
 
@@ -38,6 +39,11 @@ use App\Models\User as DebugUser; // alias pour éviter conflits éventuels
 
 // Important : définir avant "specialists/{specialist}" pour éviter la capture
 Route::get('specialists/public', [SpecialistController::class, 'publicIndex']);
+
+// Liste des entreprises pour le formulaire d'inscription
+Route::get('entreprises', [EntrepriseController::class, 'index']);
+// Détail des membres d'une entreprise
+Route::get('entreprises/{id}/members', [EntrepriseController::class, 'members']);
 
 // Route de test simple
 Route::get('health', function () {
@@ -98,6 +104,14 @@ Route::prefix('test')->group(function () {
         Route::get('schemas', [DatabaseController::class, 'listSchemas']);
         Route::get('tables', [DatabaseController::class, 'listTables']);
         Route::get('columns', [DatabaseController::class, 'listColumns']);
+        // Seed de quelques entreprises (dev)
+        Route::post('entreprises/seed', [EntrepriseController::class, 'seed']);
+        // Seed de quelques sites (dev) pour satisfaire les FKs (employees.site_id)
+        Route::post('sites/seed', [EntrepriseController::class, 'seedSites']);
+        // Liste des sites (dev)
+        Route::get('sites', [EntrepriseController::class, 'listSites']);
+        // Seed des employés (dev)
+        Route::post('employees/seed', [EntrepriseController::class, 'seedEmployees']);
     });
 });
 
