@@ -76,7 +76,8 @@ class EntrepriseController extends Controller
                     $nullable[$r->COLUMN_NAME] = ($r->IS_NULLABLE === 'YES');
                 }
             }
-        } catch (\Throwable $e) { /* ignore */ }
+        } catch (\Throwable $e) { /* ignore */
+        }
 
         $requiresEntreprise = in_array('entreprise_id', $columns, true) && (isset($nullable['entreprise_id']) ? !$nullable['entreprise_id'] : false);
 
@@ -113,14 +114,14 @@ class EntrepriseController extends Controller
         }
 
         // Ne pas dupliquer si des sites existent déjà
-    $existing = DB::table('sites')->count();
+        $existing = DB::table('sites')->count();
         if ($existing > 0) {
             return response()->json(['success' => true, 'message' => 'Sites déjà présents', 'count' => $existing]);
         }
 
-    DB::table('sites')->insert($toInsert);
-    $count = DB::table('sites')->count();
-    $sample = DB::table('sites')->limit(5)->get();
+        DB::table('sites')->insert($toInsert);
+        $count = DB::table('sites')->count();
+        $sample = DB::table('sites')->limit(5)->get();
         return response()->json(['success' => true, 'inserted' => count($toInsert), 'count' => $count, 'sample' => $sample]);
     }
 
@@ -139,10 +140,10 @@ class EntrepriseController extends Controller
         }
 
         $users = Schema::hasTable('users') && Schema::hasColumn('users', 'entreprise_id')
-            ? DB::table('users')->where('entreprise_id', $id)->select('id','name','email','created_at')->get()
+            ? DB::table('users')->where('entreprise_id', $id)->select('id', 'name', 'email', 'created_at')->get()
             : collect();
         $employees = Schema::hasTable('employees') && Schema::hasColumn('employees', 'entreprise_id')
-            ? DB::table('employees')->where('entreprise_id', $id)->select('id','user_id','created_at')->get()
+            ? DB::table('employees')->where('entreprise_id', $id)->select('id', 'user_id', 'created_at')->get()
             : collect();
 
         return response()->json([
@@ -199,7 +200,8 @@ class EntrepriseController extends Controller
                     ];
                 }
             }
-        } catch (\Throwable $e) { /* ignore */ }
+        } catch (\Throwable $e) { /* ignore */
+        }
 
         // Vérifier si site_id est requis et s'il existe des sites
         $siteRequired = in_array('site_id', $empCols, true) && (isset($nullable['site_id']) && !$nullable['site_id']['nullable']);
@@ -241,18 +243,21 @@ class EntrepriseController extends Controller
         }
 
         $now = now();
-        $inserted = 0; $skipped = 0; $errors = [];
+        $inserted = 0;
+        $skipped = 0;
+        $errors = [];
 
         foreach ($users as $u) {
             try {
-                $row = [ 'user_id' => $u->id ];
+                $row = ['user_id' => $u->id];
 
                 // entreprise_id
                 if (in_array('entreprise_id', $empCols, true)) {
                     $entId = property_exists($u, 'entreprise_id') ? ($u->entreprise_id ?? null) : null;
                     if (!$entId && isset($nullable['entreprise_id']) && !$nullable['entreprise_id']['nullable']) {
                         // Entreprise requise mais introuvable
-                        $skipped++; $errors[] = [ 'user_id' => $u->id, 'reason' => 'Entreprise requise manquante' ];
+                        $skipped++;
+                        $errors[] = ['user_id' => $u->id, 'reason' => 'Entreprise requise manquante'];
                         continue;
                     }
                     if ($entId) $row['entreprise_id'] = $entId;
@@ -263,7 +268,8 @@ class EntrepriseController extends Controller
                     $entKey = (int)($row['entreprise_id'] ?? 0);
                     $siteId = $siteByEntreprise[$entKey] ?? $siteByEntreprise[0] ?? null;
                     if ($siteRequired && !$siteId) {
-                        $skipped++; $errors[] = [ 'user_id' => $u->id, 'reason' => 'Aucun site disponible' ];
+                        $skipped++;
+                        $errors[] = ['user_id' => $u->id, 'reason' => 'Aucun site disponible'];
                         continue;
                     }
                     if ($siteId) $row['site_id'] = $siteId;
@@ -286,7 +292,8 @@ class EntrepriseController extends Controller
                         $row['manager_id'] = $manager;
                     } else if (isset($nullable['manager_id']) && !$nullable['manager_id']['nullable']) {
                         // Si NOT NULL et aucun manager disponible, on ne peut pas insérer proprement
-                        $skipped++; $errors[] = [ 'user_id' => $u->id, 'reason' => 'manager_id NOT NULL mais aucun manager existant' ];
+                        $skipped++;
+                        $errors[] = ['user_id' => $u->id, 'reason' => 'manager_id NOT NULL mais aucun manager existant'];
                         continue;
                     }
                 }
@@ -298,7 +305,7 @@ class EntrepriseController extends Controller
                 $inserted++;
             } catch (\Throwable $e) {
                 $skipped++;
-                $errors[] = [ 'user_id' => $u->id, 'error' => $e->getMessage() ];
+                $errors[] = ['user_id' => $u->id, 'error' => $e->getMessage()];
             }
         }
 

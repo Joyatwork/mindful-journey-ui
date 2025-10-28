@@ -358,7 +358,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     twoFactorPending,
     login,
     verifyOtp,
-  register,
+    register,
     forgotPassword,
     resetPassword,
     loginWithGoogle,

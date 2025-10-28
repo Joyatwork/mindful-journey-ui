@@ -66,7 +66,8 @@ class AuthController extends Controller
                     $data['entreprise_id'] = $entrepriseId;
                 }
             }
-        } catch (\Throwable $e) { /* ignore */ }
+        } catch (\Throwable $e) { /* ignore */
+        }
 
         $user = User::create($data);
 
@@ -119,14 +120,15 @@ class AuthController extends Controller
                     ];
                 }
             }
-        } catch (\Throwable $e) { /* ignore */ }
+        } catch (\Throwable $e) { /* ignore */
+        }
 
-        foreach (['first_name','last_name','name'] as $col) {
+        foreach (['first_name', 'last_name', 'name'] as $col) {
             if (in_array($col, $empColumns, true) && (isset($nullable[$col]) && !$nullable[$col]['nullable'])) {
                 $data[$col] = '';
             }
         }
-        foreach (['salary','age'] as $col) {
+        foreach (['salary', 'age'] as $col) {
             if (in_array($col, $empColumns, true) && (isset($nullable[$col]) && !$nullable[$col]['nullable'])) {
                 $data[$col] = 0;
             }
@@ -161,8 +163,11 @@ class AuthController extends Controller
         // Tenter de satisfaire d'éventuelles FKs NOT NULL courantes (department_id)
         if (in_array('department_id', $empColumns, true) && (isset($nullable['department_id']) && !$nullable['department_id']['nullable'])) {
             $depId = null;
-            foreach (['departments','departements','teams'] as $tbl) {
-                if (Schema::hasTable($tbl)) { $depId = DB::table($tbl)->value('id'); if ($depId) break; }
+            foreach (['departments', 'departements', 'teams'] as $tbl) {
+                if (Schema::hasTable($tbl)) {
+                    $depId = DB::table($tbl)->value('id');
+                    if ($depId) break;
+                }
             }
             $data['department_id'] = $depId ?? 1; // dernier recours 1
         }

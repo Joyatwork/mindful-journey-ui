@@ -393,7 +393,8 @@ class MoodController extends Controller
                 if ($userEntrepriseId) {
                     $data['entreprise_id'] = $userEntrepriseId;
                 }
-            } catch (\Throwable $e) { /* ignore */ }
+            } catch (\Throwable $e) { /* ignore */
+            }
         }
 
         // FKs: entreprise_id / department_id si non nullables, tenter de récupérer une valeur existante

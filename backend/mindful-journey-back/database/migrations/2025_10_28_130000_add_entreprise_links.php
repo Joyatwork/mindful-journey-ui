@@ -54,7 +54,8 @@ return new class extends Migration {
                 Schema::table('users', function (Blueprint $table) {
                     $table->dropForeign('users_entreprise_id_foreign');
                 });
-            } catch (\Throwable $e) {}
+            } catch (\Throwable $e) {
+            }
             Schema::table('users', function (Blueprint $table) {
                 $table->dropIndex('users_entreprise_id_index');
                 $table->dropColumn('entreprise_id');
@@ -66,7 +67,8 @@ return new class extends Migration {
                 Schema::table('employees', function (Blueprint $table) {
                     $table->dropForeign('employees_entreprise_id_foreign');
                 });
-            } catch (\Throwable $e) {}
+            } catch (\Throwable $e) {
+            }
             Schema::table('employees', function (Blueprint $table) {
                 $table->dropIndex('employees_entreprise_id_index');
                 $table->dropColumn('entreprise_id');

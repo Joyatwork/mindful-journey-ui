@@ -18,7 +18,7 @@ use App\Http\Controllers\Api\{
     ChallengeController,
     ChallengeActionController
 };
-    use App\Http\Controllers\Api\EntrepriseController;
+use App\Http\Controllers\Api\EntrepriseController;
 use App\Models\LoginOtp; // utilisé par la route debug locale
 use App\Models\User as DebugUser; // alias pour éviter conflits éventuels
 
