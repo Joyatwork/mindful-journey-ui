@@ -41,7 +41,10 @@ class MoodController extends Controller
         // Statistiques (détecter la bonne colonne d'humeur)
         $moodCol = null;
         foreach (['mood_level', 'mood_score', 'mood'] as $cand) {
-            if (\Illuminate\Support\Facades\Schema::hasColumn('mood_entries', $cand)) { $moodCol = $cand; break; }
+            if (\Illuminate\Support\Facades\Schema::hasColumn('mood_entries', $cand)) {
+                $moodCol = $cand;
+                break;
+            }
         }
         $stats = [
             'average_mood' => $moodCol ? $entries->avg($moodCol) : null,
@@ -235,7 +238,10 @@ class MoodController extends Controller
 
         $moodCol = null;
         foreach (['mood_level', 'mood_score', 'mood'] as $cand) {
-            if (Schema::hasColumn('mood_entries', $cand)) { $moodCol = $cand; break; }
+            if (Schema::hasColumn('mood_entries', $cand)) {
+                $moodCol = $cand;
+                break;
+            }
         }
 
         $weeklyAvg = $moodCol
@@ -309,7 +315,10 @@ class MoodController extends Controller
         // Déterminer la colonne d'humeur dynamique
         $moodCol = null;
         foreach (['mood_level', 'mood_score', 'mood'] as $cand) {
-            if (Schema::hasColumn('mood_entries', $cand)) { $moodCol = $cand; break; }
+            if (Schema::hasColumn('mood_entries', $cand)) {
+                $moodCol = $cand;
+                break;
+            }
         }
         if (!$moodCol) {
             return 'insufficient_data';
@@ -338,7 +347,10 @@ class MoodController extends Controller
         // Déterminer la colonne cible d'humeur (mood_level, mood_score ou mood)
         $moodTarget = null;
         foreach (['mood_level', 'mood_score', 'mood'] as $cand) {
-            if (in_array($cand, $columns, true)) { $moodTarget = $cand; break; }
+            if (in_array($cand, $columns, true)) {
+                $moodTarget = $cand;
+                break;
+            }
         }
 
         // Remapping de noms potentiels si les colonnes standards n'existent pas
