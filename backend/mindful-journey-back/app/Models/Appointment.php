@@ -11,10 +11,11 @@ class Appointment extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id',
-        'specialist_id',
+        // mindful_journey schema fields
+        'employee_id',
+        'practitioner_id',
         'scheduled_at',
-        'type',
+        'mode',
         'status',
         'price_cents',
         'notes',
@@ -24,13 +25,9 @@ class Appointment extends Model
         'scheduled_at' => 'datetime',
     ];
 
-    public function user(): BelongsTo
-    {
-        return $this->belongsTo(User::class);
-    }
-
     public function specialist(): BelongsTo
     {
-        return $this->belongsTo(Specialist::class);
+        // Map to practitioners via Specialist model with FK practitioner_id
+        return $this->belongsTo(Specialist::class, 'practitioner_id');
     }
 }

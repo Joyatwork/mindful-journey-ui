@@ -92,6 +92,13 @@ Route::prefix('test')->group(function () {
             'timestamp' => now()
         ]);
     });
+
+    // Introspection DB (schémas / tables / colonnes)
+    Route::prefix('db')->group(function () {
+        Route::get('schemas', [DatabaseController::class, 'listSchemas']);
+        Route::get('tables', [DatabaseController::class, 'listTables']);
+        Route::get('columns', [DatabaseController::class, 'listColumns']);
+    });
 });
 
 // ---------------------------------------------------------------------
@@ -223,4 +230,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('challenges', [ChallengeController::class, 'index']);
     Route::post('challenges/{challenge}/start', [ChallengeActionController::class, 'start']);
     Route::post('challenges/{challenge}/finish', [ChallengeActionController::class, 'finish']);
+
+    // Dev helper: créer le mapping employé pour l'utilisateur courant (local uniquement recommandé)
+    Route::post('test/employees/map-current', [DatabaseController::class, 'mapCurrentUserToEmployee']);
 });

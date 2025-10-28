@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class DatabaseController extends Controller
 {
@@ -68,6 +69,107 @@ class DatabaseController extends Controller
                     'activeUsers' => 0,
                 ],
                 'users' => []
+            ], 500);
+        }
+    }
+
+    /**
+     * Liste les schémas (bases) disponibles sur le serveur MySQL
+     */
+    public function listSchemas()
+    {
+        try {
+            $schemas = DB::select("SELECT SCHEMA_NAME AS schema_name FROM INFORMATION_SCHEMA.SCHEMATA ORDER BY SCHEMA_NAME");
+            return response()->json(array_map(function ($row) {
+                return $row->schema_name;
+            }, $schemas));
+        } catch (\Throwable $e) {
+            return response()->json([
+                'error' => 'Erreur lors de la récupération des schémas',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Liste les tables d'un schéma donné (par défaut le schéma courant)
+     */
+    public function listTables(Request $request)
+    {
+        try {
+            $schema = $request->query('schema');
+            if (!$schema) {
+                $schema = DB::selectOne('SELECT DATABASE() AS db')->db ?? null;
+            }
+            if (!$schema) {
+                return response()->json(['error' => 'Impossible de déterminer le schéma courant'], 400);
+            }
+
+            $tables = DB::select(
+                'SELECT TABLE_NAME AS table_name FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = ? ORDER BY TABLE_NAME',
+                [$schema]
+            );
+            return response()->json(array_map(function ($row) {
+                return $row->table_name;
+            }, $tables));
+        } catch (\Throwable $e) {
+            return response()->json([
+                'error' => 'Erreur lors de la récupération des tables',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Liste les colonnes pour un schéma, optionnellement filtré par table
+     */
+    public function listColumns(Request $request)
+    {
+        try {
+            $schema = $request->query('schema');
+            $table = $request->query('table');
+            if (!$schema) {
+                $schema = DB::selectOne('SELECT DATABASE() AS db')->db ?? null;
+            }
+            if (!$schema) {
+                return response()->json(['error' => 'Impossible de déterminer le schéma courant'], 400);
+            }
+
+            $params = [$schema];
+            $sql = "SELECT TABLE_NAME AS table_name, COLUMN_NAME AS column_name, DATA_TYPE AS data_type, COLUMN_TYPE AS column_type, IS_NULLABLE AS is_nullable, COLUMN_DEFAULT AS column_default, ORDINAL_POSITION AS ordinal_position FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ?";
+            if ($table) {
+                $sql .= " AND TABLE_NAME = ?";
+                $params[] = $table;
+            }
+            $sql .= " ORDER BY TABLE_NAME, ORDINAL_POSITION";
+
+            $rows = DB::select($sql, $params);
+            // Regrouper par table
+            $result = [];
+            foreach ($rows as $row) {
+                $t = $row->table_name;
+                if (!isset($result[$t])) {
+                    $result[$t] = [];
+                }
+                $result[$t][] = [
+                    'name' => $row->column_name,
+                    'data_type' => $row->data_type,
+                    'column_type' => $row->column_type,
+                    'is_nullable' => $row->is_nullable === 'YES',
+                    'default' => $row->column_default,
+                    'position' => (int) $row->ordinal_position,
+                ];
+            }
+
+            return response()->json([
+                'schema' => $schema,
+                'table' => $table,
+                'columns' => $result,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'error' => 'Erreur lors de la récupération des colonnes',
+                'message' => $e->getMessage(),
             ], 500);
         }
     }
@@ -152,6 +254,50 @@ class DatabaseController extends Controller
                 'success' => false,
                 'error' => 'Erreur lors de la création des utilisateurs de test: ' . $e->getMessage()
             ], 500);
+        }
+    }
+
+    /**
+     * Dev helper: mappe l'utilisateur courant vers la table employees en créant une ligne si absent.
+     * Protégé en pratique par auth:sanctum via les routes.
+     */
+    public function mapCurrentUserToEmployee(Request $request)
+    {
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'Non authentifié'], 401);
+        }
+        if (!Schema::hasTable('employees')) {
+            return response()->json(['success' => false, 'message' => "La table 'employees' est absente"], 400);
+        }
+
+        $existingId = DB::table('employees')->where('user_id', $user->id)->value('id');
+        if ($existingId) {
+            return response()->json(['success' => true, 'message' => 'Déjà mappé', 'employee_id' => $existingId]);
+        }
+
+        // Préparer les données minimales
+        $data = [
+            'user_id' => $user->id,
+        ];
+        // Colonnes facultatives courantes
+        foreach (['entreprise_id','department_id','created_by'] as $opt) {
+            if (Schema::hasColumn('employees', $opt)) {
+                $data[$opt] = null;
+            }
+        }
+        if (Schema::hasColumn('employees', 'created_at')) {
+            $data['created_at'] = now();
+        }
+        if (Schema::hasColumn('employees', 'updated_at')) {
+            $data['updated_at'] = now();
+        }
+
+        try {
+            $newId = DB::table('employees')->insertGetId($data);
+            return response()->json(['success' => true, 'message' => 'Mapping créé', 'employee_id' => $newId]);
+        } catch (\Throwable $e) {
+            return response()->json(['success' => false, 'message' => 'Échec création mapping: '.$e->getMessage()], 500);
         }
     }
 }

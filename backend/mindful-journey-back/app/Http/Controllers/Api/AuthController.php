@@ -28,11 +28,30 @@ class AuthController extends Controller
             'password' => 'required|string|min:8|confirmed',
         ]);
 
-        $user = User::create([
+        $hashed = Hash::make($request->password);
+        $data = [
             'name' => $request->name,
             'email' => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
+            'password' => $hashed,
+        ];
+        // Compatibilité schéma hérité: si password_hash existe et est NOT NULL, le remplir aussi
+        try {
+            if (Schema::hasColumn('users', 'password_hash')) {
+                $data['password_hash'] = $hashed;
+            }
+            // Renseigner first_name / last_name si ces colonnes existent encore
+            if (Schema::hasColumn('users', 'first_name')) {
+                $parts = preg_split('/\s+/', trim($request->name));
+                $data['first_name'] = $parts[0] ?? $request->name;
+                if (Schema::hasColumn('users', 'last_name')) {
+                    $data['last_name'] = isset($parts[1]) ? implode(' ', array_slice($parts, 1)) : null;
+                }
+            }
+        } catch (\Throwable $e) {
+            // ignore
+        }
+
+        $user = User::create($data);
 
         // Créer un token Sanctum pour l'utilisateur
         $token = $user->createToken('auth-token')->plainTextToken;
