@@ -10,6 +10,8 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 class RecommendationController extends Controller
 {
@@ -25,18 +27,23 @@ class RecommendationController extends Controller
                 return response()->json(['message' => 'Utilisateur non authentifié'], 401);
             }
 
-            // Récupérer l'humeur courante : priorité au paramètre, sinon dernière entrée en base
+            // Récupérer l'humeur courante : priorité au paramètre, sinon dernière entrée en base (colonne dynamique)
             $moodFromRequest = $request->get('mood');
             $moodSource = 'request';
             if ($moodFromRequest === null) {
-                // Utiliser la colonne correcte 'date' (et non 'entry_date')
-                $latestMood = MoodEntry::where('user_id', $user->id)
-                    ->orderByDesc('date')
-                    ->value('mood_level');
+                [$ownerCol, $ownerId] = $this->resolveOwner($user->id);
+                $moodCol = $this->resolveMoodColumn();
+                if ($ownerCol && $ownerId && $moodCol) {
+                    $latestMood = MoodEntry::where($ownerCol, $ownerId)
+                        ->orderByDesc('date')
+                        ->value($moodCol);
+                } else {
+                    $latestMood = null;
+                }
                 if ($latestMood !== null) {
                     // Normaliser si l'échelle stockée est 1-10 (ramener à 1-5 arrondi)
-                    if ($latestMood > 5) {
-                        $normalized = max(1, min(5, (int) round($latestMood / 2)));
+                    if ((int)$latestMood > 5) {
+                        $normalized = max(1, min(5, (int) round(((int)$latestMood) / 2)));
                         $currentMood = $normalized;
                     } else {
                         $currentMood = (int) $latestMood;
@@ -49,9 +56,11 @@ class RecommendationController extends Controller
             } else {
                 $currentMood = (int) $moodFromRequest;
             }
-            $stressLevel = $request->get('stress', 3); // 1-5 échelle
-            $energyLevel = $request->get('energy', 3); // 1-5 échelle
-            $timeOfDay = $request->get('time_of_day', date('H')); // Heure actuelle
+            $stressLevel = (int) $request->get('stress', 3); // 1-5 échelle
+            $energyLevel = (int) $request->get('energy', 3); // 1-5 échelle
+            // time_of_day peut être 'HH' ou 'HH:mm'; extraire l'heure
+            $todRaw = (string) $request->get('time_of_day', date('H'));
+            $timeOfDay = (int) (str_contains($todRaw, ':') ? explode(':', $todRaw)[0] : $todRaw);
             $diagnosticData = $request->get('diagnostic', []);
             // If diagnostic arrives as a JSON-encoded string (query param), decode it to array
             if (is_string($diagnosticData) && $diagnosticData !== '') {
@@ -87,12 +96,38 @@ class RecommendationController extends Controller
                 'generated_at' => now()
             ]);
         } catch (\Exception $e) {
-            Log::error('Erreur lors de la génération des suggestions: ' . $e->getMessage());
+            Log::error('Erreur lors de la génération des suggestions: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
             return response()->json([
                 'message' => 'Erreur lors de la génération des suggestions',
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Résout la colonne d'appartenance pour mood_entries (user_id vs employee_id)
+     */
+    private function resolveOwner(int $currentUserId): array
+    {
+        if (Schema::hasColumn('mood_entries', 'user_id')) {
+            return ['user_id', $currentUserId];
+        }
+        if (Schema::hasColumn('mood_entries', 'employee_id')) {
+            $employeeId = DB::table('employees')->where('user_id', $currentUserId)->value('id');
+            return ['employee_id', $employeeId ?? 0];
+        }
+        return ['user_id', $currentUserId];
+    }
+
+    /**
+     * Résout la colonne d'humeur dans mood_entries
+     */
+    private function resolveMoodColumn(): ?string
+    {
+        foreach (['mood_level', 'mood_score', 'mood'] as $cand) {
+            if (Schema::hasColumn('mood_entries', $cand)) return $cand;
+        }
+        return null;
     }
 
     /**
@@ -246,8 +281,21 @@ class RecommendationController extends Controller
         // The `Specialist` model exposes a virtual `specialty` accessor. We must avoid SQL references
         // to a non-existing `specialty` column. Instead, retrieve a small pool by rating and filter in PHP.
 
-        // Get a candidate pool ordered by rating (don't filter on specialty at SQL level)
-        $pool = Specialist::query()->orderBy('rating', 'desc')->take(20)->get();
+        // Get a candidate pool ordered by rating if table/column available, sinon fallback
+        $pool = collect();
+        try {
+            if (Schema::hasTable('specialists')) {
+                $q = Specialist::query();
+                // si la colonne rating n'existe pas, éviter orderBy dessus
+                if (Schema::hasColumn('specialists', 'rating')) {
+                    $q = $q->orderBy('rating', 'desc');
+                }
+                $pool = $q->take(20)->get();
+            }
+        } catch (\Throwable $e) {
+            Log::warning('generatePractitionerRecommendations: unable to fetch specialists', ['error' => $e->getMessage()]);
+            $pool = collect();
+        }
 
         // Exclude psychologues at PHP level using the accessor
         $pool = $pool->filter(function (Specialist $s) {
