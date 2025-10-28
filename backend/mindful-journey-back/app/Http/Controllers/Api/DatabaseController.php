@@ -307,27 +307,30 @@ class DatabaseController extends Controller
         }
 
         // Texte requis
-        foreach (['first_name','last_name','name'] as $col) {
+        foreach (['first_name', 'last_name', 'name'] as $col) {
             if (in_array($col, $empColumns, true) && (isset($nullable[$col]) && !$nullable[$col]['nullable'])) {
                 $data[$col] = '';
             }
         }
         // Numériques requis
-        foreach (['salary','age'] as $col) {
+        foreach (['salary', 'age'] as $col) {
             if (in_array($col, $empColumns, true) && (isset($nullable[$col]) && !$nullable[$col]['nullable'])) {
                 $data[$col] = 0;
             }
         }
         // FKs: entreprise_id / department_id
         $fkSources = [
-            'entreprise_id' => ['entreprises','enterprise','companies','organizations','organisations','businesses'],
-            'department_id' => ['departments','departements','teams'],
+            'entreprise_id' => ['entreprises', 'enterprise', 'companies', 'organizations', 'organisations', 'businesses'],
+            'department_id' => ['departments', 'departements', 'teams'],
         ];
         foreach ($fkSources as $fkCol => $candidates) {
             if (in_array($fkCol, $empColumns, true)) {
                 $value = null;
                 foreach ($candidates as $table) {
-                    if (Schema::hasTable($table)) { $value = DB::table($table)->value('id'); if ($value) break; }
+                    if (Schema::hasTable($table)) {
+                        $value = DB::table($table)->value('id');
+                        if ($value) break;
+                    }
                 }
                 if ($value) {
                     $data[$fkCol] = $value;

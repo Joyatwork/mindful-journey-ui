@@ -355,12 +355,14 @@ class MoodController extends Controller
         // Récupérer nullability pour employees depuis INFORMATION_SCHEMA
         try {
             $dbName = DB::selectOne('SELECT DATABASE() AS db')->db ?? null;
-        } catch (\Throwable $e) { $dbName = null; }
+        } catch (\Throwable $e) {
+            $dbName = null;
+        }
         $nullable = [];
         if ($dbName) {
             $rows = DB::select(
-                'SELECT COLUMN_NAME, IS_NULLABLE, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?'
-                , [$dbName, 'employees']
+                'SELECT COLUMN_NAME, IS_NULLABLE, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?',
+                [$dbName, 'employees']
             );
             foreach ($rows as $r) {
                 $nullable[$r->COLUMN_NAME] = [
@@ -371,14 +373,14 @@ class MoodController extends Controller
         }
 
         // Champs texte potentiels requis
-        foreach (['first_name','last_name','name'] as $col) {
+        foreach (['first_name', 'last_name', 'name'] as $col) {
             if (in_array($col, $empColumns, true) && (isset($nullable[$col]) && !$nullable[$col]['nullable'])) {
                 $data[$col] = '';
             }
         }
 
         // Champs numériques potentiels
-        foreach (['salary','age'] as $col) {
+        foreach (['salary', 'age'] as $col) {
             if (in_array($col, $empColumns, true) && (isset($nullable[$col]) && !$nullable[$col]['nullable'])) {
                 $data[$col] = 0;
             }
@@ -386,14 +388,17 @@ class MoodController extends Controller
 
         // FKs: entreprise_id / department_id si non nullables, tenter de récupérer une valeur existante
         $fkSources = [
-            'entreprise_id' => ['entreprises','enterprise','companies','organizations','organisations','businesses'],
-            'department_id' => ['departments','departements','teams'],
+            'entreprise_id' => ['entreprises', 'enterprise', 'companies', 'organizations', 'organisations', 'businesses'],
+            'department_id' => ['departments', 'departements', 'teams'],
         ];
         foreach ($fkSources as $fkCol => $candidates) {
             if (in_array($fkCol, $empColumns, true)) {
                 $value = null;
                 foreach ($candidates as $table) {
-                    if (Schema::hasTable($table)) { $value = DB::table($table)->value('id'); if ($value) break; }
+                    if (Schema::hasTable($table)) {
+                        $value = DB::table($table)->value('id');
+                        if ($value) break;
+                    }
                 }
                 if ($value) {
                     $data[$fkCol] = $value;
