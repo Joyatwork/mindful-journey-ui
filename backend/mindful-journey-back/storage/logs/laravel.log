@@ -11866,3 +11866,4 @@ Content-Transfer-Encoding: quoted-printable
 ","validated":{"date":"2025-10-28","mood_level":4,"mood_emoji":"🙂","energy_level":5,"stress_level":3,"sleep_quality":null,"notes":"hghgh","details":"hghgh","emotions":[],"activities":["epanoui"]}} 
 [2025-10-28 16:42:16] local.WARNING: 2FA désactivé temporairement: table login_otps absente. Retour au login direct.  
 [2025-10-28 16:46:32] local.WARNING: 2FA désactivé temporairement: table login_otps absente. Retour au login direct.  
+[2025-10-28 17:03:36] local.WARNING: Échec ensureEmployeeMapping {"user_id":10,"error":"SQLSTATE[HY000]: General error: 1364 Field 'site_id' doesn't have a default value (Connection: mysql, SQL: insert into `employees` (`user_id`, `entreprise_id`, `created_at`, `updated_at`) values (10, 1, 2025-10-28 17:03:35, 2025-10-28 17:03:35))","payload":{"user_id":10,"entreprise_id":1,"created_at":"2025-10-28 17:03:35","updated_at":"2025-10-28 17:03:35"}} 

@@ -351,16 +351,69 @@ class MoodController extends Controller
         // Préparer insert minimal
         $data = ['user_id' => $userId];
         $empColumns = Schema::getColumnListing('employees');
+
+        // Récupérer nullability pour employees depuis INFORMATION_SCHEMA
+        try {
+            $dbName = DB::selectOne('SELECT DATABASE() AS db')->db ?? null;
+        } catch (\Throwable $e) { $dbName = null; }
+        $nullable = [];
+        if ($dbName) {
+            $rows = DB::select(
+                'SELECT COLUMN_NAME, IS_NULLABLE, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?'
+                , [$dbName, 'employees']
+            );
+            foreach ($rows as $r) {
+                $nullable[$r->COLUMN_NAME] = [
+                    'nullable' => ($r->IS_NULLABLE === 'YES'),
+                    'type' => $r->DATA_TYPE,
+                ];
+            }
+        }
+
+        // Champs texte potentiels requis
+        foreach (['first_name','last_name','name'] as $col) {
+            if (in_array($col, $empColumns, true) && (isset($nullable[$col]) && !$nullable[$col]['nullable'])) {
+                $data[$col] = '';
+            }
+        }
+
+        // Champs numériques potentiels
+        foreach (['salary','age'] as $col) {
+            if (in_array($col, $empColumns, true) && (isset($nullable[$col]) && !$nullable[$col]['nullable'])) {
+                $data[$col] = 0;
+            }
+        }
+
+        // FKs: entreprise_id / department_id si non nullables, tenter de récupérer une valeur existante
+        $fkSources = [
+            'entreprise_id' => ['entreprises','enterprise','companies','organizations','organisations','businesses'],
+            'department_id' => ['departments','departements','teams'],
+        ];
+        foreach ($fkSources as $fkCol => $candidates) {
+            if (in_array($fkCol, $empColumns, true)) {
+                $value = null;
+                foreach ($candidates as $table) {
+                    if (Schema::hasTable($table)) { $value = DB::table($table)->value('id'); if ($value) break; }
+                }
+                if ($value) {
+                    $data[$fkCol] = $value;
+                } else {
+                    // si nullable on laisse null, sinon mettre 1 en dernier recours
+                    if (isset($nullable[$fkCol]) && !$nullable[$fkCol]['nullable']) {
+                        $data[$fkCol] = 1; // best-effort, peut échouer si pas d’ID 1
+                    }
+                }
+            }
+        }
+
         if (in_array('created_at', $empColumns, true)) $data['created_at'] = now();
         if (in_array('updated_at', $empColumns, true)) $data['updated_at'] = now();
-        foreach (['entreprise_id', 'department_id', 'created_by'] as $opt) {
-            if (in_array($opt, $empColumns, true)) $data[$opt] = null;
-        }
         try {
             $id = DB::table('employees')->insertGetId($data);
             return (int)$id;
         } catch (\Throwable $e) {
-            // Ne pas remonter l'exception ici; laisser la route renvoyer 422
+            // Journaliser pour debug
+            Log::warning('Échec ensureEmployeeMapping', ['user_id' => $userId, 'error' => $e->getMessage(), 'payload' => $data]);
             return null;
         }
     }
