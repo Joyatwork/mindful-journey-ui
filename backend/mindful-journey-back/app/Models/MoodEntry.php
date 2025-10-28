@@ -10,12 +10,17 @@ class MoodEntry extends Model
     protected $fillable = [
         'user_id',
         'employee_id',
-        'mood_level', 'mood',
+        'mood_level',
+        'mood',
         'mood_emoji',
-        'energy_level', 'energy',
-        'stress_level', 'stress',
-        'sleep_quality', 'sleep',
-        'emoji', 'comment',
+        'energy_level',
+        'energy',
+        'stress_level',
+        'stress',
+        'sleep_quality',
+        'sleep',
+        'emoji',
+        'comment',
         'notes',
         'details',
         'date',
@@ -33,8 +38,8 @@ class MoodEntry extends Model
         'energy' => 'integer',
         'stress_level' => 'integer',
         'stress' => 'integer',
-        'sleep_quality' => 'integer'
-        ,'sleep' => 'integer'
+        'sleep_quality' => 'integer',
+        'sleep' => 'integer'
     ];
 
     /**

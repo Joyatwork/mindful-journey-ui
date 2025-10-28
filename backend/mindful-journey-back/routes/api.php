@@ -151,6 +151,7 @@ if (app()->environment('local')) {
 // Mot de passe oublié / réinitialisation (API JSON)
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\NewPasswordController;
+
 Route::post('forgot-password', [PasswordResetLinkController::class, 'store']);
 Route::post('reset-password', [NewPasswordController::class, 'store']);
 

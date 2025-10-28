@@ -157,9 +157,9 @@ class AppointmentController extends Controller
      */
     public function update(Request $request, string $id): JsonResponse
     {
-    $user = $request->user();
-    $employeeId = DB::table('employees')->where('user_id', $user->id)->value('id');
-    $a = Appointment::where('employee_id', $employeeId)->findOrFail($id);
+        $user = $request->user();
+        $employeeId = DB::table('employees')->where('user_id', $user->id)->value('id');
+        $a = Appointment::where('employee_id', $employeeId)->findOrFail($id);
 
         $validated = $request->validate([
             'date' => 'sometimes|date_format:Y-m-d',
@@ -203,9 +203,9 @@ class AppointmentController extends Controller
      */
     public function destroy(string $id): JsonResponse
     {
-    $user = Auth::user();
-    $employeeId = DB::table('employees')->where('user_id', $user->id)->value('id');
-    $a = Appointment::where('employee_id', $employeeId)->findOrFail($id);
+        $user = Auth::user();
+        $employeeId = DB::table('employees')->where('user_id', $user->id)->value('id');
+        $a = Appointment::where('employee_id', $employeeId)->findOrFail($id);
         $a->delete();
         return response()->json([
             'success' => true,
@@ -218,9 +218,9 @@ class AppointmentController extends Controller
      */
     public function cancel(string $id): JsonResponse
     {
-    $user = Auth::user();
-    $employeeId = DB::table('employees')->where('user_id', $user->id)->value('id');
-    $a = Appointment::where('employee_id', $employeeId)->findOrFail($id);
+        $user = Auth::user();
+        $employeeId = DB::table('employees')->where('user_id', $user->id)->value('id');
+        $a = Appointment::where('employee_id', $employeeId)->findOrFail($id);
         $a->status = 'cancelled';
         $a->save();
         return response()->json([

@@ -71,16 +71,21 @@ return new class extends Migration
             try {
                 // Populate name from first_name + last_name if available and name is NULL
                 DB::statement("UPDATE `users` SET `name` = TRIM(CONCAT(COALESCE(first_name,''), ' ', COALESCE(last_name,''))) WHERE `name` IS NULL AND (first_name IS NOT NULL OR last_name IS NOT NULL)");
-            } catch (\Throwable $e) {}
+            } catch (\Throwable $e) {
+            }
 
             try {
                 // If legacy password_hash exists and password is null, copy it
                 if (Schema::hasColumn('users', 'password_hash')) {
                     // Relax legacy constraint to avoid 1364 errors on insert
-                    try { DB::statement("ALTER TABLE `users` MODIFY `password_hash` varchar(255) NULL"); } catch (\Throwable $e) {}
+                    try {
+                        DB::statement("ALTER TABLE `users` MODIFY `password_hash` varchar(255) NULL");
+                    } catch (\Throwable $e) {
+                    }
                     DB::statement("UPDATE `users` SET `password` = `password_hash` WHERE `password` IS NULL AND `password_hash` IS NOT NULL");
                 }
-            } catch (\Throwable $e) {}
+            } catch (\Throwable $e) {
+            }
 
             // Attach FK for role_id if roles table exists and FK not present
             if (Schema::hasTable('roles') && Schema::hasColumn('users', 'role_id')) {
@@ -89,7 +94,8 @@ return new class extends Migration
                     if (empty($existing)) {
                         DB::statement('ALTER TABLE `users` ADD CONSTRAINT `users_role_id_foreign` FOREIGN KEY (`role_id`) REFERENCES `roles`(`id`)');
                     }
-                } catch (\Throwable $e) {}
+                } catch (\Throwable $e) {
+                }
             }
         }
 
@@ -104,7 +110,8 @@ return new class extends Migration
                 if (Schema::hasColumn('diagnostics', 'completed_at')) {
                     DB::statement('CREATE INDEX IF NOT EXISTS diagnostics_user_scope_completed_idx ON diagnostics (user_id, scope, completed_at)');
                 }
-            } catch (\Throwable $e) {}
+            } catch (\Throwable $e) {
+            }
         }
 
         // mood_entries: add details

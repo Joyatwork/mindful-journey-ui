@@ -19,35 +19,45 @@ class DatabaseController extends Controller
             // Statistiques générales
             $totalUsers = User::count();
             $activeUsers = User::where('email_verified_at', '!=', null)->count();
-            
+
             // Récupérer tous les utilisateurs avec leurs données complètes
             $users = User::select([
-                'id', 'name', 'email', 'phone', 'bio', 'birth_date', 'gender',
-                'preferences', 'health_goals', 'email_verified_at', 'created_at', 'updated_at'
+                'id',
+                'name',
+                'email',
+                'phone',
+                'bio',
+                'birth_date',
+                'gender',
+                'preferences',
+                'health_goals',
+                'email_verified_at',
+                'created_at',
+                'updated_at'
             ])
-            ->orderBy('created_at', 'desc')
-            ->get()
-            ->map(function ($user) {
-                return [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'phone' => $user->phone,
-                    'bio' => $user->bio,
-                    'birth_date' => $user->birth_date,
-                    'gender' => $user->gender,
-                    'preferences' => is_string($user->preferences) ? json_decode($user->preferences, true) : $user->preferences,
-                    'health_goals' => is_string($user->health_goals) ? json_decode($user->health_goals, true) : $user->health_goals,
-                    'status' => $user->email_verified_at ? 'active' : 'pending',
-                    'created_at' => $user->created_at->format('Y-m-d\TH:i:s\Z'),
-                    'updated_at' => $user->updated_at->format('Y-m-d\TH:i:s\Z'),
-                ];
-            });
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->map(function ($user) {
+                    return [
+                        'id' => $user->id,
+                        'name' => $user->name,
+                        'email' => $user->email,
+                        'phone' => $user->phone,
+                        'bio' => $user->bio,
+                        'birth_date' => $user->birth_date,
+                        'gender' => $user->gender,
+                        'preferences' => is_string($user->preferences) ? json_decode($user->preferences, true) : $user->preferences,
+                        'health_goals' => is_string($user->health_goals) ? json_decode($user->health_goals, true) : $user->health_goals,
+                        'status' => $user->email_verified_at ? 'active' : 'pending',
+                        'created_at' => $user->created_at->format('Y-m-d\TH:i:s\Z'),
+                        'updated_at' => $user->updated_at->format('Y-m-d\TH:i:s\Z'),
+                    ];
+                });
 
             // Informations sur la base de données
             $dbPath = database_path('database.sqlite');
             $dbSize = file_exists($dbPath) ? filesize($dbPath) : 0;
-            
+
             return response()->json([
                 'success' => true,
                 'stats' => [
@@ -59,7 +69,6 @@ class DatabaseController extends Controller
                 'users' => $users,
                 'message' => "Base de données: {$totalUsers} utilisateurs trouvés"
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -248,7 +257,6 @@ class DatabaseController extends Controller
                 'users' => $createdUsers,
                 'total_users' => User::count()
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -281,7 +289,7 @@ class DatabaseController extends Controller
             'user_id' => $user->id,
         ];
         // Colonnes facultatives courantes
-        foreach (['entreprise_id','department_id','created_by'] as $opt) {
+        foreach (['entreprise_id', 'department_id', 'created_by'] as $opt) {
             if (Schema::hasColumn('employees', $opt)) {
                 $data[$opt] = null;
             }
@@ -297,7 +305,7 @@ class DatabaseController extends Controller
             $newId = DB::table('employees')->insertGetId($data);
             return response()->json(['success' => true, 'message' => 'Mapping créé', 'employee_id' => $newId]);
         } catch (\Throwable $e) {
-            return response()->json(['success' => false, 'message' => 'Échec création mapping: '.$e->getMessage()], 500);
+            return response()->json(['success' => false, 'message' => 'Échec création mapping: ' . $e->getMessage()], 500);
         }
     }
 }

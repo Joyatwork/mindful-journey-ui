@@ -62,8 +62,8 @@ class MoodController extends Controller
      */
     public function store(Request $request)
     {
-    $user = Auth::user();
-    [$ownerCol, $ownerId] = $this->resolveOwner($user->id);
+        $user = Auth::user();
+        [$ownerCol, $ownerId] = $this->resolveOwner($user->id);
 
         $validated = $request->validate([
             'date' => 'required|date',
@@ -124,7 +124,7 @@ class MoodController extends Controller
                 $entry = $existingEntry;
                 $message = 'Entrée d\'humeur mise à jour avec succès';
             } else {
-                $payload = [ $ownerCol => $ownerId, ...$validated ];
+                $payload = [$ownerCol => $ownerId, ...$validated];
                 $entry = MoodEntry::create($payload);
                 $message = 'Entrée d\'humeur enregistrée avec succès';
             }
@@ -204,13 +204,13 @@ class MoodController extends Controller
 
         $weeklyAvg = $moodCol
             ? MoodEntry::where($ownerCol, $ownerId)
-                ->where('date', '>=', now()->subDays(7))
-                ->avg($moodCol)
+            ->where('date', '>=', now()->subDays(7))
+            ->avg($moodCol)
             : 0;
         $monthlyAvg = $moodCol
             ? MoodEntry::where($ownerCol, $ownerId)
-                ->where('date', '>=', now()->subDays(30))
-                ->avg($moodCol)
+            ->where('date', '>=', now()->subDays(30))
+            ->avg($moodCol)
             : 0;
 
         $streak = $this->calculateStreak($ownerCol, $ownerId);
@@ -353,7 +353,7 @@ class MoodController extends Controller
         $empColumns = Schema::getColumnListing('employees');
         if (in_array('created_at', $empColumns, true)) $data['created_at'] = now();
         if (in_array('updated_at', $empColumns, true)) $data['updated_at'] = now();
-        foreach (['entreprise_id','department_id','created_by'] as $opt) {
+        foreach (['entreprise_id', 'department_id', 'created_by'] as $opt) {
             if (in_array($opt, $empColumns, true)) $data[$opt] = null;
         }
         try {

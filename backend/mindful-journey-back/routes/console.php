@@ -57,17 +57,23 @@ Artisan::command('db:sync-missing-columns {--tables=} {--dry}', function () {
         $candidateTables = collect($tablesFilterArr);
     }
 
-    $totalAdded = 0; $totalUpdated = 0; $totalTables = 0;
+    $totalAdded = 0;
+    $totalUpdated = 0;
+    $totalTables = 0;
 
     foreach ($candidateTables as $table) {
         $src = $sourceCols->get($table);
-        if (!$src) { continue; }
+        if (!$src) {
+            continue;
+        }
 
         $tgt = $targetCols->get($table) ?? collect();
         $tgtNames = collect($tgt)->pluck('COLUMN_NAME')->all();
 
         $missing = collect($src)->filter(fn($c) => !in_array($c->COLUMN_NAME, $tgtNames));
-        if ($missing->isEmpty()) { continue; }
+        if ($missing->isEmpty()) {
+            continue;
+        }
 
         $this->line("Table {$table}: " . $missing->count() . " missing column(s)");
         $totalTables++;
