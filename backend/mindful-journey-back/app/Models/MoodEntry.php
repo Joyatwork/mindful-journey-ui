@@ -9,8 +9,10 @@ class MoodEntry extends Model
 {
     protected $fillable = [
         'user_id',
+        'entreprise_id',
         'employee_id',
         'mood_level',
+        'mood_score',
         'mood',
         'mood_emoji',
         'energy_level',
@@ -22,6 +24,7 @@ class MoodEntry extends Model
         'emoji',
         'comment',
         'notes',
+        'note',
         'details',
         'date',
         'activities',
@@ -33,6 +36,7 @@ class MoodEntry extends Model
         'activities' => 'array',
         'emotions' => 'array',
         'mood_level' => 'integer',
+        'mood_score' => 'integer',
         'mood' => 'integer',
         'energy_level' => 'integer',
         'energy' => 'integer',

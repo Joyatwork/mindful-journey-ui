@@ -38,15 +38,19 @@ class MoodController extends Controller
 
         $entries = $query->orderBy('date', 'desc')->get();
 
-        // Statistiques
+        // Statistiques (détecter la bonne colonne d'humeur)
+        $moodCol = null;
+        foreach (['mood_level', 'mood_score', 'mood'] as $cand) {
+            if (\Illuminate\Support\Facades\Schema::hasColumn('mood_entries', $cand)) { $moodCol = $cand; break; }
+        }
         $stats = [
-            'average_mood' => $entries->avg('mood_level'),
+            'average_mood' => $moodCol ? $entries->avg($moodCol) : null,
             'average_energy' => $entries->avg('energy_level'),
             'average_stress' => $entries->avg('stress_level'),
             'average_sleep' => $entries->avg('sleep_quality'),
             'total_entries' => $entries->count(),
-            'best_day' => $entries->sortByDesc('mood_level')->first(),
-            'worst_day' => $entries->sortBy('mood_level')->first(),
+            'best_day' => $moodCol ? $entries->sortByDesc($moodCol)->first() : null,
+            'worst_day' => $moodCol ? $entries->sortBy($moodCol)->first() : null,
         ];
 
         return response()->json([
@@ -67,12 +71,14 @@ class MoodController extends Controller
 
         $validated = $request->validate([
             'date' => 'required|date',
-            'mood_level' => 'required|integer|between:1,10',
+            'mood_level' => 'required_without:mood_score|integer|between:1,10',
+            'mood_score' => 'required_without:mood_level|integer|between:1,10',
             'mood_emoji' => 'nullable|string|max:10',
             'energy_level' => 'nullable|integer|between:1,10',
             'stress_level' => 'nullable|integer|between:1,10',
             'sleep_quality' => 'nullable|integer|between:1,10',
             'notes' => 'nullable|string|max:1000',
+            'note' => 'nullable|string|max:255',
             'details' => 'nullable|string|max:2000',
             'activities' => 'nullable|array',
             'activities.*' => 'string|max:100',
@@ -99,6 +105,35 @@ class MoodController extends Controller
 
         // Adapter dynamiquement le payload aux colonnes réellement présentes
         $validated = $this->mapMoodPayload($validated, $ownerCol);
+
+        // Si la table mood_entries contient entreprise_id, essayer de la renseigner automatiquement
+        try {
+            $moodCols = Schema::getColumnListing('mood_entries');
+            if (in_array('entreprise_id', $moodCols, true)) {
+                $entrepriseId = null;
+                if ($ownerCol === 'employee_id' && $ownerId) {
+                    // Priorité: entreprise de l'employé
+                    $entrepriseId = DB::table('employees')->where('id', $ownerId)->value('entreprise_id');
+                }
+                if (!$entrepriseId && Schema::hasColumn('users', 'entreprise_id')) {
+                    $entrepriseId = DB::table('users')->where('id', $user->id)->value('entreprise_id');
+                }
+                if (!$entrepriseId) {
+                    // Derniers recours: trouver depuis mapping employé par user_id
+                    $entrepriseId = DB::table('employees')->where('user_id', $user->id)->value('entreprise_id');
+                }
+                if (!$entrepriseId && Schema::hasTable('entreprises')) {
+                    // Ultimate fallback: première entreprise existante (évite NOT NULL sans défaut)
+                    $entrepriseId = DB::table('entreprises')->value('id');
+                }
+                if ($entrepriseId) {
+                    $validated['entreprise_id'] = $entrepriseId;
+                }
+            }
+        } catch (\Throwable $e) {
+            // Pas bloquant, on laisse la création tenter et remonter une erreur si nécessaire
+            Log::warning('MoodController: entreprise_id auto-fill failed', ['error' => $e->getMessage()]);
+        }
 
         try {
             // Fallback: s'assurer que activities et emotions sont bien des arrays
@@ -198,9 +233,10 @@ class MoodController extends Controller
         $user = Auth::user();
         [$ownerCol, $ownerId] = $this->resolveOwner($user->id);
 
-        $moodCol = Schema::hasColumn('mood_entries', 'mood_level')
-            ? 'mood_level'
-            : (Schema::hasColumn('mood_entries', 'mood') ? 'mood' : null);
+        $moodCol = null;
+        foreach (['mood_level', 'mood_score', 'mood'] as $cand) {
+            if (Schema::hasColumn('mood_entries', $cand)) { $moodCol = $cand; break; }
+        }
 
         $weeklyAvg = $moodCol
             ? MoodEntry::where($ownerCol, $ownerId)
@@ -270,8 +306,16 @@ class MoodController extends Controller
             return 'insufficient_data';
         }
 
-        $recent = $entries->take(3)->avg('mood_level');
-        $older = $entries->skip(3)->take(4)->avg('mood_level');
+        // Déterminer la colonne d'humeur dynamique
+        $moodCol = null;
+        foreach (['mood_level', 'mood_score', 'mood'] as $cand) {
+            if (Schema::hasColumn('mood_entries', $cand)) { $moodCol = $cand; break; }
+        }
+        if (!$moodCol) {
+            return 'insufficient_data';
+        }
+        $recent = $entries->take(3)->avg($moodCol);
+        $older = $entries->skip(3)->take(4)->avg($moodCol);
 
         $difference = $recent - $older;
 
@@ -291,14 +335,22 @@ class MoodController extends Controller
     {
         $columns = Schema::getColumnListing('mood_entries');
 
+        // Déterminer la colonne cible d'humeur (mood_level, mood_score ou mood)
+        $moodTarget = null;
+        foreach (['mood_level', 'mood_score', 'mood'] as $cand) {
+            if (in_array($cand, $columns, true)) { $moodTarget = $cand; break; }
+        }
+
         // Remapping de noms potentiels si les colonnes standards n'existent pas
         $map = [
-            'mood_level' => in_array('mood_level', $columns, true) ? 'mood_level' : (in_array('mood', $columns, true) ? 'mood' : null),
+            'mood_level' => $moodTarget,
+            'mood_score' => $moodTarget,
             'energy_level' => in_array('energy_level', $columns, true) ? 'energy_level' : (in_array('energy', $columns, true) ? 'energy' : null),
             'stress_level' => in_array('stress_level', $columns, true) ? 'stress_level' : (in_array('stress', $columns, true) ? 'stress' : null),
             'sleep_quality' => in_array('sleep_quality', $columns, true) ? 'sleep_quality' : (in_array('sleep', $columns, true) ? 'sleep' : null),
             'mood_emoji' => in_array('mood_emoji', $columns, true) ? 'mood_emoji' : (in_array('emoji', $columns, true) ? 'emoji' : null),
-            'notes' => in_array('notes', $columns, true) ? 'notes' : (in_array('comment', $columns, true) ? 'comment' : null),
+            'notes' => in_array('notes', $columns, true) ? 'notes' : (in_array('comment', $columns, true) ? 'comment' : (in_array('note', $columns, true) ? 'note' : null)),
+            'note' => in_array('note', $columns, true) ? 'note' : (in_array('notes', $columns, true) ? 'notes' : null),
             'details' => in_array('details', $columns, true) ? 'details' : null,
             'activities' => in_array('activities', $columns, true) ? 'activities' : null,
             'emotions' => in_array('emotions', $columns, true) ? 'emotions' : null,
