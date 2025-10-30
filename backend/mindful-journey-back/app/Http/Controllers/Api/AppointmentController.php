@@ -103,7 +103,9 @@ class AppointmentController extends Controller
             default => 'teleconsultation',
         };
 
-        $appointment = Appointment::create([
+        // Déduire entreprise_id si la colonne existe dans appointments
+        $apptColumns = \Illuminate\Support\Facades\Schema::getColumnListing('appointments');
+        $appointmentPayload = [
             'employee_id' => $employeeId,
             'practitioner_id' => $spec->id,
             'scheduled_at' => $scheduledAt,
@@ -111,7 +113,91 @@ class AppointmentController extends Controller
             'status' => 'confirmed',
             'price_cents' => $priceCents,
             'notes' => $validated['notes'] ?? null,
-        ]);
+        ];
+
+        // Renseigner created_by si la colonne existe (certains schémas la déclarent NOT NULL)
+        if (in_array('created_by', $apptColumns, true)) {
+            $appointmentPayload['created_by'] = $user->id;
+        }
+
+        if (in_array('entreprise_id', $apptColumns, true)) {
+            // 1) essayer enterprise via employees
+            $empEntrepriseId = DB::table('employees')->where('id', $employeeId)->value('entreprise_id');
+            // 2) fallback via users.entreprise_id
+            $userEntrepriseId = null;
+            if (\Illuminate\Support\Facades\Schema::hasColumn('users', 'entreprise_id')) {
+                $userEntrepriseId = DB::table('users')->where('id', $user->id)->value('entreprise_id');
+            }
+            // 3) fallback via practitioners.entreprise_id
+            $practEntrepriseId = DB::table('practitioners')->where('id', $spec->id)->value('entreprise_id');
+
+            $entrepriseId = $empEntrepriseId ?? $userEntrepriseId ?? $practEntrepriseId;
+
+            // Si toujours null mais colonne NOT NULL, tenter un id quelconque
+            if ($entrepriseId === null) {
+                try {
+                    $dbName = DB::selectOne('SELECT DATABASE() AS db')->db ?? null;
+                    $notNull = false;
+                    if ($dbName) {
+                        $row = DB::selectOne('SELECT IS_NULLABLE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND COLUMN_NAME = ? LIMIT 1', [$dbName, 'appointments', 'entreprise_id']);
+                        $notNull = isset($row) && ($row->IS_NULLABLE === 'NO');
+                    }
+                    if ($notNull && \Illuminate\Support\Facades\Schema::hasTable('entreprises')) {
+                        $entrepriseId = DB::table('entreprises')->value('id');
+                    }
+                } catch (\Throwable $e) { /* ignore */ }
+            }
+
+            if ($entrepriseId !== null) {
+                $appointmentPayload['entreprise_id'] = $entrepriseId;
+            }
+        }
+
+        // Gérer un éventuel service_id NOT NULL dans appointments
+        if (in_array('service_id', $apptColumns, true)) {
+            $serviceId = null;
+            $serviceNotNull = false;
+            try {
+                $dbName = DB::selectOne('SELECT DATABASE() AS db')->db ?? null;
+                if ($dbName) {
+                    $row = DB::selectOne('SELECT IS_NULLABLE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND COLUMN_NAME = ? LIMIT 1', [$dbName, 'appointments', 'service_id']);
+                    $serviceNotNull = isset($row) && ($row->IS_NULLABLE === 'NO');
+                }
+            } catch (\Throwable $e) { /* ignore */ }
+
+            // Si la base utilise la table appointment_services (FK stricte), privilégier cette source
+            if (\Illuminate\Support\Facades\Schema::hasTable('appointment_services')) {
+                $serviceId = DB::table('appointment_services')->value('id');
+            }
+            // Sinon, essayer de récupérer un service lié au praticien
+            if ($serviceId === null && \Illuminate\Support\Facades\Schema::hasTable('practitioner_services')) {
+                $serviceId = DB::table('practitioner_services')->where('practitioner_id', $spec->id)->value('service_id')
+                    ?? DB::table('practitioner_services')->value('service_id');
+            }
+            // Sinon tenter la table services
+            if ($serviceId === null && \Illuminate\Support\Facades\Schema::hasTable('services')) {
+                $serviceId = DB::table('services')->value('id');
+            }
+            // Autre convention possible
+            if ($serviceId === null && \Illuminate\Support\Facades\Schema::hasTable('specialist_services')) {
+                $serviceId = DB::table('specialist_services')->where('specialist_id', $spec->id)->value('service_id')
+                    ?? DB::table('specialist_services')->value('service_id');
+            }
+
+            // Si NOT NULL et aucun service trouvable: renvoyer une erreur 422 explicite
+            if ($serviceId === null && $serviceNotNull) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Aucun service disponible pour ce rendez-vous. Veuillez créer/assigner un service au praticien."
+                ], 422);
+            }
+
+            if ($serviceId !== null) {
+                $appointmentPayload['service_id'] = $serviceId;
+            }
+        }
+
+        $appointment = Appointment::create($appointmentPayload);
 
         return response()->json([
             'success' => true,

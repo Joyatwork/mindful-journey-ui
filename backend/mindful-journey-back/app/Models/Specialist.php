@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Specialist extends Model
 {
@@ -53,7 +54,14 @@ class Specialist extends Model
         if ($first || $last) {
             return trim(($first ?? '') . ' ' . ($last ?? ''));
         }
-
+        // Fallback: if linked to users table, return the user's name
+        if (empty($value) && !empty($this->attributes['user_id'])) {
+            try {
+                return optional($this->user)->name ?? $value;
+            } catch (\Throwable $e) {
+                // ignore relation issues
+            }
+        }
         return $value;
     }
 
@@ -89,5 +97,13 @@ class Specialist extends Model
     public function appointments(): HasMany
     {
         return $this->hasMany(Appointment::class);
+    }
+
+    /**
+     * Link to the owning user (if practitioners.user_id exists)
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 }

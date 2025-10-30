@@ -318,4 +318,284 @@ class EntrepriseController extends Controller
             'hint' => 'Si vous voyez des skips liés à site_id, appelez POST /api/test/db/sites/seed d\'abord.'
         ]);
     }
+
+    /**
+     * (DEV) Seed de praticiens (practitioners) à partir des users existants.
+     * - Crée des entrées dans practitioners pour des users n'ayant pas encore de practitioner
+     * - Renseigne entreprise_id, specialty, license_number, bio
+     */
+    public function seedPractitioners(Request $request)
+    {
+        if (!Schema::hasTable('practitioners')) {
+            return response()->json(['success' => false, 'message' => "La table 'practitioners' est absente"], 400);
+        }
+        if (!Schema::hasTable('users')) {
+            return response()->json(['success' => false, 'message' => "La table 'users' est absente"], 400);
+        }
+
+        $pCols = Schema::getColumnListing('practitioners');
+
+        // Lire nullabilité des colonnes pour éviter les violations NOT NULL
+        $nullable = [];
+        try {
+            $dbName = DB::selectOne('SELECT DATABASE() AS db')->db ?? null;
+            if ($dbName) {
+                $rows = DB::select('SELECT COLUMN_NAME, IS_NULLABLE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?', [$dbName, 'practitioners']);
+                foreach ($rows as $r) {
+                    $nullable[$r->COLUMN_NAME] = ($r->IS_NULLABLE === 'YES');
+                }
+            }
+        } catch (\Throwable $e) { /* ignore */ }
+
+        // Préparer des spécialités plausibles
+        $specialties = [
+            'Psychologue', 'Nutritionniste', 'Coach bien-être', 'Sophrologue', 'Kinésithérapeute',
+            'Méditation', 'Somnologue', 'Ergothérapeute', 'Diététicien', 'Hypnothérapeute'
+        ];
+
+        // Récupérer les users qui n'ont pas encore de practitioner
+        $existingUserIds = DB::table('practitioners')->pluck('user_id')->filter()->all();
+        $usersQuery = DB::table('users')->select(['id']);
+        $hasUserEntreprise = Schema::hasColumn('users', 'entreprise_id');
+        if ($hasUserEntreprise) {
+            $usersQuery = DB::table('users')->select(['id', 'entreprise_id']);
+        }
+        if (!empty($existingUserIds)) {
+            $usersQuery->whereNotIn('id', $existingUserIds);
+        }
+
+        // Limiter pour éviter l'insertion massive involontaire
+        $users = $usersQuery->limit((int) $request->query('limit', 20))->get();
+        if ($users->isEmpty()) {
+            return response()->json(['success' => true, 'message' => 'Aucun nouvel utilisateur éligible', 'inserted' => 0]);
+        }
+
+        // Entreprises disponibles (si la colonne entreprise_id est requise)
+        $entrepriseRequired = in_array('entreprise_id', $pCols, true) && (isset($nullable['entreprise_id']) ? !$nullable['entreprise_id'] : false);
+        $anyEntrepriseId = null;
+        if (Schema::hasTable('entreprises')) {
+            $anyEntrepriseId = DB::table('entreprises')->value('id');
+        }
+        if ($entrepriseRequired && !$anyEntrepriseId && !$hasUserEntreprise) {
+            return response()->json(['success' => false, 'message' => "Aucune entreprise disponible alors que practitioners.entreprise_id est NOT NULL"], 400);
+        }
+
+        $now = now();
+        $inserted = 0;
+        $skipped = 0;
+        $errors = [];
+
+        foreach ($users as $u) {
+            try {
+                $row = [
+                    'user_id' => $u->id,
+                ];
+
+                // entreprise_id: préférer users.entreprise_id si présent, sinon une entreprise quelconque
+                if (in_array('entreprise_id', $pCols, true)) {
+                    $entId = $hasUserEntreprise ? ($u->entreprise_id ?? null) : null;
+                    if (!$entId) $entId = $anyEntrepriseId;
+                    if (!$entId && $entrepriseRequired) {
+                        $skipped++;
+                        $errors[] = ['user_id' => $u->id, 'reason' => 'Aucune entreprise disponible'];
+                        continue;
+                    }
+                    if ($entId) $row['entreprise_id'] = $entId;
+                }
+
+                if (in_array('specialty', $pCols, true)) {
+                    $row['specialty'] = $specialties[array_rand($specialties)];
+                }
+                if (in_array('license_number', $pCols, true)) {
+                    $row['license_number'] = 'LIC-' . $u->id . '-' . substr((string) time(), -5);
+                }
+                if (in_array('bio', $pCols, true)) {
+                    $row['bio'] = 'Praticien expérimenté dédié au bien-être au travail et à la santé mentale.';
+                }
+                if (in_array('created_at', $pCols, true)) $row['created_at'] = $now;
+                if (in_array('updated_at', $pCols, true)) $row['updated_at'] = $now;
+
+                DB::table('practitioners')->insert($row);
+                $inserted++;
+            } catch (\Throwable $e) {
+                $skipped++;
+                $errors[] = ['user_id' => $u->id, 'error' => $e->getMessage()];
+            }
+        }
+
+        $sample = DB::table('practitioners')->orderByDesc('id')->limit(5)->get();
+        return response()->json([
+            'success' => true,
+            'inserted' => $inserted,
+            'skipped' => $skipped,
+            'sample' => $sample,
+            'hint' => 'Vous pouvez contrôler le volume via le paramètre ?limit=NN'
+        ]);
+    }
+
+    /**
+     * (DEV) Seed de services de base pour les schémas possibles.
+     * - services: name, description, price_cents, duration_minutes
+     * - appointment_services: label, code, default_duration_min, default_price_cents, entreprise_id
+     */
+    public function seedServices(Request $request)
+    {
+        $now = now();
+        $base = [
+            [
+                'name' => 'Consultation Psychologue',
+                'description' => 'Séance de 45 min avec un psychologue certifié.',
+                'price_cents' => 6000,
+                'duration_minutes' => 45,
+                'code' => 'PSY45',
+                'label' => 'Consultation Psychologue',
+                'default_duration_min' => 45,
+                'default_price_cents' => 6000,
+            ],
+            [
+                'name' => 'Coaching Bien-être',
+                'description' => 'Accompagnement bien-être personnalisé (30 min).',
+                'price_cents' => 4000,
+                'duration_minutes' => 30,
+                'code' => 'COACH30',
+                'label' => 'Coaching Bien-être',
+                'default_duration_min' => 30,
+                'default_price_cents' => 4000,
+            ],
+            [
+                'name' => 'Bilan Nutritionnel',
+                'description' => 'Évaluation initiale et conseils nutrition (60 min).',
+                'price_cents' => 8000,
+                'duration_minutes' => 60,
+                'code' => 'NUTRI60',
+                'label' => 'Bilan Nutritionnel',
+                'default_duration_min' => 60,
+                'default_price_cents' => 8000,
+            ],
+        ];
+
+        $result = ['success' => true];
+
+        // Seed table `services` si présente
+        if (Schema::hasTable('services')) {
+            $cols = Schema::getColumnListing('services');
+            $existing = DB::table('services')->count();
+            if ($existing === 0) {
+                $toInsert = [];
+                foreach ($base as $row) {
+                    $payload = [];
+                    if (in_array('name', $cols, true)) $payload['name'] = $row['name'];
+                    if (in_array('description', $cols, true)) $payload['description'] = $row['description'];
+                    if (in_array('price_cents', $cols, true)) $payload['price_cents'] = $row['price_cents'];
+                    if (in_array('duration_minutes', $cols, true)) $payload['duration_minutes'] = $row['duration_minutes'];
+                    if (in_array('created_at', $cols, true)) $payload['created_at'] = $now;
+                    if (in_array('updated_at', $cols, true)) $payload['updated_at'] = $now;
+                    $toInsert[] = $payload;
+                }
+                if (!empty($toInsert)) DB::table('services')->insert($toInsert);
+            }
+            $result['services_count'] = DB::table('services')->count();
+        } else {
+            $result['services'] = 'absent';
+        }
+
+        // Seed table `appointment_services` si présente
+        if (Schema::hasTable('appointment_services')) {
+            $cols = Schema::getColumnListing('appointment_services');
+            $existing = DB::table('appointment_services')->count();
+            if ($existing === 0) {
+                // Entreprise requise
+                $entrepriseId = null;
+                if (Schema::hasTable('entreprises')) {
+                    $entrepriseId = DB::table('entreprises')->value('id');
+                }
+                if (in_array('entreprise_id', $cols, true) && !$entrepriseId) {
+                    return response()->json(['success' => false, 'message' => "Aucune entreprise disponible pour peupler 'appointment_services'"], 400);
+                }
+
+                $toInsert = [];
+                foreach ($base as $row) {
+                    $payload = [];
+                    if (in_array('entreprise_id', $cols, true)) $payload['entreprise_id'] = $entrepriseId;
+                    if (in_array('code', $cols, true)) $payload['code'] = $row['code'];
+                    if (in_array('label', $cols, true)) $payload['label'] = $row['label'];
+                    if (in_array('default_duration_min', $cols, true)) $payload['default_duration_min'] = $row['default_duration_min'];
+                    if (in_array('default_price_cents', $cols, true)) $payload['default_price_cents'] = $row['default_price_cents'];
+                    if (in_array('created_at', $cols, true)) $payload['created_at'] = $now;
+                    if (in_array('updated_at', $cols, true)) $payload['updated_at'] = $now;
+                    $toInsert[] = $payload;
+                }
+                if (!empty($toInsert)) DB::table('appointment_services')->insert($toInsert);
+            }
+            $result['appointment_services_count'] = DB::table('appointment_services')->count();
+        } else {
+            $result['appointment_services'] = 'absent';
+        }
+
+        return response()->json($result);
+    }
+
+    /**
+     * (DEV) Seed des liaisons praticien→service si les tables existent.
+     * Supporte les conventions `practitioner_services` (practitioner_id, service_id)
+     * ou `specialist_services` (specialist_id, service_id) suivant les schémas.
+     */
+    public function seedPractitionerServices(Request $request)
+    {
+        $linkTable = null;
+        $practFk = null;
+        if (Schema::hasTable('practitioner_services')) {
+            $linkTable = 'practitioner_services';
+            $practFk = 'practitioner_id';
+        } elseif (Schema::hasTable('specialist_services')) {
+            $linkTable = 'specialist_services';
+            $practFk = 'specialist_id';
+        } else {
+            return response()->json(['success' => false, 'message' => "Table de liaison praticien↔service absente (practitioner_services/specialist_services)"], 400);
+        }
+
+        if (!Schema::hasTable('practitioners')) {
+            return response()->json(['success' => false, 'message' => "La table 'practitioners' est absente"], 400);
+        }
+        if (!Schema::hasTable('services')) {
+            return response()->json(['success' => false, 'message' => "La table 'services' est absente"], 400);
+        }
+
+        $serviceId = DB::table('services')->value('id');
+        if (!$serviceId) {
+            return response()->json(['success' => false, 'message' => 'Aucun service disponible; appelez d’abord /api/test/db/services/seed'], 400);
+        }
+
+        $practIds = DB::table('practitioners')->pluck('id')->all();
+        if (empty($practIds)) {
+            return response()->json(['success' => false, 'message' => 'Aucun praticien trouvé'], 400);
+        }
+
+        $existing = DB::table($linkTable)->pluck($practFk)->all();
+        $toInsert = [];
+        $now = now();
+        $linkCols = Schema::getColumnListing($linkTable);
+        foreach ($practIds as $pid) {
+            if (in_array($pid, $existing, true)) continue; // ne pas dupliquer
+            $row = [
+                $practFk => $pid,
+                'service_id' => $serviceId,
+            ];
+            if (in_array('created_at', $linkCols, true)) $row['created_at'] = $now;
+            if (in_array('updated_at', $linkCols, true)) $row['updated_at'] = $now;
+            $toInsert[] = $row;
+        }
+
+        if (!empty($toInsert)) DB::table($linkTable)->insert($toInsert);
+
+        $count = DB::table($linkTable)->count();
+        $sample = DB::table($linkTable)->orderByDesc($practFk)->limit(5)->get();
+        return response()->json([
+            'success' => true,
+            'inserted' => count($toInsert),
+            'link_table' => $linkTable,
+            'count' => $count,
+            'sample' => $sample,
+        ]);
+    }
 }

@@ -112,6 +112,12 @@ Route::prefix('test')->group(function () {
         Route::get('sites', [EntrepriseController::class, 'listSites']);
         // Seed des employés (dev)
         Route::post('employees/seed', [EntrepriseController::class, 'seedEmployees']);
+        // Seed des praticiens (dev)
+        Route::post('practitioners/seed', [EntrepriseController::class, 'seedPractitioners']);
+        // Seed des services (dev)
+        Route::post('services/seed', [EntrepriseController::class, 'seedServices']);
+        // Seed des liaisons praticien-services (dev)
+        Route::post('practitioner-services/seed', [EntrepriseController::class, 'seedPractitionerServices']);
     });
 });
 

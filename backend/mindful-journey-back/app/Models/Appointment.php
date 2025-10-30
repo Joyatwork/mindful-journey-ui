@@ -14,6 +14,9 @@ class Appointment extends Model
         // mindful_journey schema fields
         'employee_id',
         'practitioner_id',
+        'entreprise_id',
+        'service_id',
+        'created_by',
         'scheduled_at',
         'mode',
         'status',

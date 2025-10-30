@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Models\Specialist;
+use Illuminate\Support\Facades\Schema;
 
 class SpecialistController extends Controller
 {
@@ -39,7 +40,21 @@ class SpecialistController extends Controller
         $perPage = max(1, min($perPage, 50));
         $page = (int) $request->get('page', 1);
 
-        $paginator = $query->orderBy('rating', 'desc')
+        // Choisir une colonne d'ordre robuste selon le schéma disponible
+        $orderColumn = 'rating';
+        if (!Schema::hasColumn('practitioners', 'rating')) {
+            if (Schema::hasColumn('practitioners', 'updated_at')) {
+                $orderColumn = 'updated_at';
+            } elseif (Schema::hasColumn('practitioners', 'created_at')) {
+                $orderColumn = 'created_at';
+            } else {
+                $orderColumn = 'id';
+            }
+        }
+
+        $direction = $orderColumn === 'id' ? 'desc' : 'desc';
+
+        $paginator = $query->orderBy($orderColumn, $direction)
             ->paginate($perPage, ['*'], 'page', $page);
 
         // Transformer les éléments paginés pour correspondre au format frontend
@@ -124,7 +139,19 @@ class SpecialistController extends Controller
             ->where('name', 'like', "%$query%")
             ->orWhere('specialty', 'like', "%$query%")
             ->orWhere('description', 'like', "%$query%")
-            ->orderBy('rating', 'desc')
+            ->when(true, function ($q) {
+                $orderColumn = 'rating';
+                if (!Schema::hasColumn('practitioners', 'rating')) {
+                    if (Schema::hasColumn('practitioners', 'updated_at')) {
+                        $orderColumn = 'updated_at';
+                    } elseif (Schema::hasColumn('practitioners', 'created_at')) {
+                        $orderColumn = 'created_at';
+                    } else {
+                        $orderColumn = 'id';
+                    }
+                }
+                $q->orderBy($orderColumn, 'desc');
+            })
             ->get();
 
         $results = $s->map(function (Specialist $sp) {
