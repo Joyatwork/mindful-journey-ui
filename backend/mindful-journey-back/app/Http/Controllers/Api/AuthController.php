@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use App\Models\LoginOtp;
 use App\Mail\TwoFactorCodeMail;
 use Illuminate\Validation\ValidationException;
@@ -408,7 +409,9 @@ class AuthController extends Controller
             'company' => 'nullable|string|max:255',
             'bio' => 'nullable|string|max:1000',
             'goals' => 'nullable|string|max:1000',
-            'avatar' => 'nullable|file|image|mimes:jpg,jpeg,png,webp|max:5120'
+            'avatar' => 'nullable|file|image|mimes:jpg,jpeg,png,webp|max:5120',
+            // Allow providing an external URL as an alternative to file upload
+            'avatar_url' => 'nullable|string|url|max:2048'
         ]);
 
         $user = $request->user();
@@ -417,13 +420,26 @@ class AuthController extends Controller
         // Handle avatar upload if present (FormData upload)
         if ($request->hasFile('avatar')) {
             try {
+                // Delete old stored avatar if present to avoid orphan files
+                if (!empty($user->avatar)) {
+                    try { Storage::disk('public')->delete($user->avatar); } catch (\Throwable $e) { /* ignore */ }
+                }
+
                 $avatarPath = $request->file('avatar')->store('avatars', 'public');
                 $validated['avatar'] = $avatarPath;
+                // Prefer uploaded file over external URL by clearing explicit avatar_url
+                $validated['avatar_url'] = null;
                 Log::info('AuthController:updateProfile - stored avatar: ' . $avatarPath);
             } catch (\Throwable $e) {
                 Log::error('AuthController:updateProfile - avatar storage failed: ' . $e->getMessage());
                 return response()->json(['success' => false, 'message' => 'Erreur lors de l\'upload de l\'avatar.'], 500);
             }
+        }
+
+        // If an explicit avatar_url is provided (and no file upload), keep it
+        if (!$request->hasFile('avatar') && isset($validated['avatar_url']) && $validated['avatar_url'] === '') {
+            // Normalize empty string to null to avoid storing empty URLs
+            $validated['avatar_url'] = null;
         }
 
         // Normalize camelCase keys to snake_case used in DB / preferences

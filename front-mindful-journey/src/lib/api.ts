@@ -84,6 +84,13 @@ async function apiRequest(endpoint: string, options: RequestInit = {}) {
     headers,
   };
 
+  // Si on envoie un FormData, laisser le navigateur définir le Content-Type (boundary)
+  if (config.body && typeof FormData !== 'undefined' && config.body instanceof FormData) {
+    if (config.headers instanceof Headers) {
+      config.headers.delete('Content-Type');
+    }
+  }
+
   // Pour les requêtes avec effet de bord, assurer le CSRF (Sanctum)
   const method = (config.method || 'GET').toString().toUpperCase();
   if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
@@ -166,11 +173,20 @@ export const apiService = {
   profile: {
     get: () => apiRequest('/profile'),
     
-    update: (profileData: any) =>
-      apiRequest('/profile', {
+    update: (profileData: any) => {
+      const isForm = typeof FormData !== 'undefined' && profileData instanceof FormData;
+      if (isForm) {
+        if (!profileData.has('_method')) profileData.append('_method', 'PUT');
+        return apiRequest('/profile', {
+          method: 'POST',
+          body: profileData,
+        });
+      }
+      return apiRequest('/profile', {
         method: 'PUT',
         body: JSON.stringify(profileData),
-      }),
+      });
+    },
   },
 
   // Rendez-vous

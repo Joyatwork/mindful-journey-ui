@@ -93,9 +93,22 @@ class User extends Authenticatable
      */
     public function getAvatarUrlAttribute(): ?string
     {
-        if ($this->avatar) {
-            return asset('storage/' . $this->avatar);
+        // Prefer explicit avatar_url column if set (external URL or precomputed)
+        try {
+            $explicit = $this->getOriginal('avatar_url');
+        } catch (\Throwable $e) {
+            $explicit = null;
         }
+
+        if (!empty($explicit) && is_string($explicit)) {
+            return $explicit;
+        }
+
+        // Fallback to local stored avatar path -> public URL through storage symlink
+        if (!empty($this->avatar)) {
+            return asset('storage/' . ltrim($this->avatar, '/'));
+        }
+
         return null;
     }
 
