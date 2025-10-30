@@ -345,12 +345,21 @@ class EntrepriseController extends Controller
                     $nullable[$r->COLUMN_NAME] = ($r->IS_NULLABLE === 'YES');
                 }
             }
-        } catch (\Throwable $e) { /* ignore */ }
+        } catch (\Throwable $e) { /* ignore */
+        }
 
         // Préparer des spécialités plausibles
         $specialties = [
-            'Psychologue', 'Nutritionniste', 'Coach bien-être', 'Sophrologue', 'Kinésithérapeute',
-            'Méditation', 'Somnologue', 'Ergothérapeute', 'Diététicien', 'Hypnothérapeute'
+            'Psychologue',
+            'Nutritionniste',
+            'Coach bien-être',
+            'Sophrologue',
+            'Kinésithérapeute',
+            'Méditation',
+            'Somnologue',
+            'Ergothérapeute',
+            'Diététicien',
+            'Hypnothérapeute'
         ];
 
         // Récupérer les users qui n'ont pas encore de practitioner

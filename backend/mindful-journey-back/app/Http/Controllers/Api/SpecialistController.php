@@ -30,8 +30,8 @@ class SpecialistController extends Controller
             $s = $request->search;
             $query->where(function ($q) use ($s) {
                 $q->where('name', 'like', "%$s%")
-                  ->orWhere('specialty', 'like', "%$s%")
-                  ->orWhere('description', 'like', "%$s%");
+                    ->orWhere('specialty', 'like', "%$s%")
+                    ->orWhere('description', 'like', "%$s%");
             });
         }
 
@@ -127,7 +127,7 @@ class SpecialistController extends Controller
     public function search(Request $request): JsonResponse
     {
         $query = $request->get('q', '');
-        
+
         if (empty($query)) {
             return response()->json([
                 'success' => true,

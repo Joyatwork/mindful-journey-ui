@@ -145,7 +145,8 @@ class AppointmentController extends Controller
                     if ($notNull && \Illuminate\Support\Facades\Schema::hasTable('entreprises')) {
                         $entrepriseId = DB::table('entreprises')->value('id');
                     }
-                } catch (\Throwable $e) { /* ignore */ }
+                } catch (\Throwable $e) { /* ignore */
+                }
             }
 
             if ($entrepriseId !== null) {
@@ -163,7 +164,8 @@ class AppointmentController extends Controller
                     $row = DB::selectOne('SELECT IS_NULLABLE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND COLUMN_NAME = ? LIMIT 1', [$dbName, 'appointments', 'service_id']);
                     $serviceNotNull = isset($row) && ($row->IS_NULLABLE === 'NO');
                 }
-            } catch (\Throwable $e) { /* ignore */ }
+            } catch (\Throwable $e) { /* ignore */
+            }
 
             // Si la base utilise la table appointment_services (FK stricte), privilégier cette source
             if (\Illuminate\Support\Facades\Schema::hasTable('appointment_services')) {
