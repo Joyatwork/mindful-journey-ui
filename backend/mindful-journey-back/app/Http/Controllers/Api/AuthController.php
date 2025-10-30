@@ -422,7 +422,10 @@ class AuthController extends Controller
             try {
                 // Delete old stored avatar if present to avoid orphan files
                 if (!empty($user->avatar)) {
-                    try { Storage::disk('public')->delete($user->avatar); } catch (\Throwable $e) { /* ignore */ }
+                    try {
+                        Storage::disk('public')->delete($user->avatar);
+                    } catch (\Throwable $e) { /* ignore */
+                    }
                 }
 
                 $avatarPath = $request->file('avatar')->store('avatars', 'public');

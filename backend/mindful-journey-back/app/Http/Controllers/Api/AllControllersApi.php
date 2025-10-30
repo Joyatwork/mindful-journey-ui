@@ -117,7 +117,7 @@ class WellnessController extends Controller
                 'type' => 'meditation'
             ],
             [
-                'id' => 2, 
+                'id' => 2,
                 'title' => 'Exercices de respiration',
                 'description' => 'Techniques de respiration pour gérer l\'anxiété',
                 'duration' => '5 min',
@@ -249,7 +249,7 @@ class ProfileController extends Controller
     public function show(Request $request): JsonResponse
     {
         $user = $request->user();
-        
+
         if (!$user) {
             return response()->json([
                 'success' => false,
@@ -269,7 +269,7 @@ class ProfileController extends Controller
     public function update(Request $request): JsonResponse
     {
         $user = $request->user();
-        
+
         if (!$user) {
             return response()->json([
                 'success' => false,
@@ -299,7 +299,10 @@ class ProfileController extends Controller
         if ($request->hasFile('avatar')) {
             try {
                 if (!empty($user->avatar)) {
-                    try { Storage::disk('public')->delete($user->avatar); } catch (\Throwable $e) { /* ignore */ }
+                    try {
+                        Storage::disk('public')->delete($user->avatar);
+                    } catch (\Throwable $e) { /* ignore */
+                    }
                 }
                 $path = $request->file('avatar')->store('avatars', 'public');
                 $validated['avatar'] = $path;
