@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useSpecialists } from '@/hooks/useApi';
-import { 
+import {
   Search,
   Filter,
   Star,
@@ -39,10 +39,10 @@ interface HealthProfessionalsListProps {
   onViewProfile: (specialist: HealthProfessional) => void;
 }
 
-const HealthProfessionalsList = ({ 
-  onBack, 
-  onBookAppointment, 
-  onViewProfile 
+const HealthProfessionalsList = ({
+  onBack,
+  onBookAppointment,
+  onViewProfile
 }: HealthProfessionalsListProps) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSpecialty, setSelectedSpecialty] = useState('all');
@@ -95,8 +95,8 @@ const HealthProfessionalsList = ({
   return (
     <div className="space-y-6 animate-fadeIn">
       <div className="flex items-center justify-between">
-        <Button 
-          variant="ghost" 
+        <Button
+          variant="ghost"
           onClick={onBack}
           className="flex items-center space-x-2"
         >
@@ -119,7 +119,7 @@ const HealthProfessionalsList = ({
               className="pl-10"
             />
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Select value={selectedSpecialty} onValueChange={setSelectedSpecialty}>
               <SelectTrigger>
@@ -201,9 +201,9 @@ const HealthProfessionalsList = ({
           </Card>
         )}
 
-  {filteredProfessionals.map((professional) => (
-          <Card 
-            key={professional.id} 
+        {filteredProfessionals.map((professional) => (
+          <Card
+            key={professional.id}
             className="p-4 glass-card border-0 shadow-lg cursor-pointer hover:shadow-xl transition-shadow"
             onClick={() => onViewProfile(professional)}
           >
@@ -214,7 +214,7 @@ const HealthProfessionalsList = ({
                   {getInitials(professional.name)}
                 </AvatarFallback>
               </Avatar>
-              
+
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="font-semibold text-lg">{professional.name}</h3>
@@ -223,10 +223,10 @@ const HealthProfessionalsList = ({
                     <span className="text-sm text-muted-foreground">{professional.rating}</span>
                   </div>
                 </div>
-                
+
                 <p className="text-wellness-lavender font-medium mb-2">{professional.specialty}</p>
                 <p className="text-sm text-muted-foreground mb-3">{professional.description}</p>
-                
+
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 text-sm text-muted-foreground">
                   <div className="flex items-center space-x-1">
                     <UserCheck className="h-4 w-4" />
@@ -253,7 +253,7 @@ const HealthProfessionalsList = ({
                     )}
                   </div>
                 </div>
-                
+
                 <div className="flex items-center justify-between">
                   <Badge variant="secondary" className="text-sm">
                     {professional.price}
