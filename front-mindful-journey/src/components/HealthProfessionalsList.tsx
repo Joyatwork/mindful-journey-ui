@@ -83,6 +83,15 @@ const HealthProfessionalsList = ({
     return sorted;
   }, [specialists, sortBy]);
 
+  // Utilitaire: initiales sécurisées même si name est null/undefined
+  const getInitials = (name?: string) => {
+    const safe = (name ?? '').trim();
+    if (!safe) return '?';
+    const parts = safe.split(/\s+/).filter(Boolean);
+    const initials = parts.slice(0, 2).map(p => p[0]?.toUpperCase() ?? '').join('');
+    return initials || '?';
+  };
+
   return (
     <div className="space-y-6 animate-fadeIn">
       <div className="flex items-center justify-between">
@@ -202,7 +211,7 @@ const HealthProfessionalsList = ({
               <Avatar className="w-16 h-16">
                 <AvatarImage src={professional.image} alt={professional.name} />
                 <AvatarFallback className="bg-wellness-gradient text-white">
-                  {professional.name.split(' ').map(n => n[0]).join('')}
+                  {getInitials(professional.name)}
                 </AvatarFallback>
               </Avatar>
               
