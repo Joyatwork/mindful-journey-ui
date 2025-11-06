@@ -11,8 +11,35 @@ class Specialist extends Model
 {
     use HasFactory;
 
-    // This model should read/write the real table named `practitioners`.
+    // Table dynamique: `practitioners` (par défaut) ou `praticiens` (schéma FR)
     protected $table = 'practitioners';
+
+    public function __construct(array $attributes = [])
+    {
+        parent::__construct($attributes);
+        try {
+            // 1) Priorité à la variable d'environnement si définie
+            $preferred = env('PRACTITIONERS_TABLE');
+            if ($preferred && \Illuminate\Support\Facades\Schema::hasTable($preferred)) {
+                $this->setTable($preferred);
+                return;
+            }
+
+            // 2) Préférer la table FR `praticiens` si présente
+            if (\Illuminate\Support\Facades\Schema::hasTable('praticiens')) {
+                $this->setTable('praticiens');
+                return;
+            }
+
+            // 3) Sinon, retomber sur `practitioners`
+            if (\Illuminate\Support\Facades\Schema::hasTable('practitioners')) {
+                $this->setTable('practitioners');
+                return;
+            }
+        } catch (\Throwable $e) {
+            // laisser la table par défaut si Schema indisponible
+        }
+    }
 
     protected $fillable = [
         'name',
@@ -70,6 +97,7 @@ class Specialist extends Model
      */
     public function getSpecialtyAttribute($value)
     {
+        // 1) specializations (json/array)
         $specs = $this->attributes['specializations'] ?? null;
         if ($specs) {
             // stored as JSON or array; try decode if string
@@ -82,7 +110,10 @@ class Specialist extends Model
                 return is_array($specs[0]) ? json_encode($specs[0]) : $specs[0];
             }
         }
-
+        // 2) fallback schéma FR: `speciality`
+        if (empty($value) && array_key_exists('speciality', $this->attributes)) {
+            return $this->attributes['speciality'];
+        }
         return $value;
     }
 
@@ -92,6 +123,54 @@ class Specialist extends Model
     public function getDescriptionAttribute($value)
     {
         return $this->attributes['bio'] ?? $value;
+    }
+
+    /**
+     * Prix en cents (fallback depuis min_price si price_cents absent)
+     */
+    public function getPriceCentsAttribute($value)
+    {
+        if ($value !== null) return (int) $value;
+        if (array_key_exists('min_price', $this->attributes) && $this->attributes['min_price'] !== null) {
+            // min_price est un décimal 8,2 → convertir en cents
+            return (int) round(((float) $this->attributes['min_price']) * 100);
+        }
+        return 0;
+    }
+
+    /**
+     * Type de consultation normalisé pour le frontend (video|inPerson|both)
+     */
+    public function getConsultationTypeAttribute($value)
+    {
+        if (!empty($value)) return $value;
+        $mode = $this->attributes['consultation_mode'] ?? null; // presentiel|teleconsultation|both
+        return match ($mode) {
+            'teleconsultation' => 'video',
+            'presentiel' => 'inPerson',
+            'both' => 'both',
+            default => null,
+        };
+    }
+
+    /**
+     * Localisation fallback "ville, pays"
+     */
+    public function getLocationAttribute($value)
+    {
+        if (!empty($value)) return $value;
+        $city = trim((string) ($this->attributes['city'] ?? ''));
+        $country = trim((string) ($this->attributes['country'] ?? ''));
+        $parts = array_filter([$city, $country]);
+        return empty($parts) ? null : implode(', ', $parts);
+    }
+
+    /**
+     * Expérience (années) fallback à 0 si absent
+     */
+    public function getExperienceYearsAttribute($value)
+    {
+        return (int) ($value ?? 0);
     }
 
     public function appointments(): HasMany

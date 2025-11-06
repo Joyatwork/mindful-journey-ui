@@ -16,22 +16,37 @@ class SpecialistController extends Controller
     public function index(Request $request): JsonResponse
     {
         $query = Specialist::query();
+        $table = (new Specialist())->getTable();
 
         if ($request->filled('specialty') && $request->specialty !== 'all') {
-            $query->where('specialty', $request->specialty);
+            $query->where(function ($q) use ($request, $table) {
+                // specialty (EN) ou speciality (FR)
+                $q->where($table . '.specialty', $request->specialty);
+                $q->orWhere($table . '.speciality', $request->specialty);
+            });
         }
         if ($request->filled('consultationType') && $request->consultationType !== 'all') {
             $type = $request->consultationType;
             if ($type !== 'both') {
-                $query->whereIn('consultation_type', [$type, 'both']);
+                // consultation_type (EN normalisé) ou consultation_mode (FR)
+                $query->where(function ($q) use ($type, $table) {
+                    $q->whereIn($table . '.consultation_type', [$type, 'both']);
+                    // map inverse pour consultation_mode stocké en FR
+                    $mode = $type === 'video' ? 'teleconsultation' : ($type === 'inPerson' ? 'presentiel' : 'both');
+                    $q->orWhereIn($table . '.consultation_mode', [$mode, 'both']);
+                });
             }
         }
         if ($request->filled('search')) {
             $s = $request->search;
-            $query->where(function ($q) use ($s) {
-                $q->where('name', 'like', "%$s%")
-                    ->orWhere('specialty', 'like', "%$s%")
-                    ->orWhere('description', 'like', "%$s%");
+            $query->where(function ($q) use ($s, $table) {
+                // name est un accessoire → on cherche sur first_name/last_name
+                $q->where($table . '.first_name', 'like', "%$s%")
+                    ->orWhere($table . '.last_name', 'like', "%$s%")
+                    ->orWhere($table . '.specialty', 'like', "%$s%")
+                    ->orWhere($table . '.speciality', 'like', "%$s%")
+                    ->orWhere($table . '.description', 'like', "%$s%")
+                    ->orWhere($table . '.bio', 'like', "%$s%");
             });
         }
 
@@ -42,13 +57,13 @@ class SpecialistController extends Controller
 
         // Choisir une colonne d'ordre robuste selon le schéma disponible
         $orderColumn = 'rating';
-        if (!Schema::hasColumn('practitioners', 'rating')) {
-            if (Schema::hasColumn('practitioners', 'updated_at')) {
-                $orderColumn = 'updated_at';
-            } elseif (Schema::hasColumn('practitioners', 'created_at')) {
-                $orderColumn = 'created_at';
+        if (!Schema::hasColumn($table, 'rating')) {
+            if (Schema::hasColumn($table, 'updated_at')) {
+                $orderColumn = $table . '.updated_at';
+            } elseif (Schema::hasColumn($table, 'created_at')) {
+                $orderColumn = $table . '.created_at';
             } else {
-                $orderColumn = 'id';
+                $orderColumn = $table . '.id';
             }
         }
 
@@ -58,22 +73,22 @@ class SpecialistController extends Controller
             ->paginate($perPage, ['*'], 'page', $page);
 
         // Transformer les éléments paginés pour correspondre au format frontend
-        $mapped = $paginator->getCollection()->map(function (Specialist $s) {
+        $mapped = $paginator->getCollection()->map(function (Specialist $s) use ($table) {
             return [
                 'id' => (string) $s->id,
                 'name' => $s->name,
                 'specialty' => $s->specialty,
-                'rating' => (float) $s->rating,
-                'experience' => $s->experience_years . ' ans',
-                'price' => intval($s->price_cents / 100) . '€',
-                'availability' => $s->availability,
-                'consultationType' => $s->consultation_type,
-                'description' => $s->description,
-                'location' => $s->location,
-                'image' => $s->image_url,
+                'rating' => (float) ($s->rating ?? 0),
+                'experience' => ($s->experience_years ?? 0) . ' ans',
+                'price' => intval(($s->price_cents ?? 0) / 100) . '€',
+                'availability' => $s->availability ?? '',
+                'consultationType' => $s->consultation_type, // accessoire normalise depuis consultation_mode si besoin
+                'description' => $s->description ?? '',
+                'location' => $s->location ?? '',
+                'image' => $s->image_url ?? null,
                 'education' => $s->education,
                 'languages' => $s->languages,
-                'reviewCount' => $s->review_count,
+                'reviewCount' => $s->review_count ?? 0,
             ];
         });
         $paginator->setCollection($mapped);
@@ -95,19 +110,20 @@ class SpecialistController extends Controller
      */
     public function show(string $id): JsonResponse
     {
-        $s = Specialist::findOrFail($id);
+    $table = (new Specialist())->getTable();
+    $s = Specialist::findOrFail($id);
         $specialist = [
             'id' => (string) $s->id,
             'name' => $s->name,
             'specialty' => $s->specialty,
-            'rating' => (float) $s->rating,
-            'experience' => $s->experience_years . ' ans',
-            'price' => intval($s->price_cents / 100) . '€',
-            'availability' => $s->availability,
+            'rating' => (float) ($s->rating ?? 0),
+            'experience' => ($s->experience_years ?? 0) . ' ans',
+            'price' => intval(($s->price_cents ?? 0) / 100) . '€',
+            'availability' => $s->availability ?? '',
             'consultationType' => $s->consultation_type,
-            'description' => $s->description,
-            'location' => $s->location,
-            'image' => $s->image_url,
+            'description' => $s->description ?? '',
+            'location' => $s->location ?? '',
+            'image' => $s->image_url ?? null,
             'education' => $s->education,
             'languages' => $s->languages,
             'reviewCount' => $s->review_count,
@@ -135,19 +151,23 @@ class SpecialistController extends Controller
             ]);
         }
 
+        $table = (new Specialist())->getTable();
         $s = Specialist::query()
-            ->where('name', 'like', "%$query%")
-            ->orWhere('specialty', 'like', "%$query%")
-            ->orWhere('description', 'like', "%$query%")
-            ->when(true, function ($q) {
+            ->where($table . '.first_name', 'like', "%$query%")
+            ->orWhere($table . '.last_name', 'like', "%$query%")
+            ->orWhere($table . '.specialty', 'like', "%$query%")
+            ->orWhere($table . '.speciality', 'like', "%$query%")
+            ->orWhere($table . '.description', 'like', "%$query%")
+            ->orWhere($table . '.bio', 'like', "%$query%")
+            ->when(true, function ($q) use ($table) {
                 $orderColumn = 'rating';
-                if (!Schema::hasColumn('practitioners', 'rating')) {
-                    if (Schema::hasColumn('practitioners', 'updated_at')) {
-                        $orderColumn = 'updated_at';
-                    } elseif (Schema::hasColumn('practitioners', 'created_at')) {
-                        $orderColumn = 'created_at';
+                if (!Schema::hasColumn($table, 'rating')) {
+                    if (Schema::hasColumn($table, 'updated_at')) {
+                        $orderColumn = $table . '.updated_at';
+                    } elseif (Schema::hasColumn($table, 'created_at')) {
+                        $orderColumn = $table . '.created_at';
                     } else {
-                        $orderColumn = 'id';
+                        $orderColumn = $table . '.id';
                     }
                 }
                 $q->orderBy($orderColumn, 'desc');
