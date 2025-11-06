@@ -107,8 +107,8 @@ class AppointmentController extends Controller
         $apptColumns = \Illuminate\Support\Facades\Schema::getColumnListing('appointments');
         $appointmentPayload = [
             'employee_id' => $employeeId,
-                'practitioner_id' => $spec->id,
-                'praticien_id' => null, // Initialize to null
+            'practitioner_id' => $spec->id,
+            'praticien_id' => null, // Initialize to null
             'scheduled_at' => $scheduledAt,
             'mode' => $mode,
             'status' => 'confirmed',
@@ -116,23 +116,23 @@ class AppointmentController extends Controller
             'notes' => $validated['notes'] ?? null,
         ];
 
-            // If the database uses the French column name, set it too to satisfy NOT NULL constraints
-            try {
-                if (\Illuminate\Support\Facades\Schema::hasColumn('appointments', 'praticien_id')) {
-                    $appointmentPayload['praticien_id'] = $spec->id;
-                }
-            } catch (\Throwable $e) {
-                // ignore schema check failures in case of permission issues
+        // If the database uses the French column name, set it too to satisfy NOT NULL constraints
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasColumn('appointments', 'praticien_id')) {
+                $appointmentPayload['praticien_id'] = $spec->id;
             }
+        } catch (\Throwable $e) {
+            // ignore schema check failures in case of permission issues
+        }
 
         // Renseigner created_by si la colonne existe (certains schémas la déclarent NOT NULL)
-            try {
-                if (\Illuminate\Support\Facades\Schema::hasColumn('appointments', 'created_by')) {
-                    $appointmentPayload['created_by'] = $user->id;
-                }
-            } catch (\Throwable $e) {
-                // ignore schema check failures
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasColumn('appointments', 'created_by')) {
+                $appointmentPayload['created_by'] = $user->id;
             }
+        } catch (\Throwable $e) {
+            // ignore schema check failures
+        }
 
         if (in_array('entreprise_id', $apptColumns, true)) {
             // 1) essayer enterprise via employees

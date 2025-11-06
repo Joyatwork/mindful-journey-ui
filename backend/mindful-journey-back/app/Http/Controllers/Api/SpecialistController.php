@@ -110,8 +110,8 @@ class SpecialistController extends Controller
      */
     public function show(string $id): JsonResponse
     {
-    $table = (new Specialist())->getTable();
-    $s = Specialist::findOrFail($id);
+        $table = (new Specialist())->getTable();
+        $s = Specialist::findOrFail($id);
         $specialist = [
             'id' => (string) $s->id,
             'name' => $s->name,
