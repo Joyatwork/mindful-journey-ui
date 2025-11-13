@@ -19,11 +19,36 @@ class EntrepriseController extends Controller
         }
 
         $q = trim((string) $request->query('q', ''));
-        $query = DB::table('entreprises')->select(['id', 'name']);
-        if ($q !== '') {
-            $query->where('name', 'like', '%' . $q . '%');
+
+        // Rendre la sélection robuste selon les colonnes disponibles
+        $cols = Schema::getColumnListing('entreprises');
+        $candidates = ['name', 'nom', 'raison_sociale', 'company_name', 'title'];
+        $selected = null;
+        foreach ($candidates as $c) {
+            if (in_array($c, $cols, true)) { $selected = $c; break; }
         }
-        $items = $query->orderBy('name')->limit(200)->get();
+
+        $query = DB::table('entreprises')->select(['id']);
+        if ($selected) {
+            // Alias uniforme "name"
+            $query->addSelect(DB::raw($selected . ' as name'));
+            if ($q !== '') {
+                $query->where($selected, 'like', '%' . $q . '%');
+            }
+            $query->orderBy($selected);
+        } else {
+            // Aucun champ nom trouvé: exposer un libellé générique
+            $query->addSelect(DB::raw("CONCAT('Entreprise ', id) as name"));
+            if ($q !== '') {
+                // Pas de colonne textuelle fiable: filtrer par id si q est numérique
+                if (ctype_digit($q)) {
+                    $query->where('id', (int)$q);
+                }
+            }
+            $query->orderBy('id');
+        }
+
+        $items = $query->limit(200)->get();
 
         return response()->json(['items' => $items]);
     }
