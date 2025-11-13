@@ -25,7 +25,10 @@ class EntrepriseController extends Controller
         $candidates = ['name', 'nom', 'raison_sociale', 'company_name', 'title'];
         $selected = null;
         foreach ($candidates as $c) {
-            if (in_array($c, $cols, true)) { $selected = $c; break; }
+            if (in_array($c, $cols, true)) {
+                $selected = $c;
+                break;
+            }
         }
 
         $query = DB::table('entreprises')->select(['id']);
