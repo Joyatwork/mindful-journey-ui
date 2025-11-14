@@ -43,8 +43,13 @@ class ContensController extends Controller
         $bodyCol  = $this->firstExisting(['body', 'content', 'message', 'texte', 'description'], $cols);
         // Message de recommandation spécifique (si présent)
         $recomCol = $this->firstExisting([
-            'recommendation_message', 'recommended_message', 'last_recommended_message',
-            'practitioner_message', 'message_recommandation', 'message_praticien', 'message_conseil'
+            'recommendation_message',
+            'recommended_message',
+            'last_recommended_message',
+            'practitioner_message',
+            'message_recommandation',
+            'message_praticien',
+            'message_conseil'
         ], $cols);
         $urlCol   = $this->firstExisting(['url', 'link', 'lien'], $cols);
         $typeCol  = $this->firstExisting(['type', 'category', 'categorie', 'kind'], $cols);
@@ -182,8 +187,13 @@ class ContensController extends Controller
         $typeCol  = $this->firstExisting(['type', 'category', 'categorie', 'kind'], $cols);
         $practCol = $this->firstExisting(['practitioner_id', 'praticien_id', 'specialist_id'], $cols);
         $recomCol = $this->firstExisting([
-            'recommendation_message', 'recommended_message', 'last_recommended_message',
-            'practitioner_message', 'message_recommandation', 'message_praticien', 'message_conseil'
+            'recommendation_message',
+            'recommended_message',
+            'last_recommended_message',
+            'practitioner_message',
+            'message_recommandation',
+            'message_praticien',
+            'message_conseil'
         ], $cols);
         $createdAtCol = in_array('created_at', $cols, true) ? 'created_at' : null;
         $readAtCol = $this->firstExisting(['read_at', 'seen_at', 'consumed_at'], $cols);
