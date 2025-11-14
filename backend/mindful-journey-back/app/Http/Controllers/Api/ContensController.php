@@ -128,7 +128,8 @@ class ContensController extends Controller
                     $join->on('cr.content_id', '=', $table . '.id')
                         ->where('cr.user_id', '=', $user->id);
                 });
-            } catch (\Throwable $e) { /* ignore */ }
+            } catch (\Throwable $e) { /* ignore */
+            }
         }
 
         // Filtrer non lus si demandé
@@ -313,14 +314,14 @@ class ContensController extends Controller
                         ->value('read_at');
                     if ($ra) $normalized['read_at'] = $ra;
                 }
-            } catch (\Throwable $e) { /* ignore */ }
+            } catch (\Throwable $e) { /* ignore */
+            }
         }
 
         return response()->json([
             'item' => $row,
             'normalized' => $normalized,
         ]);
-
     }
 
     private function getFallbackReadsTable(): string
