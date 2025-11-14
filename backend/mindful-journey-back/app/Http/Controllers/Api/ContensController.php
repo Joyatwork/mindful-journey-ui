@@ -32,7 +32,10 @@ class ContensController extends Controller
         $recipientCandidates = ['user_id', 'patient_id', 'target_user_id', 'employee_id'];
         $recipientCol = null;
         foreach ($recipientCandidates as $c) {
-            if (in_array($c, $cols, true)) { $recipientCol = $c; break; }
+            if (in_array($c, $cols, true)) {
+                $recipientCol = $c;
+                break;
+            }
         }
 
         // Colonnes de mapping pour affichage
@@ -51,12 +54,19 @@ class ContensController extends Controller
         $q = DB::table($table)->select(['id']);
         if ($titleCol) $q->addSelect(DB::raw($titleCol . ' as title'));
         else $q->addSelect(DB::raw("'' as title"));
-        if ($bodyCol) $q->addSelect(DB::raw($bodyCol . ' as body')); else $q->addSelect(DB::raw("'' as body"));
-        if ($urlCol) $q->addSelect(DB::raw($urlCol . ' as url')); else $q->addSelect(DB::raw('NULL as url'));
-        if ($typeCol) $q->addSelect(DB::raw($typeCol . ' as type')); else $q->addSelect(DB::raw("'note' as type"));
-        if ($practCol) $q->addSelect(DB::raw($practCol . ' as practitioner_id')); else $q->addSelect(DB::raw('NULL as practitioner_id'));
-        if ($createdAtCol) $q->addSelect($createdAtCol); else $q->addSelect(DB::raw('NULL as created_at'));
-        if ($readAtCol) $q->addSelect(DB::raw($readAtCol . ' as read_at')); else if ($seenCol) $q->addSelect(DB::raw($seenCol . ' as seen')); else $q->addSelect(DB::raw('NULL as read_at'));
+        if ($bodyCol) $q->addSelect(DB::raw($bodyCol . ' as body'));
+        else $q->addSelect(DB::raw("'' as body"));
+        if ($urlCol) $q->addSelect(DB::raw($urlCol . ' as url'));
+        else $q->addSelect(DB::raw('NULL as url'));
+        if ($typeCol) $q->addSelect(DB::raw($typeCol . ' as type'));
+        else $q->addSelect(DB::raw("'note' as type"));
+        if ($practCol) $q->addSelect(DB::raw($practCol . ' as practitioner_id'));
+        else $q->addSelect(DB::raw('NULL as practitioner_id'));
+        if ($createdAtCol) $q->addSelect($createdAtCol);
+        else $q->addSelect(DB::raw('NULL as created_at'));
+        if ($readAtCol) $q->addSelect(DB::raw($readAtCol . ' as read_at'));
+        else if ($seenCol) $q->addSelect(DB::raw($seenCol . ' as seen'));
+        else $q->addSelect(DB::raw('NULL as read_at'));
 
         // Filtrer par destinataire si possible, en gérant le cas employee_id -> map via employees.user_id
         if ($recipientCol) {
@@ -89,7 +99,8 @@ class ContensController extends Controller
                 if ($userEntrepriseId) {
                     $q->where('entreprise_id', $userEntrepriseId);
                 }
-            } catch (\Throwable $e) { /* ignore scope errors */ }
+            } catch (\Throwable $e) { /* ignore scope errors */
+            }
         }
 
         // Filtrer non lus si demandé
