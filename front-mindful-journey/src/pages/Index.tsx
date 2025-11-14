@@ -1200,6 +1200,21 @@ const Index = () => {
   );
 
   const [selectedContenId, setSelectedContenId] = useState<number | null>(null);
+  const [unreadContensCount, setUnreadContensCount] = useState<number>(0);
+
+  // Charger le nombre de suggestions non lues sur le dashboard
+  useEffect(() => {
+    const loadUnread = async () => {
+      try {
+        const res = await apiService.contens.list({ unreadOnly: true, limit: 1 });
+        const count = Number(res?.count ?? 0);
+        setUnreadContensCount(Number.isFinite(count) ? count : 0);
+      } catch { /* silencieux */ }
+    };
+    if (currentView === 'dashboard') {
+      void loadUnread();
+    }
+  }, [currentView]);
 
   const renderContens = () => (
     <div className="space-y-4">
@@ -1277,9 +1292,20 @@ const Index = () => {
                   {norm.type && <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 border">{norm.type}</span>}
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button size="sm" variant="outline" onClick={markRead}>Marquer lu</Button>
+                  {(!norm.read_at && !norm.seen) ? (
+                    <Button size="sm" variant="outline" onClick={markRead}>Marquer lu</Button>
+                  ) : (
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 border">Lu</span>
+                  )}
                 </div>
               </div>
+              {norm.practitioner_name && (() => {
+                const name = String(norm.practitioner_name || '').trim();
+                const hasPrefix = /^Dr\.?\s/i.test(name) || /^Docteur\s/i.test(name);
+                const display = hasPrefix ? name : `Dr ${name}`;
+                const spec = norm.practitioner_specialty ? ` — ${norm.practitioner_specialty}` : '';
+                return <div className="text-xs text-gray-500 mb-2">Recommandé par {display}{spec}</div>;
+              })()}
               {norm.created_at && (
                 <div className="text-xs text-gray-400 mb-3">{new Date(norm.created_at).toLocaleString()}</div>
               )}
@@ -1292,12 +1318,7 @@ const Index = () => {
                 </div>
               )}
             </div>
-            <div className="rounded-2xl border bg-white/60 p-4">
-              <div className="text-sm font-medium mb-2">Métadonnées</div>
-              <div className="text-xs text-gray-600 break-words">
-                <pre className="whitespace-pre-wrap">{JSON.stringify(raw, null, 2)}</pre>
-              </div>
-            </div>
+            {/* Bloc métadonnées supprimé à la demande */}
           </div>
         )}
       </div>

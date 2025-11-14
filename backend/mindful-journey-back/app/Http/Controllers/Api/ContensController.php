@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use App\Models\Specialist;
+use Illuminate\Database\Schema\Blueprint;
 
 class ContensController extends Controller
 {
@@ -61,7 +63,8 @@ class ContensController extends Controller
         $limit = min((int) $request->query('limit', 50), 200);
         $unreadOnly = filter_var($request->query('unreadOnly', 'false'), FILTER_VALIDATE_BOOLEAN);
 
-        $q = DB::table($table)->select(['id']);
+        $q = DB::table($table)->select([$table . '.id']);
+        $useFallbackReads = (!$readAtCol && !$seenCol);
         if ($titleCol) $q->addSelect(DB::raw($titleCol . ' as title'));
         else $q->addSelect(DB::raw("'' as title"));
         if ($bodyCol) $q->addSelect(DB::raw($bodyCol . ' as body'));
@@ -74,10 +77,11 @@ class ContensController extends Controller
         else $q->addSelect(DB::raw("'note' as type"));
         if ($practCol) $q->addSelect(DB::raw($practCol . ' as practitioner_id'));
         else $q->addSelect(DB::raw('NULL as practitioner_id'));
-        if ($createdAtCol) $q->addSelect($createdAtCol);
+        if ($createdAtCol) $q->addSelect(DB::raw($table . '.' . $createdAtCol . ' as created_at'));
         else $q->addSelect(DB::raw('NULL as created_at'));
         if ($readAtCol) $q->addSelect(DB::raw($readAtCol . ' as read_at'));
         else if ($seenCol) $q->addSelect(DB::raw($seenCol . ' as seen'));
+        else if ($useFallbackReads) $q->addSelect(DB::raw('cr.read_at as read_at'));
         else $q->addSelect(DB::raw('NULL as read_at'));
 
         // Filtrer par destinataire si possible, en gérant le cas employee_id -> map via employees.user_id
@@ -115,6 +119,18 @@ class ContensController extends Controller
             }
         }
 
+        // Fallback lecture: joindre la table de repli si aucune colonne native
+        if ($useFallbackReads) {
+            try {
+                $fallback = $this->getFallbackReadsTable();
+                $this->ensureFallbackReadsTable($fallback);
+                $q->leftJoin($fallback . ' as cr', function ($join) use ($table, $user) {
+                    $join->on('cr.content_id', '=', $table . '.id')
+                        ->where('cr.user_id', '=', $user->id);
+                });
+            } catch (\Throwable $e) { /* ignore */ }
+        }
+
         // Filtrer non lus si demandé
         if ($unreadOnly) {
             if ($readAtCol) {
@@ -123,14 +139,43 @@ class ContensController extends Controller
                 $q->where(function ($qq) use ($seenCol) {
                     $qq->where($seenCol, 0)->orWhereNull($seenCol);
                 });
+            } else {
+                // fallback: non lus si cr.read_at est NULL
+                $q->whereNull('cr.read_at');
             }
         }
 
         // Ordre: plus récents d'abord si created_at disponible
-        if ($createdAtCol) $q->orderByDesc($createdAtCol);
-        else $q->orderByDesc('id');
+        if ($createdAtCol) $q->orderByDesc($table . '.' . $createdAtCol);
+        else $q->orderByDesc($table . '.id');
 
         $items = $q->limit($limit)->get();
+
+        // Résoudre les noms de praticiens si un identifiant est présent
+        if ($practCol && $items->count() > 0) {
+            try {
+                $ids = $items->pluck('practitioner_id')->filter()->unique()->values();
+                if ($ids->count() > 0) {
+                    $specs = Specialist::query()
+                        ->whereIn('id', $ids)
+                        ->get();
+                    $nameMap = $specs->mapWithKeys(function (Specialist $s) {
+                        return [$s->id => $s->name];
+                    });
+                    $specMap = $specs->mapWithKeys(function (Specialist $s) {
+                        return [$s->id => $s->specialty];
+                    });
+                    $items = $items->map(function ($it) use ($nameMap, $specMap) {
+                        $pid = property_exists($it, 'practitioner_id') ? $it->practitioner_id : null;
+                        $it->practitioner_name = $pid && isset($nameMap[$pid]) ? $nameMap[$pid] : null;
+                        $it->practitioner_specialty = $pid && isset($specMap[$pid]) ? $specMap[$pid] : null;
+                        return $it;
+                    });
+                }
+            } catch (\Throwable $e) {
+                // silencieux si incapacité à résoudre les noms
+            }
+        }
         return response()->json(['items' => $items, 'count' => $items->count()]);
     }
 
@@ -149,8 +194,34 @@ class ContensController extends Controller
         $readAtCol = $this->firstExisting(['read_at', 'seen_at', 'consumed_at'], $cols);
         $seenCol = $this->firstExisting(['seen', 'is_read'], $cols);
 
+        // Si aucune colonne native pour marquer la lecture, utiliser une table de fallback
         if (!$readAtCol && !$seenCol) {
-            return response()->json(['success' => false, 'message' => 'Aucune colonne de lecture (read_at/seen_at/consumed_at ou seen)'], 400);
+            try {
+                $fallback = $this->getFallbackReadsTable();
+                $this->ensureFallbackReadsTable($fallback);
+                // upsert sur (content_id, user_id)
+                $existing = DB::table($fallback)
+                    ->where('content_id', $id)
+                    ->where('user_id', $request->user()->id)
+                    ->first();
+                $now = now();
+                if ($existing) {
+                    DB::table($fallback)
+                        ->where('id', $existing->id)
+                        ->update(['read_at' => $now, 'updated_at' => $now]);
+                } else {
+                    DB::table($fallback)->insert([
+                        'content_id' => $id,
+                        'user_id' => $request->user()->id,
+                        'read_at' => $now,
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ]);
+                }
+                return response()->json(['success' => true, 'fallback' => true]);
+            } catch (\Throwable $e) {
+                return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+            }
         }
 
         $updated = 0;
@@ -218,10 +289,58 @@ class ContensController extends Controller
             'recommendation_message' => $recomCol ? ($row->{$recomCol} ?? null) : null,
         ];
 
+        // Joindre un nom de praticien si possible
+        if (!empty($normalized['practitioner_id'])) {
+            try {
+                $spec = Specialist::find($normalized['practitioner_id']);
+                if ($spec) {
+                    $normalized['practitioner_name'] = $spec->name;
+                    $normalized['practitioner_specialty'] = $spec->specialty;
+                }
+            } catch (\Throwable $e) {
+                // ignorer
+            }
+        }
+
+        // Fallback: si pas de colonne read* et pas de seen, récupérer l'état via content_reads
+        if (!$readAtCol && !$seenCol) {
+            try {
+                $fallback = $this->getFallbackReadsTable();
+                if (Schema::hasTable($fallback)) {
+                    $ra = DB::table($fallback)
+                        ->where('content_id', $id)
+                        ->where('user_id', $request->user()->id)
+                        ->value('read_at');
+                    if ($ra) $normalized['read_at'] = $ra;
+                }
+            } catch (\Throwable $e) { /* ignore */ }
+        }
+
         return response()->json([
             'item' => $row,
             'normalized' => $normalized,
         ]);
+
+    }
+
+    private function getFallbackReadsTable(): string
+    {
+        if (Schema::hasTable('content_reads')) return 'content_reads';
+        if (Schema::hasTable('conten_reads')) return 'conten_reads';
+        return 'content_reads';
+    }
+
+    private function ensureFallbackReadsTable(string $table): void
+    {
+        if (Schema::hasTable($table)) return;
+        Schema::create($table, function (Blueprint $t) {
+            $t->bigIncrements('id');
+            $t->unsignedBigInteger('content_id');
+            $t->unsignedBigInteger('user_id');
+            $t->timestamp('read_at')->nullable();
+            $t->timestamps();
+            $t->unique(['content_id', 'user_id']);
+        });
     }
 
     private function firstExisting(array $candidates, array $available): ?string

@@ -12,6 +12,8 @@ type ContenItem = {
     url?: string | null;
     type?: string;
     practitioner_id?: number | null;
+    practitioner_name?: string | null;
+    practitioner_specialty?: string | null;
     created_at?: string | null;
     read_at?: string | null;
     seen?: number | null;
@@ -80,6 +82,16 @@ const PersonalizedContens: React.FC<PersonalizedContensProps> = ({ unreadOnly = 
                                         {it.type && <Badge variant="outline" className="text-xs">{it.type}</Badge>}
                                         {!isRead && <Badge className="text-xs">Nouveau</Badge>}
                                     </div>
+                                    {it.practitioner_name && (() => {
+                                        const name = (it.practitioner_name || '').trim();
+                                        const hasPrefix = /^Dr\.?\s/i.test(name) || /^Docteur\s/i.test(name);
+                                        const display = hasPrefix ? name : `Dr ${name}`;
+                                        return (
+                                            <div className="text-xs text-gray-500">
+                                                par {display}{it.practitioner_specialty ? ` — ${it.practitioner_specialty}` : ''}
+                                            </div>
+                                        );
+                                    })()}
                                     {contentText && <div className="text-sm text-gray-700 whitespace-pre-wrap">{contentText}</div>}
                                     <div className="text-xs text-gray-400">
                                         {it.created_at ? new Date(it.created_at).toLocaleString() : ''}
