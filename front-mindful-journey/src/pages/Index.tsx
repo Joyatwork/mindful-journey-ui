@@ -30,6 +30,7 @@ import MeditationContent from '@/components/MeditationContent';
 import BreathingContent from '@/components/BreathingContent';
 import SleepRoutineContent from '@/components/SleepRoutineContent';
 import IntelligentSuggestions from '@/components/IntelligentSuggestions';
+import PersonalizedContens from '@/components/PersonalizedContens';
 import AppointmentManagement from '@/components/AppointmentManagement';
 import { useToast } from "@/hooks/use-toast";
 import { useAppointments } from '@/hooks/useApi';
@@ -835,6 +836,8 @@ const Index = () => {
   const renderDashboard = () => {
     return (
       <div className="space-y-6 animate-fadeIn pt-4">
+        {/* Suggestions directes envoyées par le praticien (déplacé plus bas) */}
+
         {(() => {
           // Contexte pour les suggestions basées sur le dernier diagnostic
           const computedStress = savedDiagnostic ? toFiveScale(Number(savedDiagnostic.stress_level) || 3) : undefined;
@@ -1012,6 +1015,28 @@ const Index = () => {
 
         </div>
         <div className="grid grid-cols-1 gap-4 mt-2">
+          {/* Mes rendez-vous au-dessus de Mes Défis */}
+          <Button
+            onClick={() => setCurrentView('appointments')}
+            className="h-16 bg-gradient-to-br from-green-500 to-emerald-600 hover:opacity-90 text-white rounded-2xl"
+          >
+            <div className="text-center">
+              <Calendar className="h-6 w-6 mx-auto mb-1" />
+              <div className="text-sm font-medium">Mes rendez-vous</div>
+            </div>
+          </Button>
+
+          {/* Bouton pour afficher les suggestions praticien */}
+          <Button
+            onClick={() => setCurrentView('contens')}
+            className="h-16 bg-gradient-to-br from-indigo-500 to-fuchsia-600 hover:opacity-90 text-white rounded-2xl"
+          >
+            <div className="text-center">
+              <Sparkles className="h-6 w-6 mx-auto mb-1" />
+              <div className="text-sm font-medium">Suggestions de votre praticien</div>
+            </div>
+          </Button>
+
           <Button
             onClick={() => setCurrentView('challenges')}
             className="h-16 bg-gradient-to-br from-orange-400 to-pink-400 hover:opacity-90 text-white rounded-2xl relative"
@@ -1025,15 +1050,6 @@ const Index = () => {
                 {challengeList.length}
               </span>
             )}
-          </Button>
-          <Button
-            onClick={() => setCurrentView('appointments')}
-            className="h-16 bg-gradient-to-br from-green-500 to-emerald-600 hover:opacity-90 text-white rounded-2xl"
-          >
-            <div className="text-center">
-              <Calendar className="h-6 w-6 mx-auto mb-1" />
-              <div className="text-sm font-medium">Mes rendez-vous</div>
-            </div>
           </Button>
           {/* Bouton Démo Méditation retiré */}
         </div>
@@ -1180,6 +1196,23 @@ const Index = () => {
         <h1 className="text-2xl font-bold text-gray-900">Mes rendez-vous</h1>
       </div>
       <AppointmentManagement onClose={() => setCurrentView('dashboard')} />
+    </div>
+  );
+
+  const renderContens = () => (
+    <div className="space-y-4">
+      <div className="flex items-center space-x-2 mb-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setCurrentView('dashboard')}
+          className="p-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+        <h1 className="text-2xl font-bold text-gray-900">Suggestions de votre praticien</h1>
+      </div>
+      <PersonalizedContens unreadOnly={false} limit={50} />
     </div>
   );
 
@@ -3694,6 +3727,7 @@ const Index = () => {
           {currentView === 'specialist-profile' && renderSpecialistProfile()}
           {currentView === 'booking' && renderBooking()}
           {currentView === 'appointments' && renderAppointments()}
+          {currentView === 'contens' && renderContens()}
           {currentView === 'meditation' && renderMeditation()}
           {currentView === 'breathing' && renderBreathing()}
           {currentView === 'sleep-routine' && renderSleepRoutine()}

@@ -309,6 +309,18 @@ export const apiService = {
 
     getHistoryBased: () => apiRequest('/recommendations/history-based'),
   },
+
+  // Suggestions personnalisées envoyées par le praticien (table `contens`)
+  contens: {
+    list: (params?: { unreadOnly?: boolean; limit?: number }) => {
+      const search = new URLSearchParams();
+      if (params?.unreadOnly !== undefined) search.set('unreadOnly', String(params.unreadOnly));
+      if (params?.limit !== undefined) search.set('limit', String(params.limit));
+      const qs = search.toString();
+      return apiRequest(`/contens${qs ? `?${qs}` : ''}`);
+    },
+    markRead: (id: number | string) => apiRequest(`/contens/${id}/read`, { method: 'PATCH' }),
+  },
 };
 
 export default apiService;

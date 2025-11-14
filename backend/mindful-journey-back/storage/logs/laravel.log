@@ -16111,3 +16111,65 @@ Content-Transfer-Encoding: quoted-printable
 #56 C:\\Users\\camar\\Bureau\\mindful-journey-ui\\backend\\mindful-journey-back\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\resources\\server.php(23): require_once('...')
 #57 {main}
 "} 
+[2025-11-14 01:05:19] local.DEBUG: From: Example <hello@example.com>
+To: b@gmail.com
+Subject: Laravel - Votre code de connexion
+MIME-Version: 1.0
+Date: Fri, 14 Nov 2025 01:05:19 +0000
+Message-ID: <394ac990e3ce9a6c1949d4953625a79f@example.com>
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <title>Code de connexion</title>
+    <style>
+        body { font-family: Arial, sans-serif; color:#222; }
+        .code { font-size: 32px; letter-spacing: 8px; font-weight: bold; background:#f5f5f5; padding:12px 18px; display:inline-block; border-radius:8px; }
+        .container { max-width:600px; margin:0 auto; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Laravel - Connexion sécurisée</h2>
+    <p>Voici votre code de vérification (valide 10 minutes) :</p>
+    <p class="code">54233</p>
+    <p>Si vous n'êtes pas à l'origine de cette tentative, vous pouvez ignorer cet email.</p>
+    <p style="font-size:12px;color:#666;">Ne partagez jamais ce code.</p>
+</div>
+</body>
+</html>
+  
+[2025-11-14 01:22:36] local.DEBUG: From: Example <hello@example.com>
+To: b@gmail.com
+Subject: Laravel - Votre code de connexion
+MIME-Version: 1.0
+Date: Fri, 14 Nov 2025 01:22:36 +0000
+Message-ID: <c16ff0a402c8bb9a1e9e49799a111a2d@example.com>
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <title>Code de connexion</title>
+    <style>
+        body { font-family: Arial, sans-serif; color:#222; }
+        .code { font-size: 32px; letter-spacing: 8px; font-weight: bold; background:#f5f5f5; padding:12px 18px; display:inline-block; border-radius:8px; }
+        .container { max-width:600px; margin:0 auto; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Laravel - Connexion sécurisée</h2>
+    <p>Voici votre code de vérification (valide 10 minutes) :</p>
+    <p class="code">37581</p>
+    <p>Si vous n'êtes pas à l'origine de cette tentative, vous pouvez ignorer cet email.</p>
+    <p style="font-size:12px;color:#666;">Ne partagez jamais ce code.</p>
+</div>
+</body>
+</html>
+  

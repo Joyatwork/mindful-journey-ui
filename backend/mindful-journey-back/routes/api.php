@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\{
     ChallengeActionController
 };
 use App\Http\Controllers\Api\EntrepriseController;
+use App\Http\Controllers\Api\ContensController;
 use App\Models\LoginOtp; // utilisé par la route debug locale
 use App\Models\User as DebugUser; // alias pour éviter conflits éventuels
 
@@ -193,6 +194,10 @@ Route::middleware('auth:sanctum')->group(function () {
     // Rendez-vous
     Route::apiResource('appointments', AppointmentController::class);
     Route::put('appointments/{appointment}/cancel', [AppointmentController::class, 'cancel']);
+
+    // Suggestions personnalisées (table `contens`)
+    Route::get('contens', [ContensController::class, 'index']);
+    Route::patch('contens/{id}/read', [ContensController::class, 'markRead']);
 
     // Spécialistes de santé
     // IMPORTANT : mettre "search" AVANT "{specialist}" pour éviter la capture par la route dynamique
