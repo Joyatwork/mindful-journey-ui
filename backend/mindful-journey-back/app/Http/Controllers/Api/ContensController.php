@@ -41,6 +41,11 @@ class ContensController extends Controller
         // Colonnes de mapping pour affichage
         $titleCol = $this->firstExisting(['title', 'titre', 'label', 'subject'], $cols);
         $bodyCol  = $this->firstExisting(['body', 'content', 'message', 'texte', 'description'], $cols);
+        // Message de recommandation spécifique (si présent)
+        $recomCol = $this->firstExisting([
+            'recommendation_message', 'recommended_message', 'last_recommended_message',
+            'practitioner_message', 'message_recommandation', 'message_praticien', 'message_conseil'
+        ], $cols);
         $urlCol   = $this->firstExisting(['url', 'link', 'lien'], $cols);
         $typeCol  = $this->firstExisting(['type', 'category', 'categorie', 'kind'], $cols);
         $practCol = $this->firstExisting(['practitioner_id', 'praticien_id', 'specialist_id'], $cols);
@@ -56,6 +61,8 @@ class ContensController extends Controller
         else $q->addSelect(DB::raw("'' as title"));
         if ($bodyCol) $q->addSelect(DB::raw($bodyCol . ' as body'));
         else $q->addSelect(DB::raw("'' as body"));
+        if ($recomCol) $q->addSelect(DB::raw($recomCol . ' as recommendation_message'));
+        else $q->addSelect(DB::raw('NULL as recommendation_message'));
         if ($urlCol) $q->addSelect(DB::raw($urlCol . ' as url'));
         else $q->addSelect(DB::raw('NULL as url'));
         if ($typeCol) $q->addSelect(DB::raw($typeCol . ' as type'));
@@ -155,6 +162,56 @@ class ContensController extends Controller
         }
 
         return response()->json(['success' => $updated > 0, 'updated' => $updated]);
+    }
+
+    /** Détail d'une suggestion (par id) */
+    public function show(Request $request, int $id): JsonResponse
+    {
+        // Résolution table dynamique
+        $table = null;
+        if (Schema::hasTable('contents')) $table = 'contents';
+        elseif (Schema::hasTable('contens')) $table = 'contens';
+        if (!$table) {
+            return response()->json(['message' => "Table 'contents/contens' absente"], 404);
+        }
+
+        $cols = Schema::getColumnListing($table);
+        $titleCol = $this->firstExisting(['title', 'titre', 'label', 'subject'], $cols);
+        $bodyCol  = $this->firstExisting(['body', 'content', 'message', 'texte', 'description'], $cols);
+        $urlCol   = $this->firstExisting(['url', 'link', 'lien'], $cols);
+        $typeCol  = $this->firstExisting(['type', 'category', 'categorie', 'kind'], $cols);
+        $practCol = $this->firstExisting(['practitioner_id', 'praticien_id', 'specialist_id'], $cols);
+        $recomCol = $this->firstExisting([
+            'recommendation_message', 'recommended_message', 'last_recommended_message',
+            'practitioner_message', 'message_recommandation', 'message_praticien', 'message_conseil'
+        ], $cols);
+        $createdAtCol = in_array('created_at', $cols, true) ? 'created_at' : null;
+        $readAtCol = $this->firstExisting(['read_at', 'seen_at', 'consumed_at'], $cols);
+        $seenCol = $this->firstExisting(['seen', 'is_read'], $cols);
+
+        $row = DB::table($table)->where('id', $id)->first();
+        if (!$row) {
+            return response()->json(['message' => 'Suggestion introuvable'], 404);
+        }
+
+        // Normalisation minimaliste
+        $normalized = [
+            'id' => $row->id,
+            'title' => $titleCol ? ($row->{$titleCol} ?? '') : '',
+            'body' => $bodyCol ? ($row->{$bodyCol} ?? '') : '',
+            'url' => $urlCol ? ($row->{$urlCol} ?? null) : null,
+            'type' => $typeCol ? ($row->{$typeCol} ?? 'note') : 'note',
+            'practitioner_id' => $practCol ? ($row->{$practCol} ?? null) : null,
+            'created_at' => $createdAtCol ? ($row->{$createdAtCol} ?? null) : null,
+            'read_at' => $readAtCol ? ($row->{$readAtCol} ?? null) : null,
+            'seen' => $seenCol ? ($row->{$seenCol} ?? null) : null,
+            'recommendation_message' => $recomCol ? ($row->{$recomCol} ?? null) : null,
+        ];
+
+        return response()->json([
+            'item' => $row,
+            'normalized' => $normalized,
+        ]);
     }
 
     private function firstExisting(array $candidates, array $available): ?string

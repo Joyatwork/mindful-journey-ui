@@ -197,6 +197,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Suggestions personnalisées (table `contens`)
     Route::get('contens', [ContensController::class, 'index']);
+    Route::get('contens/{id}', [ContensController::class, 'show']);
     Route::patch('contens/{id}/read', [ContensController::class, 'markRead']);
 
     // Spécialistes de santé

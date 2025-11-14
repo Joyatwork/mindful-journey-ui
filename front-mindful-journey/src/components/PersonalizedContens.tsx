@@ -8,6 +8,7 @@ type ContenItem = {
     id: number;
     title?: string;
     body?: string;
+    recommendation_message?: string | null;
     url?: string | null;
     type?: string;
     practitioner_id?: number | null;
@@ -19,9 +20,10 @@ type ContenItem = {
 interface PersonalizedContensProps {
     unreadOnly?: boolean;
     limit?: number;
+    onOpen?: (id: number) => void;
 }
 
-const PersonalizedContens: React.FC<PersonalizedContensProps> = ({ unreadOnly = true, limit = 10 }) => {
+const PersonalizedContens: React.FC<PersonalizedContensProps> = ({ unreadOnly = true, limit = 10, onOpen }) => {
     const [items, setItems] = useState<ContenItem[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -69,15 +71,16 @@ const PersonalizedContens: React.FC<PersonalizedContensProps> = ({ unreadOnly = 
                 <div className="space-y-3">
                     {items.map((it) => {
                         const isRead = (it.read_at != null) || (typeof it.seen === 'number' && it.seen > 0);
+                        const contentText = it.body && it.body.trim().length > 0 ? it.body : (it.recommendation_message || '');
                         return (
-                            <div key={it.id} className="p-3 rounded-lg border bg-white/80 flex items-start justify-between gap-3">
+                            <div key={it.id} className="p-3 rounded-lg border bg-white/80 flex items-start justify-between gap-3 cursor-pointer hover:bg-white" onClick={() => onOpen?.(it.id)}>
                                 <div className="space-y-1">
                                     <div className="flex items-center gap-2">
                                         <span className="font-semibold">{it.title || 'Suggestion'}</span>
                                         {it.type && <Badge variant="outline" className="text-xs">{it.type}</Badge>}
                                         {!isRead && <Badge className="text-xs">Nouveau</Badge>}
                                     </div>
-                                    {it.body && <div className="text-sm text-gray-700 whitespace-pre-wrap">{it.body}</div>}
+                                    {contentText && <div className="text-sm text-gray-700 whitespace-pre-wrap">{contentText}</div>}
                                     <div className="text-xs text-gray-400">
                                         {it.created_at ? new Date(it.created_at).toLocaleString() : ''}
                                     </div>
@@ -87,7 +90,7 @@ const PersonalizedContens: React.FC<PersonalizedContensProps> = ({ unreadOnly = 
                                 </div>
                                 <div className="shrink-0">
                                     {!isRead ? (
-                                        <Button size="sm" onClick={() => markRead(it.id)}>Marquer lu</Button>
+                                        <Button size="sm" onClick={(e) => { e.stopPropagation(); void markRead(it.id); }}>Marquer lu</Button>
                                     ) : (
                                         <Badge variant="secondary">Lu</Badge>
                                     )}

@@ -319,6 +319,7 @@ export const apiService = {
       const qs = search.toString();
       return apiRequest(`/contens${qs ? `?${qs}` : ''}`);
     },
+    getById: (id: number | string) => apiRequest(`/contens/${id}`),
     markRead: (id: number | string) => apiRequest(`/contens/${id}/read`, { method: 'PATCH' }),
   },
 };

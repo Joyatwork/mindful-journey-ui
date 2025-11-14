@@ -1199,6 +1199,8 @@ const Index = () => {
     </div>
   );
 
+  const [selectedContenId, setSelectedContenId] = useState<number | null>(null);
+
   const renderContens = () => (
     <div className="space-y-4">
       <div className="flex items-center space-x-2 mb-2">
@@ -1212,9 +1214,95 @@ const Index = () => {
         </Button>
         <h1 className="text-2xl font-bold text-gray-900">Suggestions de votre praticien</h1>
       </div>
-      <PersonalizedContens unreadOnly={false} limit={50} />
+      <PersonalizedContens unreadOnly={false} limit={50} onOpen={(id) => { setSelectedContenId(id); setCurrentView('contens-detail'); }} />
     </div>
   );
+
+  const ContenDetailView: React.FC = () => {
+    const [state, setState] = useState<{ loading: boolean; error: string | null; data: any | null }>({ loading: true, error: null, data: null });
+    useEffect(() => {
+      let cancelled = false;
+      const load = async () => {
+        if (!selectedContenId) return;
+        setState({ loading: true, error: null, data: null });
+        try {
+          const res = await apiService.contens.getById(selectedContenId);
+          if (!cancelled) setState({ loading: false, error: null, data: res });
+        } catch (e: any) {
+          if (!cancelled) setState({ loading: false, error: e?.message || 'Erreur lors du chargement', data: null });
+        }
+      };
+      void load();
+      return () => { cancelled = true; };
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectedContenId]);
+
+    const markRead = async () => {
+      if (!selectedContenId) return;
+      try {
+        await apiService.contens.markRead(selectedContenId);
+        try {
+          const res = await apiService.contens.getById(selectedContenId);
+          setState({ loading: false, error: null, data: res });
+        } catch { }
+      } catch (e: any) {
+        setState(prev => ({ ...prev, error: e?.message || 'Erreur lors du marquage' }));
+      }
+    };
+
+    const norm = state.data?.normalized || {};
+    const raw = state.data?.item || {};
+
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center space-x-2 mb-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setCurrentView('contens')}
+            className="p-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <h1 className="text-2xl font-bold text-gray-900">Détail de la suggestion</h1>
+        </div>
+        {state.loading && <div className="text-sm text-gray-500">Chargement…</div>}
+        {state.error && <div className="text-sm text-red-600">{state.error}</div>}
+        {!state.loading && !state.error && (
+          <div className="space-y-4">
+            <div className="rounded-2xl border bg-white/80 p-4">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg font-semibold">{norm.title || 'Suggestion'}</span>
+                  {norm.type && <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 border">{norm.type}</span>}
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button size="sm" variant="outline" onClick={markRead}>Marquer lu</Button>
+                </div>
+              </div>
+              {norm.created_at && (
+                <div className="text-xs text-gray-400 mb-3">{new Date(norm.created_at).toLocaleString()}</div>
+              )}
+              {(norm.body || norm.recommendation_message) && (
+                <div className="prose prose-sm max-w-none whitespace-pre-wrap text-gray-800">{norm.body || norm.recommendation_message}</div>
+              )}
+              {norm.url && (
+                <div className="mt-3">
+                  <a href={norm.url} target="_blank" rel="noreferrer" className="text-sm text-blue-600 hover:underline">Ouvrir le lien associé</a>
+                </div>
+              )}
+            </div>
+            <div className="rounded-2xl border bg-white/60 p-4">
+              <div className="text-sm font-medium mb-2">Métadonnées</div>
+              <div className="text-xs text-gray-600 break-words">
+                <pre className="whitespace-pre-wrap">{JSON.stringify(raw, null, 2)}</pre>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   const renderDiagnostic = () => {
     if (isAnnual && !annualStarted) {
@@ -3732,6 +3820,7 @@ const Index = () => {
           {currentView === 'breathing' && renderBreathing()}
           {currentView === 'sleep-routine' && renderSleepRoutine()}
           {currentView === 'suggestions' && renderSuggestions()}
+          {currentView === 'contens-detail' && <ContenDetailView />}
         </div>
 
         {renderBottomNav()}
