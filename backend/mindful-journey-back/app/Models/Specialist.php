@@ -20,13 +20,25 @@ class Specialist extends Model
         try {
             // 1) Priorité variable d'env
             $preferred = env('PRACTITIONERS_TABLE');
-            if ($preferred && \Illuminate\Support\Facades\Schema::hasTable($preferred)) { $this->setTable($preferred); return; }
+            if ($preferred && \Illuminate\Support\Facades\Schema::hasTable($preferred)) {
+                $this->setTable($preferred);
+                return;
+            }
             // 2) Table FR
-            if (\Illuminate\Support\Facades\Schema::hasTable('praticiens')) { $this->setTable('praticiens'); return; }
+            if (\Illuminate\Support\Facades\Schema::hasTable('praticiens')) {
+                $this->setTable('praticiens');
+                return;
+            }
             // 3) Table specialists (nouvelle canonical)
-            if (\Illuminate\Support\Facades\Schema::hasTable('specialists')) { $this->setTable('specialists'); return; }
+            if (\Illuminate\Support\Facades\Schema::hasTable('specialists')) {
+                $this->setTable('specialists');
+                return;
+            }
             // 4) Fallback legacy
-            if (\Illuminate\Support\Facades\Schema::hasTable('practitioners')) { $this->setTable('practitioners'); return; }
+            if (\Illuminate\Support\Facades\Schema::hasTable('practitioners')) {
+                $this->setTable('practitioners');
+                return;
+            }
         } catch (\Throwable $e) {
             // laisser la table par défaut si Schema indisponible
         }
