@@ -32,9 +32,9 @@ try {
 }
 
 # Vérifier si les dossiers existent
-if (-not (Test-Path "back-mindful-journey-iu\mindful-journey-back")) {
+if (-not (Test-Path "backend\mindful-journey-back")) {
     Write-Host "❌ Dossier backend non trouvé!" -ForegroundColor Red
-    Write-Host "   Chemin attendu: back-mindful-journey-iu\mindful-journey-back" -ForegroundColor Yellow
+    Write-Host "   Chemin attendu: backend\mindful-journey-back" -ForegroundColor Yellow
     exit 1
 }
 
@@ -51,9 +51,9 @@ if (-not (Test-Path "node_modules")) {
 }
 
 # Vérifier les dépendances backend
-if (-not (Test-Path "back-mindful-journey-iu\mindful-journey-back\vendor")) {
+if (-not (Test-Path "backend\mindful-journey-back\vendor")) {
     Write-Host "⚠️  vendor non trouvé. Installation des dépendances Laravel..." -ForegroundColor Yellow
-    Set-Location "back-mindful-journey-iu\mindful-journey-back"
+    Set-Location "backend\mindful-journey-back"
     composer install --no-dev
     if ($LASTEXITCODE -ne 0) {
         Write-Host "❌ Erreur lors de l'installation des dépendances Laravel!" -ForegroundColor Red
@@ -66,13 +66,13 @@ Write-Host ""
 Write-Host "🔧 Configuration de l'environnement..." -ForegroundColor Yellow
 
 # Vérifier le fichier .env Laravel
-$envPath = "back-mindful-journey-iu\mindful-journey-back\.env"
+$envPath = "backend\mindful-journey-back\.env"
 if (-not (Test-Path $envPath)) {
     Write-Host "⚠️  Fichier .env Laravel non trouvé. Création à partir de .env.example..." -ForegroundColor Yellow
-    Copy-Item "back-mindful-journey-iu\mindful-journey-back\.env.example" $envPath
+    Copy-Item "backend\mindful-journey-back\.env.example" $envPath
     
     # Générer la clé d'application Laravel
-    Set-Location "back-mindful-journey-iu\mindful-journey-back"
+    Set-Location "backend\mindful-journey-back"
     php artisan key:generate
     Set-Location "..\..\"
 }
@@ -113,10 +113,19 @@ if ((netstat -ano | Select-String ':8080')) {
     return
 }
 
+Write-Host "🔌 Vérification port backend (8081)" -ForegroundColor Yellow
+Kill-Port 8081
+if ((netstat -ano | Select-String ':8081')) {
+    Write-Host "⚠️ Abandon (port 8081 non libéré). Exécute manuellement :" -ForegroundColor Red
+    Write-Host "   netstat -ano | findstr :8081" -ForegroundColor DarkCyan
+    Write-Host "   taskkill /PID <PID> /F" -ForegroundColor DarkCyan
+    return
+}
+
 Write-Host "🧪 Lancement backend Laravel (port 8081)" -ForegroundColor Yellow
-$backendDir = "..\back-mindful-journey-iu\mindful-journey-back"
+$backendDir = "..\backend\mindful-journey-back"
 if (-not (Test-Path $backendDir)) { Write-Host "❌ Backend introuvable: $backendDir" -ForegroundColor Red; Pop-Location; exit 1 }
-$laravelCmd = "cd '$backendDir'; php artisan serve --host=0.0.0.0 --port=8081"
+$laravelCmd = "cd '$backendDir'; php artisan serve --host=127.0.0.1 --port=8081"
 $laravelProcess = Start-Process powershell -ArgumentList "-NoExit","-Command", $laravelCmd -PassThru
 Start-Sleep -Seconds 3
 

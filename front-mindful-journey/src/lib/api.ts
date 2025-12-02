@@ -230,9 +230,9 @@ export const apiService = {
       return apiRequest(`/specialists/public${qs ? `?${qs}` : ''}`);
     },
 
-    getById: (id: string) => apiRequest(`/specialists/${id}`),
+    getById: (id: string) => apiRequest(`/specialists/public/${id}`),
 
-    search: (query: string) => apiRequest(`/specialists/search?q=${encodeURIComponent(query)}`),
+    search: (query: string) => apiRequest(`/specialists/public/search?q=${encodeURIComponent(query)}`),
   },
 
   // Données de santé (humeur, stress, etc.)

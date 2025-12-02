@@ -11,12 +11,12 @@ export default defineConfig(({ mode }) => ({
     strictPort: true, // on veut absolument 8080; si occupé -> erreur claire
     proxy: {
       '/api': {
-        target: 'http://localhost:8081',
+        target: 'http://127.0.0.1:8081',
         changeOrigin: true,
         secure: false,
       },
       '/sanctum': {
-        target: 'http://localhost:8081',
+        target: 'http://127.0.0.1:8081',
         changeOrigin: true,
         secure: false,
       },

@@ -63,8 +63,8 @@ class AppointmentController extends Controller
     {
         $user = $request->user();
         $validated = $request->validate([
-            // validate against the canonical practitioners table
-            'specialistId' => ['required', Rule::exists('practitioners', 'id')],
+            // Validate against the canonical specialists (or praticiens/practitioners if env overrides)
+            'specialistId' => ['required', Rule::exists(env('PRACTITIONERS_TABLE') ?: (\Illuminate\Support\Facades\Schema::hasTable('praticiens') ? 'praticiens' : (\Illuminate\Support\Facades\Schema::hasTable('specialists') ? 'specialists' : 'practitioners')), 'id')],
             'date' => 'required|date_format:Y-m-d',
             'time' => 'required|date_format:H:i',
             'type' => 'required|in:video,inPerson,phone',
@@ -142,8 +142,16 @@ class AppointmentController extends Controller
             if (\Illuminate\Support\Facades\Schema::hasColumn('users', 'entreprise_id')) {
                 $userEntrepriseId = DB::table('users')->where('id', $user->id)->value('entreprise_id');
             }
-            // 3) fallback via practitioners.entreprise_id
-            $practEntrepriseId = DB::table('practitioners')->where('id', $spec->id)->value('entreprise_id');
+            // 3) fallback via specialist underlying table entreprise_id (praticiens/specialists)
+            $practEntrepriseId = null;
+            try {
+                $specTable = (new Specialist())->getTable();
+                if (\Illuminate\Support\Facades\Schema::hasColumn($specTable, 'entreprise_id')) {
+                    $practEntrepriseId = DB::table($specTable)->where('id', $spec->id)->value('entreprise_id');
+                }
+            } catch (\Throwable $e) {
+                // ignore schema exceptions
+            }
 
             $entrepriseId = $empEntrepriseId ?? $userEntrepriseId ?? $practEntrepriseId;
 

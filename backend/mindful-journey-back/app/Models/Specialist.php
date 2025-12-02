@@ -11,31 +11,22 @@ class Specialist extends Model
 {
     use HasFactory;
 
-    // Table dynamique: `practitioners` (par défaut) ou `praticiens` (schéma FR)
-    protected $table = 'practitioners';
+    // Table dynamique: préférer `praticiens` (FR) puis `specialists`; fallback legacy `practitioners` si encore présent
+    protected $table = 'specialists';
 
     public function __construct(array $attributes = [])
     {
         parent::__construct($attributes);
         try {
-            // 1) Priorité à la variable d'environnement si définie
+            // 1) Priorité variable d'env
             $preferred = env('PRACTITIONERS_TABLE');
-            if ($preferred && \Illuminate\Support\Facades\Schema::hasTable($preferred)) {
-                $this->setTable($preferred);
-                return;
-            }
-
-            // 2) Préférer la table FR `praticiens` si présente
-            if (\Illuminate\Support\Facades\Schema::hasTable('praticiens')) {
-                $this->setTable('praticiens');
-                return;
-            }
-
-            // 3) Sinon, retomber sur `practitioners`
-            if (\Illuminate\Support\Facades\Schema::hasTable('practitioners')) {
-                $this->setTable('practitioners');
-                return;
-            }
+            if ($preferred && \Illuminate\Support\Facades\Schema::hasTable($preferred)) { $this->setTable($preferred); return; }
+            // 2) Table FR
+            if (\Illuminate\Support\Facades\Schema::hasTable('praticiens')) { $this->setTable('praticiens'); return; }
+            // 3) Table specialists (nouvelle canonical)
+            if (\Illuminate\Support\Facades\Schema::hasTable('specialists')) { $this->setTable('specialists'); return; }
+            // 4) Fallback legacy
+            if (\Illuminate\Support\Facades\Schema::hasTable('practitioners')) { $this->setTable('practitioners'); return; }
         } catch (\Throwable $e) {
             // laisser la table par défaut si Schema indisponible
         }

@@ -10,6 +10,30 @@ use Illuminate\Support\Facades\Schema;
 
 class SpecialistController extends Controller
 {
+    private function normalizeToArray($value): array
+    {
+        if (is_array($value)) return $value;
+        if (is_string($value)) {
+            $trim = trim($value);
+            if ($trim === '') return [];
+            // Try JSON decode first
+            try {
+                $decoded = json_decode($trim, true, 512, JSON_THROW_ON_ERROR);
+                if (is_array($decoded)) return $decoded;
+            } catch (\Throwable $e) {
+                // not a JSON array, fall through
+            }
+            // Comma or semicolon separated list
+            if (str_contains($trim, ',') || str_contains($trim, ';')) {
+                $parts = preg_split('/[;,]/', $trim);
+                return array_values(array_filter(array_map(fn($s) => trim((string)$s), $parts), fn($s) => $s !== ''));
+            }
+            // Single token string
+            return [$trim];
+        }
+        return [];
+    }
+
     /**
      * Liste des spécialistes avec filtres
      */
@@ -86,8 +110,8 @@ class SpecialistController extends Controller
                 'description' => $s->description ?? '',
                 'location' => $s->location ?? '',
                 'image' => $s->image_url ?? null,
-                'education' => $s->education,
-                'languages' => $s->languages,
+                'education' => $this->normalizeToArray($s->education),
+                'languages' => $this->normalizeToArray($s->languages),
                 'reviewCount' => $s->review_count ?? 0,
             ];
         });
@@ -124,8 +148,8 @@ class SpecialistController extends Controller
             'description' => $s->description ?? '',
             'location' => $s->location ?? '',
             'image' => $s->image_url ?? null,
-            'education' => $s->education,
-            'languages' => $s->languages,
+            'education' => $this->normalizeToArray($s->education),
+            'languages' => $this->normalizeToArray($s->languages),
             'reviewCount' => $s->review_count,
             'nextAvailable' => null,
             'reason' => null,
@@ -187,8 +211,8 @@ class SpecialistController extends Controller
                 'description' => $sp->description,
                 'location' => $sp->location,
                 'image' => $sp->image_url,
-                'education' => $sp->education,
-                'languages' => $sp->languages,
+                'education' => $this->normalizeToArray($sp->education),
+                'languages' => $this->normalizeToArray($sp->languages),
                 'reviewCount' => $sp->review_count,
             ];
         });

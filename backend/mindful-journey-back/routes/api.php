@@ -40,6 +40,9 @@ use App\Models\User as DebugUser; // alias pour éviter conflits éventuels
 
 // Important : définir avant "specialists/{specialist}" pour éviter la capture
 Route::get('specialists/public', [SpecialistController::class, 'publicIndex']);
+// Rendre la consultation d'un spécialiste et la recherche accessibles publiquement
+Route::get('specialists/public/search', [SpecialistController::class, 'search']);
+Route::get('specialists/public/{specialist}', [SpecialistController::class, 'show']);
 
 // Liste des entreprises pour le formulaire d'inscription
 Route::get('entreprises', [EntrepriseController::class, 'index']);

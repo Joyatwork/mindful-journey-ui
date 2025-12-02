@@ -282,6 +282,7 @@ const LoginPage = () => {
                       value={loginForm.email}
                       onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
                       required
+                      autoComplete="username"
                     />
                   </div>
                   <div className="space-y-2">
@@ -398,6 +399,7 @@ const LoginPage = () => {
                     value={registerForm.email}
                     onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })}
                     required
+                    autoComplete="email"
                   />
                 </div>
                 <div className="space-y-2">
@@ -511,6 +513,7 @@ const LoginPage = () => {
                     onChange={(e) => setForgotEmail(e.target.value)}
                     placeholder="votre@email.com"
                     required
+                    autoComplete="email"
                   />
                 </div>
                 <div className="flex gap-2">
