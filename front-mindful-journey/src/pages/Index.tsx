@@ -3630,14 +3630,13 @@ const Index = () => {
                   {c.description && <p className="text-xs text-gray-600 mt-0.5">{c.description}</p>}
                 </div>
                 <div className="flex items-center gap-2 ml-2 flex-shrink-0">
-                  <span className={`text-xs px-2 py-1 rounded-full font-semibold whitespace-nowrap ${
-                    c.status === 'finished' ? 'bg-green-100 text-green-800' :
-                    c.status === 'in_progress' ? 'bg-yellow-100 text-yellow-800' :
-                    'bg-gray-100 text-gray-800'
-                  }`}>
+                  <span className={`text-xs px-2 py-1 rounded-full font-semibold whitespace-nowrap ${c.status === 'finished' ? 'bg-green-100 text-green-800' :
+                      c.status === 'in_progress' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-gray-100 text-gray-800'
+                    }`}>
                     {c.status === 'finished' ? '✓ Terminé' :
-                     c.status === 'in_progress' ? '⏳ En cours' :
-                     'Non démarré'}
+                      c.status === 'in_progress' ? '⏳ En cours' :
+                        'Non démarré'}
                   </span>
                   {c.status === 'not_started' && (
                     <Button
