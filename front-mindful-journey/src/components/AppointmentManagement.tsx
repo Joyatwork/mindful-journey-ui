@@ -7,6 +7,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { 
   Calendar,
   Clock,
@@ -14,7 +20,8 @@ import {
   MapPin,
   Trash2,
   Edit,
-  Phone
+  Phone,
+  MoreVertical
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAppointments } from '@/hooks/useApi';
@@ -235,19 +242,32 @@ const AppointmentManagement = ({ onClose }: AppointmentManagementProps) => {
                               onSave={handleSaveEdit}
                               onCancel={() => setEditingAppointment(null)}
                               availableTimes={availableTimes}
+                              onCancelAppointment={handleCancelAppointment}
                             />
                           )}
                         </DialogContent>
                       </Dialog>
                       
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleCancelAppointment(appointment.id)}
-                        className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                          >
+                            <MoreVertical className="h-3 w-3" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-32">
+                          <DropdownMenuItem
+                            onClick={() => handleCancelAppointment(appointment.id)}
+                            className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
+                          >
+                            <Trash2 className="h-3 w-3 mr-2" />
+                            Annuler
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </>
                   )}
                   {appointment.status === 'cancelled' && (
@@ -275,12 +295,14 @@ const EditAppointmentForm = ({
   appointment, 
   onSave, 
   onCancel, 
-  availableTimes 
+  availableTimes,
+  onCancelAppointment
 }: {
   appointment: Appointment;
   onSave: (appointment: Appointment) => void;
   onCancel: () => void;
   availableTimes: string[];
+  onCancelAppointment?: (appointmentId: string) => void;
 }) => {
   const [date, setDate] = useState(appointment.date);
   const [time, setTime] = useState(appointment.time);
@@ -365,6 +387,23 @@ const EditAppointmentForm = ({
         </Button>
         <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
           Annuler
+        </Button>
+      </div>
+
+      <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+        <Button 
+          type="button" 
+          variant="destructive"
+          onClick={() => {
+            if (onCancelAppointment) {
+              onCancelAppointment(appointment.id);
+              onCancel();
+            }
+          }}
+          className="w-full"
+        >
+          <Trash2 className="h-4 w-4 mr-2" />
+          Annuler le rendez-vous
         </Button>
       </div>
     </form>
