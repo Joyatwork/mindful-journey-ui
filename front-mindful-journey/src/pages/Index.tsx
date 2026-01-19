@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import testApiService from '@/lib/test-api';
 import apiService from '@/lib/api';
@@ -3622,19 +3622,66 @@ const Index = () => {
             {' '}·{' '}En cours: {challengeList.filter(c => c.status === 'in_progress').length}
             {' '}·{' '}Non démarrés: {challengeList.filter(c => c.status === 'not_started').length}
           </div>
-          <ul className="space-y-1 text-sm">
+          <div className="space-y-2">
             {challengeList.map((c) => (
-              <li key={c.id} className="flex items-center justify-between">
-                <span>{c.title}</span>
-                <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100">
-                  {c.status}{c.completed_at ? ` • ${new Date(c.completed_at).toLocaleString()}` : ''}
-                </span>
-              </li>
+              <div key={c.id} className="flex items-start justify-between p-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-100">
+                <div className="flex-1">
+                  <p className="font-medium text-sm">{c.title}</p>
+                  {c.description && <p className="text-xs text-gray-600 mt-0.5">{c.description}</p>}
+                </div>
+                <div className="flex items-center gap-2 ml-2 flex-shrink-0">
+                  <span className={`text-xs px-2 py-1 rounded-full font-semibold whitespace-nowrap ${
+                    c.status === 'finished' ? 'bg-green-100 text-green-800' :
+                    c.status === 'in_progress' ? 'bg-yellow-100 text-yellow-800' :
+                    'bg-gray-100 text-gray-800'
+                  }`}>
+                    {c.status === 'finished' ? '✓ Terminé' :
+                     c.status === 'in_progress' ? '⏳ En cours' :
+                     'Non démarré'}
+                  </span>
+                  {c.status === 'not_started' && (
+                    <Button
+                      size="sm"
+                      onClick={async () => {
+                        try {
+                          await testApiService.challenges.start(c.id);
+                          toast({ title: 'Défi démarré !' });
+                          await loadChallenges();
+                        } catch (e: any) {
+                          console.error('Erreur:', e);
+                          toast({ title: 'Erreur', description: 'Impossible de démarrer le défi', variant: 'destructive' });
+                        }
+                      }}
+                      className="bg-wellness-gradient hover:opacity-90 text-white whitespace-nowrap"
+                    >
+                      Démarrer
+                    </Button>
+                  )}
+                  {c.status === 'in_progress' && (
+                    <Button
+                      size="sm"
+                      onClick={async () => {
+                        try {
+                          await testApiService.challenges.finish(c.id);
+                          toast({ title: 'Défi terminé ! 🎉' });
+                          await loadChallenges();
+                        } catch (e: any) {
+                          console.error('Erreur:', e);
+                          toast({ title: 'Erreur', description: 'Impossible de terminer le défi', variant: 'destructive' });
+                        }
+                      }}
+                      className="bg-green-500 hover:bg-green-600 text-white whitespace-nowrap"
+                    >
+                      Terminer
+                    </Button>
+                  )}
+                </div>
+              </div>
             ))}
             {challengeList.length === 0 && (
-              <li className="text-gray-500 text-sm">Aucun défi pour l’instant</li>
+              <div className="text-gray-500 text-sm">Aucun défi pour l'instant</div>
             )}
-          </ul>
+          </div>
         </div>
       </div>
     </div>
