@@ -398,21 +398,45 @@ class AuthController extends Controller
         Log::info('=== DÉBUT UPDATE PROFILE ===');
         Log::info('Données reçues:', $request->all());
 
-        // Use validated data and capture it
+        // Normalize incoming snake_case keys to camelCase for consistent validation
+        $input = $request->all();
+        if (isset($input['birth_date']) && !isset($input['birthDate'])) {
+            $input['birthDate'] = $input['birth_date'];
+        }
+        if (isset($input['job_position']) && !isset($input['jobPosition'])) {
+            $input['jobPosition'] = $input['job_position'];
+        }
+
+        // Use validated data and capture it - accept both formats
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . $request->user()->id,
+            'name' => 'sometimes|string|max:255',
+            'email' => 'sometimes|string|email|max:255|unique:users,email,' . $request->user()->id,
             'phone' => 'nullable|string|max:20',
             'location' => 'nullable|string|max:255',
             'birthDate' => 'nullable|date',
+            'birth_date' => 'nullable|date',
             'jobPosition' => 'nullable|string|max:255',
+            'job_position' => 'nullable|string|max:255',
             'company' => 'nullable|string|max:255',
             'bio' => 'nullable|string|max:1000',
             'goals' => 'nullable|string|max:1000',
             'avatar' => 'nullable|file|image|mimes:jpg,jpeg,png,webp|max:5120',
             // Allow providing an external URL as an alternative to file upload
             'avatar_url' => 'nullable|string|url|max:2048'
+        ], [], [
+            'birthDate' => 'date de naissance (birthDate)',
+            'birth_date' => 'date de naissance (birth_date)',
+            'jobPosition' => 'poste (jobPosition)',
+            'job_position' => 'poste (job_position)'
         ]);
+        
+        // Normalize: prefer camelCase validated keys, keep snake_case if present
+        if (isset($validated['birth_date']) && !isset($validated['birthDate'])) {
+            $validated['birthDate'] = $validated['birth_date'];
+        }
+        if (isset($validated['job_position']) && !isset($validated['jobPosition'])) {
+            $validated['jobPosition'] = $validated['job_position'];
+        }
 
         $user = $request->user();
         Log::info('Utilisateur avant modification:', $user->toArray());
