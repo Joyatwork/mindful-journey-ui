@@ -13,7 +13,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { 
+import {
   Calendar,
   Clock,
   Video,
@@ -70,11 +70,11 @@ const AppointmentManagement = ({ onClose }: AppointmentManagementProps) => {
       pending: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-200',
       cancelled: 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-200'
     };
-    
+
     return (
       <Badge className={variants[status as keyof typeof variants]}>
-        {status === 'confirmed' ? 'Confirmé' : 
-         status === 'pending' ? 'En attente' : 'Annulé'}
+        {status === 'confirmed' ? 'Confirmé' :
+          status === 'pending' ? 'En attente' : 'Annulé'}
       </Badge>
     );
   };
@@ -116,8 +116,8 @@ const AppointmentManagement = ({ onClose }: AppointmentManagementProps) => {
 
   const handleSaveEdit = (updatedAppointment: Appointment) => {
     // Toujours via l'API
-    updateAppointment({ 
-      id: updatedAppointment.id, 
+    updateAppointment({
+      id: updatedAppointment.id,
       data: {
         date: updatedAppointment.date,
         time: updatedAppointment.time,
@@ -127,7 +127,7 @@ const AppointmentManagement = ({ onClose }: AppointmentManagementProps) => {
     });
 
     setEditingAppointment(null);
-    
+
     toast({
       title: "Rendez-vous modifié",
       description: "Votre rendez-vous a été modifié avec succès.",
@@ -166,7 +166,7 @@ const AppointmentManagement = ({ onClose }: AppointmentManagementProps) => {
             Chargement des rendez-vous...
           </p>
         )}
-        
+
         {/* Si aucun rendez-vous, afficher l'état vide (pas de praticiens) */}
         {appointments.length === 0 && !isLoading ? (
           <p className="text-center text-gray-500 dark:text-gray-400 py-8">
@@ -182,7 +182,7 @@ const AppointmentManagement = ({ onClose }: AppointmentManagementProps) => {
                       {appointment.specialistName.split(' ').map(n => n[0]).join('')}
                     </AvatarFallback>
                   </Avatar>
-                  
+
                   <div className="flex-1">
                     <h3 className="font-semibold text-sm text-gray-900 dark:text-white">
                       {appointment.specialistName}
@@ -190,7 +190,7 @@ const AppointmentManagement = ({ onClose }: AppointmentManagementProps) => {
                     <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
                       {appointment.specialty}
                     </p>
-                    
+
                     <div className="flex items-center space-x-4 text-xs text-gray-500 dark:text-gray-400 mb-2">
                       <div className="flex items-center space-x-1">
                         <Calendar className="h-3 w-3" />
@@ -204,11 +204,11 @@ const AppointmentManagement = ({ onClose }: AppointmentManagementProps) => {
                         {getTypeIcon(appointment.type)}
                         <span>
                           {appointment.type === 'video' ? 'Visio' :
-                           appointment.type === 'phone' ? 'Téléphone' : 'Présentiel'}
+                            appointment.type === 'phone' ? 'Téléphone' : 'Présentiel'}
                         </span>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center space-x-2">
                       {getStatusBadge(appointment.status)}
                       <Badge variant="outline" className="text-xs">
@@ -217,7 +217,7 @@ const AppointmentManagement = ({ onClose }: AppointmentManagementProps) => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="flex space-x-1">
                   {appointment.status !== 'cancelled' && (
                     <>
@@ -247,7 +247,7 @@ const AppointmentManagement = ({ onClose }: AppointmentManagementProps) => {
                           )}
                         </DialogContent>
                       </Dialog>
-                      
+
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button
@@ -291,10 +291,10 @@ const AppointmentManagement = ({ onClose }: AppointmentManagementProps) => {
 };
 
 // Composant pour l'édition d'un rendez-vous
-const EditAppointmentForm = ({ 
-  appointment, 
-  onSave, 
-  onCancel, 
+const EditAppointmentForm = ({
+  appointment,
+  onSave,
+  onCancel,
   availableTimes,
   onCancelAppointment
 }: {
@@ -391,8 +391,8 @@ const EditAppointmentForm = ({
       </div>
 
       <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
-        <Button 
-          type="button" 
+        <Button
+          type="button"
           variant="destructive"
           onClick={() => {
             if (onCancelAppointment) {
