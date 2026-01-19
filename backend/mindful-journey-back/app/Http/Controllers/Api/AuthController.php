@@ -429,7 +429,7 @@ class AuthController extends Controller
             'jobPosition' => 'poste (jobPosition)',
             'job_position' => 'poste (job_position)'
         ]);
-        
+
         // Normalize: prefer camelCase validated keys, keep snake_case if present
         if (isset($validated['birth_date']) && !isset($validated['birthDate'])) {
             $validated['birthDate'] = $validated['birth_date'];
