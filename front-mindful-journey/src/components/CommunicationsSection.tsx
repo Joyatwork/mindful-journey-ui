@@ -11,7 +11,10 @@ import {
     Heart,
     ArrowRight,
     AlertCircle,
-    Loader2
+    Loader2,
+    Menu,
+    ChevronDown,
+    X
 } from 'lucide-react';
 
 interface Communication {
@@ -62,6 +65,7 @@ export const CommunicationsSection: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
     const [interestIds, setInterestIds] = useState<Set<number>>(new Set());
+    const [menuOpen, setMenuOpen] = useState(false);
 
     // Charger les communications
     useEffect(() => {
@@ -148,28 +152,55 @@ export const CommunicationsSection: React.FC = () => {
                 </Badge>
             </div>
 
-            {/* Filtres */}
+            {/* Menu burger filtres */}
             {types.length > 0 && (
-                <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1">
+                <div className="relative">
                     <Button
-                        onClick={() => setSelectedFilter(null)}
-                        variant={selectedFilter === null ? 'default' : 'outline'}
+                        onClick={() => setMenuOpen(!menuOpen)}
+                        variant="outline"
                         size="sm"
-                        className="whitespace-nowrap flex-shrink-0"
+                        className="w-full justify-between"
                     >
-                        Tous
+                        <span className="flex items-center gap-2">
+                            <Menu className="h-4 w-4" />
+                            {selectedFilter ? typeLabels[selectedFilter] : 'Toutes les annonces'}
+                        </span>
+                        <ChevronDown className={`h-4 w-4 transition-transform ${menuOpen ? 'rotate-180' : ''}`} />
                     </Button>
-                    {types.map(type => (
-                        <Button
-                            key={type}
-                            onClick={() => setSelectedFilter(type)}
-                            variant={selectedFilter === type ? 'default' : 'outline'}
-                            size="sm"
-                            className="whitespace-nowrap flex-shrink-0"
-                        >
-                            {typeLabels[type] || type}
-                        </Button>
-                    ))}
+                    
+                    {menuOpen && (
+                        <>
+                            {/* Overlay pour fermer */}
+                            <div 
+                                className="fixed inset-0 z-10" 
+                                onClick={() => setMenuOpen(false)}
+                            />
+                            {/* Menu dropdown */}
+                            <div className="absolute top-full left-0 right-0 mt-1 bg-white border rounded-lg shadow-lg z-20 overflow-hidden">
+                                <button
+                                    onClick={() => { setSelectedFilter(null); setMenuOpen(false); }}
+                                    className={`w-full px-4 py-3 text-left text-sm flex items-center justify-between hover:bg-gray-50 ${
+                                        selectedFilter === null ? 'bg-blue-50 text-blue-700 font-medium' : ''
+                                    }`}
+                                >
+                                    Toutes les annonces
+                                    {selectedFilter === null && <span className="text-blue-600">✓</span>}
+                                </button>
+                                {types.map(type => (
+                                    <button
+                                        key={type}
+                                        onClick={() => { setSelectedFilter(type); setMenuOpen(false); }}
+                                        className={`w-full px-4 py-3 text-left text-sm flex items-center justify-between hover:bg-gray-50 border-t ${
+                                            selectedFilter === type ? 'bg-blue-50 text-blue-700 font-medium' : ''
+                                        }`}
+                                    >
+                                        {typeLabels[type] || type}
+                                        {selectedFilter === type && <span className="text-blue-600">✓</span>}
+                                    </button>
+                                ))}
+                            </div>
+                        </>
+                    )}
                 </div>
             )}
 

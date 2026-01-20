@@ -20015,3 +20015,65 @@ Content-Transfer-Encoding: quoted-printable
 [2026-01-20 11:58:46] local.INFO: ProfileController:update - avatar path: avatars/wIbFRkCZEQhVF0uVQFg56hKcY2uEGGWIVhKKekjc.jpg  
 [2026-01-20 11:58:46] local.INFO: ProfileController:update - user avatar (db): avatars/wIbFRkCZEQhVF0uVQFg56hKcY2uEGGWIVhKKekjc.jpg  
 [2026-01-20 11:58:46] local.INFO: ProfileController:update - user avatar_url (accessor): http://127.0.0.1:8081/storage/avatars/wIbFRkCZEQhVF0uVQFg56hKcY2uEGGWIVhKKekjc.jpg  
+[2026-01-20 12:35:59] local.DEBUG: From: Example <hello@example.com>
+To: b@gmail.com
+Subject: Laravel - Votre code de connexion
+MIME-Version: 1.0
+Date: Tue, 20 Jan 2026 12:35:59 +0000
+Message-ID: <5db8f76d97b6d04d86204d048d50af7e@example.com>
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <title>Code de connexion</title>
+    <style>
+        body { font-family: Arial, sans-serif; color:#222; }
+        .code { font-size: 32px; letter-spacing: 8px; font-weight: bold; background:#f5f5f5; padding:12px 18px; display:inline-block; border-radius:8px; }
+        .container { max-width:600px; margin:0 auto; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Laravel - Connexion sécurisée</h2>
+    <p>Voici votre code de vérification (valide 10 minutes) :</p>
+    <p class="code">80807</p>
+    <p>Si vous n'êtes pas à l'origine de cette tentative, vous pouvez ignorer cet email.</p>
+    <p style="font-size:12px;color:#666;">Ne partagez jamais ce code.</p>
+</div>
+</body>
+</html>
+  
+[2026-01-20 14:11:55] local.DEBUG: From: Example <hello@example.com>
+To: mara291@gmail.com
+Subject: Laravel - Votre code de connexion
+MIME-Version: 1.0
+Date: Tue, 20 Jan 2026 14:11:55 +0000
+Message-ID: <8218c92c62a95137381403cfe464c40d@example.com>
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <title>Code de connexion</title>
+    <style>
+        body { font-family: Arial, sans-serif; color:#222; }
+        .code { font-size: 32px; letter-spacing: 8px; font-weight: bold; background:#f5f5f5; padding:12px 18px; display:inline-block; border-radius:8px; }
+        .container { max-width:600px; margin:0 auto; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Laravel - Connexion sécurisée</h2>
+    <p>Voici votre code de vérification (valide 10 minutes) :</p>
+    <p class="code">51040</p>
+    <p>Si vous n'êtes pas à l'origine de cette tentative, vous pouvez ignorer cet email.</p>
+    <p style="font-size:12px;color:#666;">Ne partagez jamais ce code.</p>
+</div>
+</body>
+</html>
+  
