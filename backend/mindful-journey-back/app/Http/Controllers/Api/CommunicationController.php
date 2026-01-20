@@ -19,7 +19,7 @@ class CommunicationController extends Controller
         try {
             /** @var User|null $user */
             $user = Auth::user();
-            
+
             if (!$user) {
                 return response()->json(['error' => 'Unauthorized'], 401);
             }
@@ -35,7 +35,6 @@ class CommunicationController extends Controller
                 'data' => $communications,
                 'count' => $communications->count()
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Erreur lors de la récupération des communications',
@@ -52,7 +51,7 @@ class CommunicationController extends Controller
         try {
             /** @var User|null $user */
             $user = Auth::user();
-            
+
             if (!$user) {
                 return response()->json(['error' => 'Unauthorized'], 401);
             }
@@ -69,7 +68,6 @@ class CommunicationController extends Controller
                 'success' => true,
                 'data' => $communication
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Communication non trouvée',
@@ -86,7 +84,7 @@ class CommunicationController extends Controller
         try {
             /** @var User|null $user */
             $user = Auth::user();
-            
+
             if (!$user) {
                 return response()->json(['error' => 'Unauthorized'], 401);
             }
@@ -101,7 +99,6 @@ class CommunicationController extends Controller
                 'success' => true,
                 'message' => 'Intérêt enregistré'
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Erreur lors de l\'enregistrement',
@@ -118,7 +115,7 @@ class CommunicationController extends Controller
         try {
             /** @var User|null $user */
             $user = Auth::user();
-            
+
             if (!$user) {
                 return response()->json(['error' => 'Unauthorized'], 401);
             }
@@ -133,7 +130,6 @@ class CommunicationController extends Controller
                 'success' => true,
                 'message' => 'Clic enregistré'
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Erreur lors de l\'enregistrement',
@@ -150,13 +146,13 @@ class CommunicationController extends Controller
         try {
             /** @var User|null $user */
             $user = Auth::user();
-            
+
             if (!$user) {
                 return response()->json(['error' => 'Unauthorized'], 401);
             }
 
             $validTypes = ['annonce', 'campagne', 'evenement', 'barometre', 'bilan', 'conseil', 'autre'];
-            
+
             if (!in_array($type, $validTypes)) {
                 return response()->json(['error' => 'Type invalide'], 400);
             }
@@ -172,7 +168,6 @@ class CommunicationController extends Controller
                 'data' => $communications,
                 'count' => $communications->count()
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Erreur lors du filtrage',

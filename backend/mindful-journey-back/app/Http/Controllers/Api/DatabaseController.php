@@ -23,11 +23,11 @@ class DatabaseController extends Controller
 
             // Récupérer les informations de toutes les colonnes de la table challenges
             $columns = DB::select(
-                'SELECT COLUMN_NAME AS column_name, DATA_TYPE AS data_type, COLUMN_TYPE AS column_type, 
-                        IS_NULLABLE AS is_nullable, COLUMN_DEFAULT AS column_default, 
+                'SELECT COLUMN_NAME AS column_name, DATA_TYPE AS data_type, COLUMN_TYPE AS column_type,
+                        IS_NULLABLE AS is_nullable, COLUMN_DEFAULT AS column_default,
                         EXTRA AS extra, COLUMN_KEY AS column_key, ORDINAL_POSITION AS ordinal_position
-                 FROM INFORMATION_SCHEMA.COLUMNS 
-                 WHERE TABLE_SCHEMA = ? AND TABLE_NAME = "challenges" 
+                 FROM INFORMATION_SCHEMA.COLUMNS
+                 WHERE TABLE_SCHEMA = ? AND TABLE_NAME = "challenges"
                  ORDER BY ORDINAL_POSITION',
                 [$schema]
             );
@@ -48,7 +48,7 @@ class DatabaseController extends Controller
                 if ($col->extra === 'auto_increment') $keys[] = 'AI';
                 if ($col->is_nullable === 'NO') $keys[] = 'NOT NULL';
                 if ($col->is_nullable === 'YES') $keys[] = 'NULLABLE';
-                
+
                 $formattedColumns[] = [
                     'name' => $col->column_name,
                     'type' => $col->column_type,
@@ -59,7 +59,7 @@ class DatabaseController extends Controller
 
             // Récupérer aussi les statistiques de la table
             $tableStats = DB::selectOne(
-                'SELECT TABLE_ROWS as total_rows FROM INFORMATION_SCHEMA.TABLES 
+                'SELECT TABLE_ROWS as total_rows FROM INFORMATION_SCHEMA.TABLES
                  WHERE TABLE_SCHEMA = ? AND TABLE_NAME = "challenges"',
                 [$schema]
             );

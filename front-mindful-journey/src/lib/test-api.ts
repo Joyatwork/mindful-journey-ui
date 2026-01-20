@@ -297,7 +297,8 @@ const testApiService = {
     filterByType: async (type: string) => {
       const response = await testApiRequest(`/communications/type/${type}`);
       return response.data;
-    }  }
+    }
+  }
 };
 
 export default testApiService;
