@@ -270,7 +270,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('communications/{id}/interest', [CommunicationController::class, 'recordInterest']);
     Route::post('communications/{id}/cta-click', [CommunicationController::class, 'recordCtaClick']);
     Route::get('communications/type/{type}', [CommunicationController::class, 'filterByType']);
-    
+
     // --- Participation aux campagnes ---
     Route::post('communications/{id}/join', [CommunicationController::class, 'joinCampaign']);
     Route::post('communications/{id}/leave', [CommunicationController::class, 'leaveCampaign']);

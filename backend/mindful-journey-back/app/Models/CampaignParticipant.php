@@ -10,7 +10,7 @@ class CampaignParticipant extends Model
     use HasFactory;
 
     protected $table = 'campaign_participants';
-    
+
     public $timestamps = false;
 
     protected $fillable = [
@@ -50,7 +50,7 @@ class CampaignParticipant extends Model
     protected function setKeysForSaveQuery($query)
     {
         $query->where('campaign_id', '=', $this->getAttribute('campaign_id'))
-              ->where('employee_id', '=', $this->getAttribute('employee_id'));
+            ->where('employee_id', '=', $this->getAttribute('employee_id'));
         return $query;
     }
 }

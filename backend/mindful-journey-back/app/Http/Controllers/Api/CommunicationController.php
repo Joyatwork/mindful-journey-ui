@@ -60,11 +60,11 @@ class CommunicationController extends Controller
                             ->where('employee_id', $employeeId)
                             ->first();
                     }
-                    
+
                     // Vérifier si participant actif (joined, pas withdrawn)
-                    $isParticipant = $participation !== null && 
+                    $isParticipant = $participation !== null &&
                         $participation->status === 'joined';
-                    
+
                     // Transformer en format communication
                     return (object)[
                         'id' => $campaign->id,
@@ -267,7 +267,7 @@ class CommunicationController extends Controller
 
             // Récupérer l'employee_id de l'utilisateur
             $employee = Employee::where('user_id', $user->id)->first();
-            
+
             if (!$employee) {
                 return response()->json([
                     'error' => 'Profil employé non trouvé'
@@ -285,14 +285,14 @@ class CommunicationController extends Controller
                     $existing->status = 'joined';
                     $existing->joined_at = now();
                     $existing->save();
-                    
+
                     return response()->json([
                         'success' => true,
                         'message' => 'Réinscription à la campagne effectuée',
                         'status' => 'joined'
                     ]);
                 }
-                
+
                 return response()->json([
                     'error' => 'Vous êtes déjà inscrit à cette campagne',
                     'status' => $existing->status
@@ -313,7 +313,6 @@ class CommunicationController extends Controller
                 'message' => 'Inscription à la campagne effectuée',
                 'status' => 'joined'
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Erreur lors de l\'inscription',
@@ -336,7 +335,7 @@ class CommunicationController extends Controller
             }
 
             $employee = Employee::where('user_id', $user->id)->first();
-            
+
             if (!$employee) {
                 return response()->json(['error' => 'Profil employé non trouvé'], 404);
             }
@@ -362,7 +361,6 @@ class CommunicationController extends Controller
                 'message' => 'Désinscription effectuée',
                 'status' => 'withdrawn'
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Erreur lors de la désinscription',
@@ -385,7 +383,7 @@ class CommunicationController extends Controller
             }
 
             $employee = Employee::where('user_id', $user->id)->first();
-            
+
             if (!$employee) {
                 return response()->json([
                     'is_participant' => false,
@@ -404,7 +402,6 @@ class CommunicationController extends Controller
                 'progress' => $participation?->progress,
                 'joined_at' => $participation?->joined_at
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Erreur',

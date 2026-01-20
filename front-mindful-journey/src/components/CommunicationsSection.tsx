@@ -127,8 +127,8 @@ export const CommunicationsSection: React.FC = () => {
         try {
             await testApiService.communications.joinCampaign(commId);
             // Mettre à jour l'état local
-            setCommunications(prev => prev.map(c => 
-                c.id === commId 
+            setCommunications(prev => prev.map(c =>
+                c.id === commId
                     ? { ...c, is_participant: true, participation_status: 'joined' as const }
                     : c
             ));
@@ -151,8 +151,8 @@ export const CommunicationsSection: React.FC = () => {
         setJoiningCampaign(commId);
         try {
             await testApiService.communications.leaveCampaign(commId);
-            setCommunications(prev => prev.map(c => 
-                c.id === commId 
+            setCommunications(prev => prev.map(c =>
+                c.id === commId
                     ? { ...c, is_participant: false, participation_status: 'withdrawn' as const }
                     : c
             ));
