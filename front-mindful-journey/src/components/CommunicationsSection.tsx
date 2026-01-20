@@ -167,21 +167,20 @@ export const CommunicationsSection: React.FC = () => {
                         </span>
                         <ChevronDown className={`h-4 w-4 transition-transform ${menuOpen ? 'rotate-180' : ''}`} />
                     </Button>
-                    
+
                     {menuOpen && (
                         <>
                             {/* Overlay pour fermer */}
-                            <div 
-                                className="fixed inset-0 z-10" 
+                            <div
+                                className="fixed inset-0 z-10"
                                 onClick={() => setMenuOpen(false)}
                             />
                             {/* Menu dropdown */}
                             <div className="absolute top-full left-0 right-0 mt-1 bg-white border rounded-lg shadow-lg z-20 overflow-hidden">
                                 <button
                                     onClick={() => { setSelectedFilter(null); setMenuOpen(false); }}
-                                    className={`w-full px-4 py-3 text-left text-sm flex items-center justify-between hover:bg-gray-50 ${
-                                        selectedFilter === null ? 'bg-blue-50 text-blue-700 font-medium' : ''
-                                    }`}
+                                    className={`w-full px-4 py-3 text-left text-sm flex items-center justify-between hover:bg-gray-50 ${selectedFilter === null ? 'bg-blue-50 text-blue-700 font-medium' : ''
+                                        }`}
                                 >
                                     Toutes les annonces
                                     {selectedFilter === null && <span className="text-blue-600">✓</span>}
@@ -190,9 +189,8 @@ export const CommunicationsSection: React.FC = () => {
                                     <button
                                         key={type}
                                         onClick={() => { setSelectedFilter(type); setMenuOpen(false); }}
-                                        className={`w-full px-4 py-3 text-left text-sm flex items-center justify-between hover:bg-gray-50 border-t ${
-                                            selectedFilter === type ? 'bg-blue-50 text-blue-700 font-medium' : ''
-                                        }`}
+                                        className={`w-full px-4 py-3 text-left text-sm flex items-center justify-between hover:bg-gray-50 border-t ${selectedFilter === type ? 'bg-blue-50 text-blue-700 font-medium' : ''
+                                            }`}
                                     >
                                         {typeLabels[type] || type}
                                         {selectedFilter === type && <span className="text-blue-600">✓</span>}
