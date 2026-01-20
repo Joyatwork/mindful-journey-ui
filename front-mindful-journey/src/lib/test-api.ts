@@ -297,6 +297,24 @@ const testApiService = {
     filterByType: async (type: string) => {
       const response = await testApiRequest(`/communications/type/${type}`);
       return response.data;
+    },
+
+    // Participation aux campagnes
+    joinCampaign: async (id: string | number) => {
+      return testApiRequest(`/communications/${id}/join`, {
+        method: 'POST'
+      });
+    },
+
+    leaveCampaign: async (id: string | number) => {
+      return testApiRequest(`/communications/${id}/leave`, {
+        method: 'POST'
+      });
+    },
+
+    getCampaignStatus: async (id: string | number) => {
+      const response = await testApiRequest(`/communications/${id}/participation`);
+      return response;
     }
   }
 };

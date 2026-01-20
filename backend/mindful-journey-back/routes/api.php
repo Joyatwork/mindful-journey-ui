@@ -270,6 +270,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('communications/{id}/interest', [CommunicationController::class, 'recordInterest']);
     Route::post('communications/{id}/cta-click', [CommunicationController::class, 'recordCtaClick']);
     Route::get('communications/type/{type}', [CommunicationController::class, 'filterByType']);
+    
+    // --- Participation aux campagnes ---
+    Route::post('communications/{id}/join', [CommunicationController::class, 'joinCampaign']);
+    Route::post('communications/{id}/leave', [CommunicationController::class, 'leaveCampaign']);
+    Route::get('communications/{id}/participation', [CommunicationController::class, 'getCampaignStatus']);
 
     // Dev helper: créer le mapping employé pour l'utilisateur courant (local uniquement recommandé)
     Route::post('test/employees/map-current', [DatabaseController::class, 'mapCurrentUserToEmployee']);

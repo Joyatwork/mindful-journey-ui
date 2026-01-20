@@ -10,11 +10,12 @@ import {
     Eye,
     Heart,
     ArrowRight,
-    AlertCircle,
     Loader2,
     Menu,
     ChevronDown,
-    X
+    UserPlus,
+    UserMinus,
+    CheckCircle
 } from 'lucide-react';
 
 interface Communication {
@@ -35,6 +36,10 @@ interface Communication {
     view_count: number;
     interested_count: number;
     reminder_count: number;
+    // Participation aux campagnes
+    is_participant?: boolean;
+    participation_status?: 'invited' | 'joined' | 'completed' | 'withdrawn' | null;
+    participation_progress?: number | null;
 }
 
 const typeLabels: Record<string, string> = {
@@ -66,6 +71,7 @@ export const CommunicationsSection: React.FC = () => {
     const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
     const [interestIds, setInterestIds] = useState<Set<number>>(new Set());
     const [menuOpen, setMenuOpen] = useState(false);
+    const [joiningCampaign, setJoiningCampaign] = useState<number | null>(null);
 
     // Charger les communications
     useEffect(() => {
@@ -113,6 +119,55 @@ export const CommunicationsSection: React.FC = () => {
             }
         } catch (error) {
             console.error('Erreur lors de l\'enregistrement du clic:', error);
+        }
+    };
+
+    const handleJoinCampaign = async (commId: number) => {
+        setJoiningCampaign(commId);
+        try {
+            await testApiService.communications.joinCampaign(commId);
+            // Mettre à jour l'état local
+            setCommunications(prev => prev.map(c => 
+                c.id === commId 
+                    ? { ...c, is_participant: true, participation_status: 'joined' as const }
+                    : c
+            ));
+            toast({
+                title: '✅ Inscription réussie!',
+                description: 'Vous êtes inscrit à cette campagne.',
+            });
+        } catch (error) {
+            toast({
+                title: 'Erreur',
+                description: 'Impossible de vous inscrire à la campagne',
+                variant: 'destructive',
+            });
+        } finally {
+            setJoiningCampaign(null);
+        }
+    };
+
+    const handleLeaveCampaign = async (commId: number) => {
+        setJoiningCampaign(commId);
+        try {
+            await testApiService.communications.leaveCampaign(commId);
+            setCommunications(prev => prev.map(c => 
+                c.id === commId 
+                    ? { ...c, is_participant: false, participation_status: 'withdrawn' as const }
+                    : c
+            ));
+            toast({
+                title: 'Désinscription effectuée',
+                description: 'Vous n\'êtes plus inscrit à cette campagne.',
+            });
+        } catch (error) {
+            toast({
+                title: 'Erreur',
+                description: 'Impossible de vous désinscrire',
+                variant: 'destructive',
+            });
+        } finally {
+            setJoiningCampaign(null);
         }
     };
 
@@ -204,9 +259,9 @@ export const CommunicationsSection: React.FC = () => {
 
             {/* Liste des communications */}
             <div className="space-y-4">
-                {filteredCommunications.map(comm => (
+                {filteredCommunications.map((comm, index) => (
                     <Card
-                        key={comm.id}
+                        key={`${comm.type}-${comm.id}-${index}`}
                         className="p-4 hover:shadow-lg transition-shadow border border-gray-200 overflow-hidden"
                     >
                         {/* Image */}
@@ -267,7 +322,45 @@ export const CommunicationsSection: React.FC = () => {
                         </div>
 
                         {/* Boutons d'action */}
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 flex-wrap">
+                            {/* Bouton inscription campagne */}
+                            {comm.type === 'campagne' && (
+                                comm.is_participant ? (
+                                    <Button
+                                        onClick={() => handleLeaveCampaign(comm.id)}
+                                        disabled={joiningCampaign === comm.id}
+                                        variant="outline"
+                                        size="sm"
+                                        className="flex-1 min-w-0 border-green-500 text-green-700 hover:bg-red-50 hover:border-red-500 hover:text-red-700 group"
+                                    >
+                                        {joiningCampaign === comm.id ? (
+                                            <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+                                        ) : (
+                                            <>
+                                                <CheckCircle className="h-4 w-4 mr-1.5 flex-shrink-0 text-green-600 group-hover:hidden" />
+                                                <UserMinus className="h-4 w-4 mr-1.5 flex-shrink-0 text-red-600 hidden group-hover:block" />
+                                            </>
+                                        )}
+                                        <span className="truncate group-hover:hidden">Inscrit</span>
+                                        <span className="truncate hidden group-hover:block">Se désinscrire</span>
+                                    </Button>
+                                ) : (
+                                    <Button
+                                        onClick={() => handleJoinCampaign(comm.id)}
+                                        disabled={joiningCampaign === comm.id}
+                                        size="sm"
+                                        className="flex-1 min-w-0 bg-green-600 hover:bg-green-700 text-white"
+                                    >
+                                        {joiningCampaign === comm.id ? (
+                                            <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+                                        ) : (
+                                            <UserPlus className="h-4 w-4 mr-1.5 flex-shrink-0" />
+                                        )}
+                                        <span className="truncate">S'inscrire</span>
+                                    </Button>
+                                )
+                            )}
+
                             <Button
                                 onClick={() => handleInterest(comm.id)}
                                 disabled={interestIds.has(comm.id)}
