@@ -20,6 +20,7 @@ import WellnessCard from '@/components/WellnessCard';
 import ProgressChart from '@/components/ProgressChart';
 import ProgressPage from '@/components/ProgressPage';
 import ChallengeFilter from '@/components/ChallengeFilter';
+import ChallengeDetailsModal from '@/components/ChallengeDetailsModal';
 import DiagnosticStep from '@/components/DiagnosticStep';
 import ProfilePage from '@/components/ProfilePage';
 import HealthSpecialistSuggestions from '@/components/HealthSpecialistSuggestions';
@@ -32,6 +33,7 @@ import SleepRoutineContent from '@/components/SleepRoutineContent';
 import IntelligentSuggestions from '@/components/IntelligentSuggestions';
 import PersonalizedContens from '@/components/PersonalizedContens';
 import AppointmentManagement from '@/components/AppointmentManagement';
+import CommunicationsSection from '@/components/CommunicationsSection';
 import { useToast } from "@/hooks/use-toast";
 import { useAppointments } from '@/hooks/useApi';
 import {
@@ -64,6 +66,8 @@ const Index = () => {
   const [currentView, setCurrentView] = useState('dashboard');
   const [selectedMood, setSelectedMood] = useState<number>(); // Conservé pour suggestions
   const [challengeFilters, setChallengeFilters] = useState<string[]>([]);
+  const [selectedChallenge, setSelectedChallenge] = useState<any>(null);
+  const [isChallengeModalOpen, setIsChallengeModalOpen] = useState(false);
   const [diagnosticStep, setDiagnosticStep] = useState(1);
   const [diagnosticAnswers, setDiagnosticAnswers] = useState<Record<string, any>>({});
   const [showPostDiagnosticSuggestions, setShowPostDiagnosticSuggestions] = useState(false);
@@ -690,8 +694,10 @@ const Index = () => {
       const res = await testApiService.challenges.list();
       const items = res?.data || [];
       setChallengeList(items);
+      return items;
     } catch (e) {
       console.warn('Impossible de charger les défis:', e);
+      return [];
     }
   };
 
@@ -3624,7 +3630,14 @@ const Index = () => {
           </div>
           <div className="space-y-2">
             {challengeList.map((c) => (
-              <div key={c.id} className="flex items-start justify-between p-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-100">
+              <div
+                key={c.id}
+                onClick={() => {
+                  setSelectedChallenge(c);
+                  setIsChallengeModalOpen(true);
+                }}
+                className="flex items-start justify-between p-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-100 cursor-pointer hover:shadow-md transition-shadow"
+              >
                 <div className="flex-1">
                   <p className="font-medium text-sm">{c.title}</p>
                   {c.description && <p className="text-xs text-gray-600 mt-0.5">{c.description}</p>}
@@ -3638,42 +3651,6 @@ const Index = () => {
                       c.status === 'in_progress' ? '⏳ En cours' :
                         'Non démarré'}
                   </span>
-                  {c.status === 'not_started' && (
-                    <Button
-                      size="sm"
-                      onClick={async () => {
-                        try {
-                          await testApiService.challenges.start(c.id);
-                          toast({ title: 'Défi démarré !' });
-                          await loadChallenges();
-                        } catch (e: any) {
-                          console.error('Erreur:', e);
-                          toast({ title: 'Erreur', description: 'Impossible de démarrer le défi', variant: 'destructive' });
-                        }
-                      }}
-                      className="bg-wellness-gradient hover:opacity-90 text-white whitespace-nowrap"
-                    >
-                      Démarrer
-                    </Button>
-                  )}
-                  {c.status === 'in_progress' && (
-                    <Button
-                      size="sm"
-                      onClick={async () => {
-                        try {
-                          await testApiService.challenges.finish(c.id);
-                          toast({ title: 'Défi terminé ! 🎉' });
-                          await loadChallenges();
-                        } catch (e: any) {
-                          console.error('Erreur:', e);
-                          toast({ title: 'Erreur', description: 'Impossible de terminer le défi', variant: 'destructive' });
-                        }
-                      }}
-                      className="bg-green-500 hover:bg-green-600 text-white whitespace-nowrap"
-                    >
-                      Terminer
-                    </Button>
-                  )}
                 </div>
               </div>
             ))}
@@ -3683,6 +3660,37 @@ const Index = () => {
           </div>
         </div>
       </div>
+
+      {/* Modal pour les détails du défi */}
+      <ChallengeDetailsModal
+        challenge={selectedChallenge}
+        isOpen={isChallengeModalOpen}
+        onClose={() => {
+          setIsChallengeModalOpen(false);
+          setSelectedChallenge(null);
+          loadChallenges();
+        }}
+        onStart={async (challengeId: number) => {
+          await testApiService.challenges.start(challengeId);
+          // Récharger les défis pour mettre à jour le statut
+          const updatedList = await loadChallenges();
+          // Mettre à jour le défi sélectionné avec le nouveau statut
+          const updated = updatedList?.find((c: any) => c.id === challengeId);
+          if (updated) {
+            setSelectedChallenge(updated);
+          }
+        }}
+        onFinish={async (challengeId: number) => {
+          await testApiService.challenges.finish(challengeId);
+          // Récharger les défis pour mettre à jour le statut
+          const updatedList = await loadChallenges();
+          // Mettre à jour le défi sélectionné avec le nouveau statut
+          const updated = updatedList?.find((c: any) => c.id === challengeId);
+          if (updated) {
+            setSelectedChallenge(updated);
+          }
+        }}
+      />
     </div>
   );
 
@@ -3835,6 +3843,16 @@ const Index = () => {
         </Button>
 
         <Button
+          variant={currentView === 'communications' ? 'default' : 'ghost'}
+          size="sm"
+          onClick={() => setCurrentView('communications')}
+          className="flex flex-col items-center space-y-1 h-12 px-3 min-w-0 flex-1"
+        >
+          <Bell className="h-4 w-4" />
+          <span className="text-xs truncate">Annonces</span>
+        </Button>
+
+        <Button
           variant={currentView === 'progress' ? 'default' : 'ghost'}
           size="sm"
           onClick={() => setCurrentView('progress')}
@@ -3876,6 +3894,7 @@ const Index = () => {
           {currentView === 'dashboard' && renderDashboard()}
           {(currentView === 'diagnostic' || currentView === 'diagnostic-annual') && renderDiagnostic()}
           {currentView === 'challenges' && renderChallenges()}
+          {currentView === 'communications' && <CommunicationsSection />}
           {currentView === 'progress' && renderProgress()}
           {currentView === 'profile' && <ProfilePage />}
           {currentView === 'professionals' && renderProfessionals()}

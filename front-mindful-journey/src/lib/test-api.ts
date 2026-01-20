@@ -268,7 +268,36 @@ const testApiService = {
         body: JSON.stringify(profileData)
       });
     }
-  }
+  },
+
+  // Communications / Annonces
+  communications: {
+    list: async () => {
+      const response = await testApiRequest('/communications');
+      return response.data;
+    },
+
+    getById: async (id: string | number) => {
+      const response = await testApiRequest(`/communications/${id}`);
+      return response.data;
+    },
+
+    recordInterest: async (id: string | number) => {
+      return testApiRequest(`/communications/${id}/interest`, {
+        method: 'POST'
+      });
+    },
+
+    recordCtaClick: async (id: string | number) => {
+      return testApiRequest(`/communications/${id}/cta-click`, {
+        method: 'POST'
+      });
+    },
+
+    filterByType: async (type: string) => {
+      const response = await testApiRequest(`/communications/type/${type}`);
+      return response.data;
+    }  }
 };
 
 export default testApiService;

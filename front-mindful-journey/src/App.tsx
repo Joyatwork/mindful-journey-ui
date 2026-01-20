@@ -15,6 +15,7 @@ import TestAPI from "./pages/TestAPI";
 import ApiTest from "./pages/ApiTest";
 import AuthTest from "./pages/AuthTest";
 import DatabaseViewer from "./pages/DatabaseViewer";
+import ChallengesInfoPage from "./pages/ChallengesInfoPage";
 import MoodPage from "./pages/MoodPage";
 import MeditationPage from "./pages/MeditationPage";
 import MeditationDemo from "./pages/MeditationDemo";
@@ -138,6 +139,11 @@ const App = () => (
               <Route path="/database" element={
                 <ProtectedRoute>
                   <DatabaseViewer />
+                </ProtectedRoute>
+              } />
+              <Route path="/challenges-info" element={
+                <ProtectedRoute>
+                  <ChallengesInfoPage />
                 </ProtectedRoute>
               } />
               <Route path="/mood" element={

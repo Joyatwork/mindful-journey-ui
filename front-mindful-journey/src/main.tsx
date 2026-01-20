@@ -13,7 +13,7 @@ if (import.meta.env.PROD && 'serviceWorker' in navigator) {
     })
       .then((registration) => {
         console.log('SW registered: ', registration);
-        
+
         // Vérifier les mises à jour du service worker
         registration.addEventListener('updatefound', () => {
           const newWorker = registration.installing;
@@ -56,11 +56,11 @@ else {
         if (regs.length) console.log(`Désinscription de ${regs.length} Service Worker(s) en dev...`);
         regs.forEach((r) => r.unregister());
       })
-      .catch(() => {});
+      .catch(() => { });
   }
   if ('caches' in window) {
     caches.keys()
       .then((keys) => Promise.all(keys.map((k) => caches.delete(k))))
-      .catch(() => {});
+      .catch(() => { });
   }
 }

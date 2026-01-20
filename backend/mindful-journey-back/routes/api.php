@@ -16,7 +16,8 @@ use App\Http\Controllers\Api\{
     MeditationController,
     RecommendationController,
     ChallengeController,
-    ChallengeActionController
+    ChallengeActionController,
+    CommunicationController
 };
 use App\Http\Controllers\Api\EntrepriseController;
 use App\Http\Controllers\Api\ContensController;
@@ -108,6 +109,8 @@ Route::prefix('test')->group(function () {
         Route::get('schemas', [DatabaseController::class, 'listSchemas']);
         Route::get('tables', [DatabaseController::class, 'listTables']);
         Route::get('columns', [DatabaseController::class, 'listColumns']);
+        // Infos détaillées de la table challenges
+        Route::get('challenges-info', [DatabaseController::class, 'getChallengesTableInfo']);
         // Seed de quelques entreprises (dev)
         Route::post('entreprises/seed', [EntrepriseController::class, 'seed']);
         // Seed de quelques sites (dev) pour satisfaire les FKs (employees.site_id)
@@ -260,6 +263,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('challenges', [ChallengeController::class, 'index']);
     Route::post('challenges/{challenge}/start', [ChallengeActionController::class, 'start']);
     Route::post('challenges/{challenge}/finish', [ChallengeActionController::class, 'finish']);
+
+    // --- Communications / Annonces ---
+    Route::get('communications', [CommunicationController::class, 'index']);
+    Route::get('communications/{id}', [CommunicationController::class, 'show']);
+    Route::post('communications/{id}/interest', [CommunicationController::class, 'recordInterest']);
+    Route::post('communications/{id}/cta-click', [CommunicationController::class, 'recordCtaClick']);
+    Route::get('communications/type/{type}', [CommunicationController::class, 'filterByType']);
 
     // Dev helper: créer le mapping employé pour l'utilisateur courant (local uniquement recommandé)
     Route::post('test/employees/map-current', [DatabaseController::class, 'mapCurrentUserToEmployee']);
