@@ -136,25 +136,26 @@ export const CommunicationsSection: React.FC = () => {
     }
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4 px-1">
             {/* En-tête */}
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                    <Megaphone className="h-6 w-6 text-blue-600" />
-                    <h2 className="text-2xl font-bold">Annonces & Communications</h2>
+            <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2">
+                    <Megaphone className="h-5 w-5 text-blue-600 flex-shrink-0" />
+                    <h2 className="text-xl font-bold truncate">Annonces</h2>
                 </div>
-                <Badge variant="outline" className="bg-blue-50">
+                <Badge variant="outline" className="bg-blue-50 flex-shrink-0">
                     {filteredCommunications.length} annonce{filteredCommunications.length > 1 ? 's' : ''}
                 </Badge>
             </div>
 
             {/* Filtres */}
             {types.length > 0 && (
-                <div className="flex gap-2 overflow-x-auto pb-2">
+                <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1">
                     <Button
                         onClick={() => setSelectedFilter(null)}
                         variant={selectedFilter === null ? 'default' : 'outline'}
-                        className="whitespace-nowrap"
+                        size="sm"
+                        className="whitespace-nowrap flex-shrink-0"
                     >
                         Tous
                     </Button>
@@ -163,7 +164,8 @@ export const CommunicationsSection: React.FC = () => {
                             key={type}
                             onClick={() => setSelectedFilter(type)}
                             variant={selectedFilter === type ? 'default' : 'outline'}
-                            className="whitespace-nowrap"
+                            size="sm"
+                            className="whitespace-nowrap flex-shrink-0"
                         >
                             {typeLabels[type] || type}
                         </Button>
@@ -172,11 +174,11 @@ export const CommunicationsSection: React.FC = () => {
             )}
 
             {/* Liste des communications */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-4">
                 {filteredCommunications.map(comm => (
                     <Card
                         key={comm.id}
-                        className="p-6 hover:shadow-lg transition-shadow border border-gray-200"
+                        className="p-4 hover:shadow-lg transition-shadow border border-gray-200 overflow-hidden"
                     >
                         {/* Image */}
                         {comm.image_url && (
@@ -188,33 +190,33 @@ export const CommunicationsSection: React.FC = () => {
                         )}
 
                         {/* Badges */}
-                        <div className="flex gap-2 mb-3 flex-wrap">
-                            <Badge variant="outline" className="bg-gray-50">
+                        <div className="flex gap-1.5 mb-3 flex-wrap">
+                            <Badge variant="outline" className="bg-gray-50 text-xs">
                                 {typeLabels[comm.type] || comm.type}
                             </Badge>
                             <Badge
                                 variant="outline"
-                                className={objectiveColors[comm.objective] || 'bg-gray-100 text-gray-800 border-gray-200'}
+                                className={`text-xs ${objectiveColors[comm.objective] || 'bg-gray-100 text-gray-800 border-gray-200'}`}
                             >
                                 {objectiveLabels[comm.objective]}
                             </Badge>
                             {comm.progress !== undefined && (
-                                <Badge variant="outline" className="bg-purple-50 text-purple-800 border-purple-200">
-                                    {comm.progress}% complété
+                                <Badge variant="outline" className="bg-purple-50 text-purple-800 border-purple-200 text-xs">
+                                    {comm.progress}%
                                 </Badge>
                             )}
                         </div>
 
                         {/* Titre */}
-                        <h3 className="text-lg font-semibold mb-2 line-clamp-2">{comm.title}</h3>
+                        <h3 className="text-base font-semibold mb-2 line-clamp-2 break-words">{comm.title}</h3>
 
                         {/* Contenu */}
-                        <p className="text-sm text-gray-600 mb-4 line-clamp-3">{comm.content}</p>
+                        <p className="text-sm text-gray-600 mb-3 line-clamp-2 break-words">{comm.content}</p>
 
                         {/* Dates */}
                         {(comm.start_date || comm.published_at) && (
-                            <div className="flex items-center gap-2 text-xs text-gray-500 mb-4">
-                                <Calendar className="h-4 w-4" />
+                            <div className="flex items-center gap-1.5 text-xs text-gray-500 mb-3">
+                                <Calendar className="h-3.5 w-3.5 flex-shrink-0" />
                                 <span>
                                     {comm.start_date
                                         ? new Date(comm.start_date).toLocaleDateString('fr-FR')
@@ -224,14 +226,14 @@ export const CommunicationsSection: React.FC = () => {
                         )}
 
                         {/* Statistiques */}
-                        <div className="flex gap-4 mb-4 text-xs text-gray-500 border-t pt-4">
+                        <div className="flex gap-3 mb-3 text-xs text-gray-500 border-t pt-3">
                             <div className="flex items-center gap-1">
-                                <Eye className="h-4 w-4" />
-                                {comm.view_count} vue{comm.view_count > 1 ? 's' : ''}
+                                <Eye className="h-3.5 w-3.5" />
+                                <span>{comm.view_count}</span>
                             </div>
                             <div className="flex items-center gap-1">
-                                <Heart className="h-4 w-4" />
-                                {comm.interested_count} intéressé{comm.interested_count > 1 ? 's' : ''}
+                                <Heart className="h-3.5 w-3.5" />
+                                <span>{comm.interested_count}</span>
                             </div>
                         </div>
 
@@ -241,22 +243,24 @@ export const CommunicationsSection: React.FC = () => {
                                 onClick={() => handleInterest(comm.id)}
                                 disabled={interestIds.has(comm.id)}
                                 variant="outline"
-                                className="flex-1"
+                                size="sm"
+                                className="flex-1 min-w-0"
                             >
                                 <Heart
-                                    className={`h-4 w-4 mr-2 ${interestIds.has(comm.id) ? 'fill-red-500 text-red-500' : ''
+                                    className={`h-4 w-4 mr-1.5 flex-shrink-0 ${interestIds.has(comm.id) ? 'fill-red-500 text-red-500' : ''
                                         }`}
                                 />
-                                {interestIds.has(comm.id) ? 'Intéressé' : 'S\'intéresser'}
+                                <span className="truncate">{interestIds.has(comm.id) ? 'Intéressé' : 'Intéressé'}</span>
                             </Button>
 
                             {comm.cta_label && comm.cta_target && (
                                 <Button
                                     onClick={() => handleCtaClick(comm.id, comm.cta_target)}
-                                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                                    size="sm"
+                                    className="flex-1 min-w-0 bg-blue-600 hover:bg-blue-700 text-white"
                                 >
-                                    {comm.cta_label}
-                                    <ArrowRight className="h-4 w-4 ml-2" />
+                                    <span className="truncate">{comm.cta_label}</span>
+                                    <ArrowRight className="h-4 w-4 ml-1.5 flex-shrink-0" />
                                 </Button>
                             )}
                         </div>
