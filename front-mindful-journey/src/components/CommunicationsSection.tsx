@@ -15,7 +15,9 @@ import {
     ChevronDown,
     UserPlus,
     UserMinus,
-    CheckCircle
+    CheckCircle,
+    BookOpen,
+    BookCheck
 } from 'lucide-react';
 
 interface Communication {
@@ -40,6 +42,8 @@ interface Communication {
     is_participant?: boolean;
     participation_status?: 'invited' | 'joined' | 'completed' | 'withdrawn' | null;
     participation_progress?: number | null;
+    // Lecture
+    is_real_campaign?: boolean;
 }
 
 const typeLabels: Record<string, string> = {
@@ -72,6 +76,8 @@ export const CommunicationsSection: React.FC = () => {
     const [interestIds, setInterestIds] = useState<Set<number>>(new Set());
     const [menuOpen, setMenuOpen] = useState(false);
     const [joiningCampaign, setJoiningCampaign] = useState<number | null>(null);
+    const [readIds, setReadIds] = useState<Set<number>>(new Set());
+    const [markingRead, setMarkingRead] = useState<number | null>(null);
 
     // Charger les communications
     useEffect(() => {
@@ -168,6 +174,26 @@ export const CommunicationsSection: React.FC = () => {
             });
         } finally {
             setJoiningCampaign(null);
+        }
+    };
+
+    const handleMarkAsRead = async (commId: number) => {
+        setMarkingRead(commId);
+        try {
+            await testApiService.communications.markAsRead(commId);
+            setReadIds(new Set([...readIds, commId]));
+            toast({
+                title: '📖 Annonce lue',
+                description: 'Les RH ont été notifiés de votre lecture.',
+            });
+        } catch (error) {
+            toast({
+                title: 'Erreur',
+                description: 'Impossible de marquer comme lu',
+                variant: 'destructive',
+            });
+        } finally {
+            setMarkingRead(null);
         }
     };
 
@@ -359,6 +385,26 @@ export const CommunicationsSection: React.FC = () => {
                                         <span className="truncate">S'inscrire</span>
                                     </Button>
                                 )
+                            )}
+
+                            {/* Bouton Marquer comme lu - pour les annonces (pas les campagnes) */}
+                            {!comm.is_real_campaign && (
+                                <Button
+                                    onClick={() => handleMarkAsRead(comm.id)}
+                                    disabled={readIds.has(comm.id) || markingRead === comm.id}
+                                    variant="outline"
+                                    size="sm"
+                                    className={`flex-1 min-w-0 ${readIds.has(comm.id) ? 'border-emerald-500 text-emerald-700 bg-emerald-50' : ''}`}
+                                >
+                                    {markingRead === comm.id ? (
+                                        <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+                                    ) : readIds.has(comm.id) ? (
+                                        <BookCheck className="h-4 w-4 mr-1.5 flex-shrink-0 text-emerald-600" />
+                                    ) : (
+                                        <BookOpen className="h-4 w-4 mr-1.5 flex-shrink-0" />
+                                    )}
+                                    <span className="truncate">{readIds.has(comm.id) ? 'Lu' : 'Marquer lu'}</span>
+                                </Button>
                             )}
 
                             <Button

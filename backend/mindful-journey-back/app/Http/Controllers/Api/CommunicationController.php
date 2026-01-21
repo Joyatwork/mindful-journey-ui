@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\HrCommunication;
 use App\Models\CampaignParticipant;
 use App\Models\Campaign;
+use App\Models\CommunicationRead;
+use App\Models\Notification;
 use App\Models\Employee;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -402,6 +404,138 @@ class CommunicationController extends Controller
                 'progress' => $participation?->progress,
                 'joined_at' => $participation?->joined_at
             ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Erreur',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Marquer une annonce comme lue et notifier les RH
+     */
+    public function markAsRead(string $id): JsonResponse
+    {
+        try {
+            /** @var User|null $user */
+            $user = Auth::user();
+
+            if (!$user) {
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
+
+            // Vérifier que la communication existe
+            $communication = HrCommunication::where('id', $id)
+                ->where('entreprise_id', $user->entreprise_id)
+                ->where('status', 'published')
+                ->first();
+
+            if (!$communication) {
+                return response()->json([
+                    'error' => 'Communication non trouvée'
+                ], 404);
+            }
+
+            // Vérifier si déjà lu par cet utilisateur
+            $alreadyRead = CommunicationRead::where('communication_id', $id)
+                ->where('user_id', $user->id)
+                ->exists();
+
+            if ($alreadyRead) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Déjà marqué comme lu',
+                    'already_read' => true
+                ]);
+            }
+
+            // Enregistrer la lecture
+            CommunicationRead::create([
+                'communication_id' => $id,
+                'user_id' => $user->id,
+                'user_name' => $user->name,
+                'user_email' => $user->email,
+                'read_at' => now()
+            ]);
+
+            // Incrémenter le compteur de vues
+            $communication->increment('view_count');
+
+            // Notifier les RH de l'entreprise
+            $this->notifyHrAboutRead($communication, $user);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Annonce marquée comme lue',
+                'already_read' => false
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Erreur lors de l\'enregistrement de la lecture',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Notifier les RH qu'un employé a lu une annonce
+     */
+    private function notifyHrAboutRead(HrCommunication $communication, User $reader): void
+    {
+        // Trouver les utilisateurs RH de l'entreprise (role = 'rh' ou 'admin')
+        $hrUsers = User::where('entreprise_id', $communication->entreprise_id)
+            ->whereIn('role', ['rh', 'admin', 'hr'])
+            ->where('id', '!=', $reader->id) // Ne pas notifier si c'est le RH lui-même
+            ->get();
+
+        foreach ($hrUsers as $hrUser) {
+            Notification::create([
+                'user_id' => $hrUser->id,
+                'title' => 'Annonce lue',
+                'message' => "{$reader->name} a lu l'annonce \"{$communication->title}\"",
+                'type' => 'info',
+                'is_read' => false,
+                'related_table' => 'hr_communications',
+                'related_id' => $communication->id
+            ]);
+        }
+    }
+
+    /**
+     * Récupérer les statistiques de lecture d'une communication (pour les RH)
+     */
+    public function getReadStats(string $id): JsonResponse
+    {
+        try {
+            /** @var User|null $user */
+            $user = Auth::user();
+
+            if (!$user) {
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
+
+            // Vérifier que l'utilisateur est RH ou admin
+            if (!in_array($user->role, ['rh', 'admin', 'hr'])) {
+                return response()->json(['error' => 'Accès non autorisé'], 403);
+            }
+
+            $communication = HrCommunication::where('id', $id)
+                ->where('entreprise_id', $user->entreprise_id)
+                ->firstOrFail();
+
+            $reads = CommunicationRead::where('communication_id', $id)
+                ->orderBy('read_at', 'desc')
+                ->get(['user_name', 'user_email', 'read_at']);
+
+            return response()->json([
+                'success' => true,
+                'communication_title' => $communication->title,
+                'total_reads' => $reads->count(),
+                'readers' => $reads
+            ]);
+
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Erreur',

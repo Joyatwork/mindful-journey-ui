@@ -315,6 +315,13 @@ const testApiService = {
     getCampaignStatus: async (id: string | number) => {
       const response = await testApiRequest(`/communications/${id}/participation`);
       return response;
+    },
+
+    // Marquer comme lu
+    markAsRead: async (id: string | number) => {
+      return testApiRequest(`/communications/${id}/read`, {
+        method: 'POST'
+      });
     }
   }
 };

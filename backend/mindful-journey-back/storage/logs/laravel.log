@@ -20149,3 +20149,23 @@ Content-Transfer-Encoding: quoted-printable
 #19 C:\\Users\\camar\\Bureau\\mindful-journey-ui\\backend\\mindful-journey-back\\artisan(16): Illuminate\\Foundation\\Application->handleCommand()
 #20 {main}
 "} 
+[2026-01-20 14:51:52] local.ERROR: Unexpected end of input {"exception":"[object] (InvalidArgumentException(code: 0): Unexpected end of input at C:\\Users\\camar\\Bureau\\mindful-journey-ui\\backend\\mindful-journey-back\\vendor\\psy\\psysh\\src\\Shell.php:891)
+[stacktrace]
+#0 C:\\Users\\camar\\Bureau\\mindful-journey-ui\\backend\\mindful-journey-back\\vendor\\psy\\psysh\\src\\Shell.php(1390): Psy\\Shell->setCode()
+#1 C:\\Users\\camar\\Bureau\\mindful-journey-ui\\backend\\mindful-journey-back\\vendor\\laravel\\tinker\\src\\Console\\TinkerCommand.php(76): Psy\\Shell->execute()
+#2 C:\\Users\\camar\\Bureau\\mindful-journey-ui\\backend\\mindful-journey-back\\vendor\\laravel\\framework\\src\\Illuminate\\Container\\BoundMethod.php(36): Laravel\\Tinker\\Console\\TinkerCommand->handle()
+#3 C:\\Users\\camar\\Bureau\\mindful-journey-ui\\backend\\mindful-journey-back\\vendor\\laravel\\framework\\src\\Illuminate\\Container\\Util.php(43): Illuminate\\Container\\BoundMethod::Illuminate\\Container\\{closure}()
+#4 C:\\Users\\camar\\Bureau\\mindful-journey-ui\\backend\\mindful-journey-back\\vendor\\laravel\\framework\\src\\Illuminate\\Container\\BoundMethod.php(96): Illuminate\\Container\\Util::unwrapIfClosure()
+#5 C:\\Users\\camar\\Bureau\\mindful-journey-ui\\backend\\mindful-journey-back\\vendor\\laravel\\framework\\src\\Illuminate\\Container\\BoundMethod.php(35): Illuminate\\Container\\BoundMethod::callBoundMethod()
+#6 C:\\Users\\camar\\Bureau\\mindful-journey-ui\\backend\\mindful-journey-back\\vendor\\laravel\\framework\\src\\Illuminate\\Container\\Container.php(780): Illuminate\\Container\\BoundMethod::call()
+#7 C:\\Users\\camar\\Bureau\\mindful-journey-ui\\backend\\mindful-journey-back\\vendor\\laravel\\framework\\src\\Illuminate\\Console\\Command.php(211): Illuminate\\Container\\Container->call()
+#8 C:\\Users\\camar\\Bureau\\mindful-journey-ui\\backend\\mindful-journey-back\\vendor\\symfony\\console\\Command\\Command.php(318): Illuminate\\Console\\Command->execute()
+#9 C:\\Users\\camar\\Bureau\\mindful-journey-ui\\backend\\mindful-journey-back\\vendor\\laravel\\framework\\src\\Illuminate\\Console\\Command.php(180): Symfony\\Component\\Console\\Command\\Command->run()
+#10 C:\\Users\\camar\\Bureau\\mindful-journey-ui\\backend\\mindful-journey-back\\vendor\\symfony\\console\\Application.php(1092): Illuminate\\Console\\Command->run()
+#11 C:\\Users\\camar\\Bureau\\mindful-journey-ui\\backend\\mindful-journey-back\\vendor\\symfony\\console\\Application.php(341): Symfony\\Component\\Console\\Application->doRunCommand()
+#12 C:\\Users\\camar\\Bureau\\mindful-journey-ui\\backend\\mindful-journey-back\\vendor\\symfony\\console\\Application.php(192): Symfony\\Component\\Console\\Application->doRun()
+#13 C:\\Users\\camar\\Bureau\\mindful-journey-ui\\backend\\mindful-journey-back\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Console\\Kernel.php(197): Symfony\\Component\\Console\\Application->run()
+#14 C:\\Users\\camar\\Bureau\\mindful-journey-ui\\backend\\mindful-journey-back\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Application.php(1234): Illuminate\\Foundation\\Console\\Kernel->handle()
+#15 C:\\Users\\camar\\Bureau\\mindful-journey-ui\\backend\\mindful-journey-back\\artisan(16): Illuminate\\Foundation\\Application->handleCommand()
+#16 {main}
+"} 
