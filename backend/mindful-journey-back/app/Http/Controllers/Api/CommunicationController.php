@@ -470,7 +470,6 @@ class CommunicationController extends Controller
                 'message' => 'Annonce marquée comme lue',
                 'already_read' => false
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Erreur lors de l\'enregistrement de la lecture',
@@ -535,7 +534,6 @@ class CommunicationController extends Controller
                 'total_reads' => $reads->count(),
                 'readers' => $reads
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Erreur',
