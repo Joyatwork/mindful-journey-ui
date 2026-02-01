@@ -1,0 +1,21 @@
+# Node modules will be installed fresh during build
+node_modules/
+
+# Git
+.git/
+
+# Logs and temp
+*.log
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+
+# Build outputs  
+dist/
+build/
+
+# Expo cache
+.expo/

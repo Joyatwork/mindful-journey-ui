@@ -20169,3 +20169,286 @@ Content-Transfer-Encoding: quoted-printable
 #15 C:\\Users\\camar\\Bureau\\mindful-journey-ui\\backend\\mindful-journey-back\\artisan(16): Illuminate\\Foundation\\Application->handleCommand()
 #16 {main}
 "} 
+[2026-01-30 12:20:58] local.INFO: ProfileController:update - hasFile avatar: yes  
+[2026-01-30 12:20:58] local.INFO: ProfileController:update - avatar path: avatars/KrD6AYEpUacjbNUO4lmAZVX6jCzbxb0cNOPzBVUX.jpg  
+[2026-01-30 12:20:58] local.INFO: ProfileController:update - user avatar (db): avatars/KrD6AYEpUacjbNUO4lmAZVX6jCzbxb0cNOPzBVUX.jpg  
+[2026-01-30 12:20:58] local.INFO: ProfileController:update - user avatar_url (accessor): http://127.0.0.1:8081/storage/avatars/KrD6AYEpUacjbNUO4lmAZVX6jCzbxb0cNOPzBVUX.jpg  
+[2026-02-01 01:30:43] local.DEBUG: From: Example <hello@example.com>
+To: a291@gmail.com
+Subject: Laravel - Votre code de connexion
+MIME-Version: 1.0
+Date: Sun, 01 Feb 2026 01:30:43 +0000
+Message-ID: <97ee5f04c70e8a4bd05ec9d5a19bf201@example.com>
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <title>Code de connexion</title>
+    <style>
+        body { font-family: Arial, sans-serif; color:#222; }
+        .code { font-size: 32px; letter-spacing: 8px; font-weight: bold; background:#f5f5f5; padding:12px 18px; display:inline-block; border-radius:8px; }
+        .container { max-width:600px; margin:0 auto; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Laravel - Connexion sécurisée</h2>
+    <p>Voici votre code de vérification (valide 10 minutes) :</p>
+    <p class="code">04174</p>
+    <p>Si vous n'êtes pas à l'origine de cette tentative, vous pouvez ignorer cet email.</p>
+    <p style="font-size:12px;color:#666;">Ne partagez jamais ce code.</p>
+</div>
+</body>
+</html>
+  
+[2026-02-01 01:35:05] local.DEBUG: From: Example <hello@example.com>
+To: a291@gmail.com
+Subject: Laravel - Votre code de connexion
+MIME-Version: 1.0
+Date: Sun, 01 Feb 2026 01:35:05 +0000
+Message-ID: <9658d0235ab37dd93a6398f88129e2a0@example.com>
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <title>Code de connexion</title>
+    <style>
+        body { font-family: Arial, sans-serif; color:#222; }
+        .code { font-size: 32px; letter-spacing: 8px; font-weight: bold; background:#f5f5f5; padding:12px 18px; display:inline-block; border-radius:8px; }
+        .container { max-width:600px; margin:0 auto; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Laravel - Connexion sécurisée</h2>
+    <p>Voici votre code de vérification (valide 10 minutes) :</p>
+    <p class="code">92050</p>
+    <p>Si vous n'êtes pas à l'origine de cette tentative, vous pouvez ignorer cet email.</p>
+    <p style="font-size:12px;color:#666;">Ne partagez jamais ce code.</p>
+</div>
+</body>
+</html>
+  
+[2026-02-01 01:42:06] local.DEBUG: From: Example <hello@example.com>
+To: bocoummohamadoun@gmail.com
+Subject: Laravel - Votre code de connexion
+MIME-Version: 1.0
+Date: Sun, 01 Feb 2026 01:42:06 +0000
+Message-ID: <209a8dcf99d8289dec8b7960441166f9@example.com>
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <title>Code de connexion</title>
+    <style>
+        body { font-family: Arial, sans-serif; color:#222; }
+        .code { font-size: 32px; letter-spacing: 8px; font-weight: bold; background:#f5f5f5; padding:12px 18px; display:inline-block; border-radius:8px; }
+        .container { max-width:600px; margin:0 auto; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Laravel - Connexion sécurisée</h2>
+    <p>Voici votre code de vérification (valide 10 minutes) :</p>
+    <p class="code">06052</p>
+    <p>Si vous n'êtes pas à l'origine de cette tentative, vous pouvez ignorer cet email.</p>
+    <p style="font-size:12px;color:#666;">Ne partagez jamais ce code.</p>
+</div>
+</body>
+</html>
+  
+[2026-02-01 01:42:43] local.DEBUG: From: Example <hello@example.com>
+To: a291@gmail.com
+Subject: Laravel - Votre code de connexion
+MIME-Version: 1.0
+Date: Sun, 01 Feb 2026 01:42:43 +0000
+Message-ID: <f88357a86379d89b3e599b9a7ea54db0@example.com>
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <title>Code de connexion</title>
+    <style>
+        body { font-family: Arial, sans-serif; color:#222; }
+        .code { font-size: 32px; letter-spacing: 8px; font-weight: bold; background:#f5f5f5; padding:12px 18px; display:inline-block; border-radius:8px; }
+        .container { max-width:600px; margin:0 auto; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Laravel - Connexion sécurisée</h2>
+    <p>Voici votre code de vérification (valide 10 minutes) :</p>
+    <p class="code">27383</p>
+    <p>Si vous n'êtes pas à l'origine de cette tentative, vous pouvez ignorer cet email.</p>
+    <p style="font-size:12px;color:#666;">Ne partagez jamais ce code.</p>
+</div>
+</body>
+</html>
+  
+[2026-02-01 01:44:40] local.DEBUG: From: Example <hello@example.com>
+To: a291@gmail.com
+Subject: Laravel - Votre code de connexion
+MIME-Version: 1.0
+Date: Sun, 01 Feb 2026 01:44:40 +0000
+Message-ID: <f120af39448e4b48fb6ab1a535e93862@example.com>
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <title>Code de connexion</title>
+    <style>
+        body { font-family: Arial, sans-serif; color:#222; }
+        .code { font-size: 32px; letter-spacing: 8px; font-weight: bold; background:#f5f5f5; padding:12px 18px; display:inline-block; border-radius:8px; }
+        .container { max-width:600px; margin:0 auto; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Laravel - Connexion sécurisée</h2>
+    <p>Voici votre code de vérification (valide 10 minutes) :</p>
+    <p class="code">48751</p>
+    <p>Si vous n'êtes pas à l'origine de cette tentative, vous pouvez ignorer cet email.</p>
+    <p style="font-size:12px;color:#666;">Ne partagez jamais ce code.</p>
+</div>
+</body>
+</html>
+  
+[2026-02-01 01:46:35] local.DEBUG: From: Example <hello@example.com>
+To: a291@gmail.com
+Subject: Laravel - Votre code de connexion
+MIME-Version: 1.0
+Date: Sun, 01 Feb 2026 01:46:35 +0000
+Message-ID: <5ff8b81ed6236d2c13f489a58d39c335@example.com>
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <title>Code de connexion</title>
+    <style>
+        body { font-family: Arial, sans-serif; color:#222; }
+        .code { font-size: 32px; letter-spacing: 8px; font-weight: bold; background:#f5f5f5; padding:12px 18px; display:inline-block; border-radius:8px; }
+        .container { max-width:600px; margin:0 auto; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Laravel - Connexion sécurisée</h2>
+    <p>Voici votre code de vérification (valide 10 minutes) :</p>
+    <p class="code">81432</p>
+    <p>Si vous n'êtes pas à l'origine de cette tentative, vous pouvez ignorer cet email.</p>
+    <p style="font-size:12px;color:#666;">Ne partagez jamais ce code.</p>
+</div>
+</body>
+</html>
+  
+[2026-02-01 01:47:40] local.DEBUG: From: Example <hello@example.com>
+To: bocoummohamadoun@gmail.com
+Subject: Laravel - Votre code de connexion
+MIME-Version: 1.0
+Date: Sun, 01 Feb 2026 01:47:40 +0000
+Message-ID: <b8a1d63be7a9d6d37d0879e92715bb77@example.com>
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <title>Code de connexion</title>
+    <style>
+        body { font-family: Arial, sans-serif; color:#222; }
+        .code { font-size: 32px; letter-spacing: 8px; font-weight: bold; background:#f5f5f5; padding:12px 18px; display:inline-block; border-radius:8px; }
+        .container { max-width:600px; margin:0 auto; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Laravel - Connexion sécurisée</h2>
+    <p>Voici votre code de vérification (valide 10 minutes) :</p>
+    <p class="code">15445</p>
+    <p>Si vous n'êtes pas à l'origine de cette tentative, vous pouvez ignorer cet email.</p>
+    <p style="font-size:12px;color:#666;">Ne partagez jamais ce code.</p>
+</div>
+</body>
+</html>
+  
+[2026-02-01 02:02:58] local.DEBUG: From: Example <hello@example.com>
+To: a291@gmail.com
+Subject: Laravel - Votre code de connexion
+MIME-Version: 1.0
+Date: Sun, 01 Feb 2026 02:02:58 +0000
+Message-ID: <12293cd659cb334912199b9d3bc06a7c@example.com>
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <title>Code de connexion</title>
+    <style>
+        body { font-family: Arial, sans-serif; color:#222; }
+        .code { font-size: 32px; letter-spacing: 8px; font-weight: bold; background:#f5f5f5; padding:12px 18px; display:inline-block; border-radius:8px; }
+        .container { max-width:600px; margin:0 auto; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Laravel - Connexion sécurisée</h2>
+    <p>Voici votre code de vérification (valide 10 minutes) :</p>
+    <p class="code">01563</p>
+    <p>Si vous n'êtes pas à l'origine de cette tentative, vous pouvez ignorer cet email.</p>
+    <p style="font-size:12px;color:#666;">Ne partagez jamais ce code.</p>
+</div>
+</body>
+</html>
+  
+[2026-02-01 02:09:30] local.DEBUG: From: Example <hello@example.com>
+To: a291@gmail.com
+Subject: Laravel - Votre code de connexion
+MIME-Version: 1.0
+Date: Sun, 01 Feb 2026 02:09:30 +0000
+Message-ID: <901e746f72d05ffbbc2bb04d4e24b6d3@example.com>
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <title>Code de connexion</title>
+    <style>
+        body { font-family: Arial, sans-serif; color:#222; }
+        .code { font-size: 32px; letter-spacing: 8px; font-weight: bold; background:#f5f5f5; padding:12px 18px; display:inline-block; border-radius:8px; }
+        .container { max-width:600px; margin:0 auto; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Laravel - Connexion sécurisée</h2>
+    <p>Voici votre code de vérification (valide 10 minutes) :</p>
+    <p class="code">03901</p>
+    <p>Si vous n'êtes pas à l'origine de cette tentative, vous pouvez ignorer cet email.</p>
+    <p style="font-size:12px;color:#666;">Ne partagez jamais ce code.</p>
+</div>
+</body>
+</html>
+  

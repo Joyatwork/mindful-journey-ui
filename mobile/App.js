@@ -2,10 +2,9 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView, StyleSheet, Text, View, Platform, ActivityIndicator } from 'react-native';
 import { WebView } from 'react-native-webview';
 
-// TODO: remplace cette URL par l'adresse LAN de ton frontend Vite
-// Exemple : const WEB_APP_URL = 'http://172.20.10.5:8080';
-// Assure-toi que le téléphone et le PC sont sur le même réseau et que le firewall autorise le port 8080.
-const WEB_APP_URL = 'http://172.20.10.5:8080';
+// URL publique du frontend (via Serveo tunnel)
+// Pour tester en local sur le même réseau: 'http://172.20.10.5:8080'
+const WEB_APP_URL = 'https://d26183e38d83f1ad-78-244-200-91.serveousercontent.com';
 
 export default function App() {
   const isWeb = Platform.OS === 'web';
