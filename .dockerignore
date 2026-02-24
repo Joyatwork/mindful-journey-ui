@@ -1,0 +1,25 @@
+# ── Frontend (not needed for backend deployment) ────
+front-mindful-journey/
+mobile/
+src/
+public/
+
+# ── Vendor rebuild inside container ─────────────────
+backend/mindful-journey-back/vendor/
+back-mindful-journey-iu/
+
+# ── IDE / OS / Git ──────────────────────────────────
+.git
+.github
+.vscode
+*.md
+*.txt
+*.ps1
+*.html
+.env.backup*
+.env.example*
+
+# ── Node / build artifacts ──────────────────────────
+node_modules/
+bun.lockb
+*.log

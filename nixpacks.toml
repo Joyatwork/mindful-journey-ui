@@ -2,13 +2,16 @@
 language = "php"
 
 [phases.setup]
-nixPkgs = ['php82', 'php82Extensions.pdo_mysql', 'php82Extensions.openssl', 'php82Extensions.mbstring', 'php82Extensions.tokenizer', 'php82Extensions.xml', 'php82Extensions.ctype', 'php82Extensions.json', 'php82Extensions.bcmath', 'php82Extensions.curl', 'php82Extensions.fileinfo', 'php82Extensions.gd', 'php82Extensions.intl', 'php82Extensions.redis', 'composer']
+nixPkgs = ['php82', 'php82Extensions.pdo_mysql', 'php82Extensions.openssl', 'php82Extensions.mbstring', 'php82Extensions.tokenizer', 'php82Extensions.xml', 'php82Extensions.ctype', 'php82Extensions.json', 'php82Extensions.bcmath', 'php82Extensions.curl', 'php82Extensions.fileinfo', 'php82Extensions.gd', 'php82Extensions.intl', 'php82Extensions.opcache', 'composer', 'cacert']
 
 [phases.install]
 cmds = ['cd backend/mindful-journey-back && composer install --no-dev --optimize-autoloader']
 
 [phases.build]
-cmds = ['cd backend/mindful-journey-back && php artisan config:cache && php artisan route:cache && php artisan migrate --force']
+cmds = [
+  'cd backend/mindful-journey-back && mkdir -p storage/framework/{sessions,views,cache} storage/logs bootstrap/cache',
+  'cd backend/mindful-journey-back && chmod -R 775 storage bootstrap/cache',
+]
 
 [start]
-cmd = 'cd backend/mindful-journey-back && php artisan serve --host=0.0.0.0 --port=${PORT:-8081}'
+cmd = 'cd backend/mindful-journey-back && php artisan config:cache && php artisan route:cache && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=${PORT:-8081}'
