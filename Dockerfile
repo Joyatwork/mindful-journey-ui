@@ -1,22 +1,15 @@
-FROM php:8.2-alpine
+FROM php:8.2-fpm
 
-# Installer les dépendances système et de compilation
-RUN apk add --no-cache \
+# Installer les dépendances système
+RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     curl \
     zip \
-    unzip \
-    autoconf \
-    g++ \
-    gcc \
-    make \
-    libc-dev \
-    oniguruma-dev \
-    openssl-dev
+    unzip && \
+    rm -rf /var/lib/apt/lists/*
 
 # Installer les extensions PHP
-RUN docker-php-ext-install \
-    pdo \
+RUN docker-php-ext-install -j$(nproc) \
     pdo_mysql \
     mbstring \
     json \
@@ -32,12 +25,11 @@ WORKDIR /app
 
 COPY . /app
 
-# Installer les dépendances PHP avec Composer
+# Installer les dépendances et préparer l'app
 RUN cd backend/mindful-journey-back && \
-    composer install --no-dev --optimize-autoloader && \
-    php artisan config:cache && \
-    php artisan route:cache
+    composer install --no-dev --optimize-autoloader
 
 EXPOSE 8081
 
-CMD ["sh", "-c", "cd backend/mindful-journey-back && php -S 0.0.0.0:8081 public/index.php"]
+# Démarrer PHP en mode serveur intégré
+CMD cd backend/mindful-journey-back && php -S 0.0.0.0:8081 public/index.php
