@@ -8,4 +8,4 @@ cmds = ['cd backend/mindful-journey-back && composer install --no-dev --optimize
 cmds = ['cd backend/mindful-journey-back && php artisan config:cache && php artisan route:cache']
 
 [start]
-cmd = 'cd backend/mindful-journey-back && php artisan serve --host=0.0.0.0 --port=${PORT:-8081}'
+cmd = 'cd backend/mindful-journey-back && php artisan config:cache && php artisan route:cache && php -S 0.0.0.0:${PORT:-8081} -t public'
