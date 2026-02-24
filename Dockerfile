@@ -1,12 +1,11 @@
-FROM php:8.2-cli
+FROM php:8.2-alpine
 
 # Installer les dépendances système minimales
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apk add --no-cache \
     git \
     curl \
     zip \
-    unzip \
-    && rm -rf /var/lib/apt/lists/*
+    unzip
 
 # Installer les extensions PHP nécessaires
 RUN docker-php-ext-install \
