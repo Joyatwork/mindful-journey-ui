@@ -1,5 +1,7 @@
 // Service API de test pour le développement
-const API_BASE_URL = '/api';
+// En dev : '/api' (proxifié par Vite vers localhost:8081)
+// En prod : 'https://votre-backend.railway.app/api'
+const API_BASE_URL = (import.meta.env.VITE_API_URL || '') + '/api';
 
 // Lit un cookie par nom
 function getCookie(name: string) {
@@ -10,7 +12,7 @@ function getCookie(name: string) {
 // Fonction pour obtenir le token CSRF
 async function getCsrfToken() {
   try {
-    await fetch('/sanctum/csrf-cookie', {
+    await fetch(`${import.meta.env.VITE_API_URL || ''}/sanctum/csrf-cookie`, {
       method: 'GET',
       credentials: 'include',
       headers: {

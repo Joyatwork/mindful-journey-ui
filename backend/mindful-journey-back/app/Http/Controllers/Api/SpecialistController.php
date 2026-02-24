@@ -52,12 +52,22 @@ class SpecialistController extends Controller
         if ($request->filled('consultationType') && $request->consultationType !== 'all') {
             $type = $request->consultationType;
             if ($type !== 'both') {
-                // consultation_type (EN normalisé) ou consultation_mode (FR)
                 $query->where(function ($q) use ($type, $table) {
-                    $q->whereIn($table . '.consultation_type', [$type, 'both']);
-                    // map inverse pour consultation_mode stocké en FR
-                    $mode = $type === 'video' ? 'teleconsultation' : ($type === 'inPerson' ? 'presentiel' : 'both');
-                    $q->orWhereIn($table . '.consultation_mode', [$mode, 'both']);
+                    $hasConsultationType = Schema::hasColumn($table, 'consultation_type');
+                    $hasConsultationMode = Schema::hasColumn($table, 'consultation_mode');
+
+                    if ($hasConsultationType) {
+                        $q->whereIn($table . '.consultation_type', [$type, 'both']);
+                    }
+                    if ($hasConsultationMode) {
+                        // map inverse pour consultation_mode stocké en FR
+                        $mode = $type === 'video' ? 'teleconsultation' : ($type === 'inPerson' ? 'presentiel' : 'both');
+                        if ($hasConsultationType) {
+                            $q->orWhereIn($table . '.consultation_mode', [$mode, 'both']);
+                        } else {
+                            $q->whereIn($table . '.consultation_mode', [$mode, 'both']);
+                        }
+                    }
                 });
             }
         }

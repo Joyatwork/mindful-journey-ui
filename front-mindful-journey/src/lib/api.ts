@@ -1,10 +1,12 @@
 // Configuration de base pour l'API Laravel
-const API_BASE_URL = '/api';
+// En dev : '/api' (proxifié par Vite vers localhost:8081)
+// En prod : 'https://votre-backend.railway.app/api'
+const API_BASE_URL = (import.meta.env.VITE_API_URL || '') + '/api';
 
 // Récupère le token CSRF (Laravel Sanctum) et le place en cookie (XSRF-TOKEN)
 const getCsrfToken = async () => {
   try {
-    const csrfUrl = '/sanctum/csrf-cookie';
+    const csrfUrl = `${import.meta.env.VITE_API_URL || ''}/sanctum/csrf-cookie`;
     console.log('🔒 Fetching CSRF from:', csrfUrl);
 
     const response = await fetch(csrfUrl, {
