@@ -50,12 +50,14 @@ RUN cd backend/mindful-journey-back \
 
 # ── SSL for Aiven MySQL ─────────────────────────────────────────
 # Aiven uses publicly-trusted CAs; the system bundle works
-ENV MYSQL_ATTR_SSL_CA=/etc/ssl/certs/ca-certificates.crt
 
-# ── Cache config & routes (uses env at build time) ───────────────
-# Skipped: Railway injects env vars at runtime, not build time.
-# Config/route caching is done at container start instead.
+# ── Set final working directory to the Laravel project ───────────
+WORKDIR /app/backend/mindful-journey-back
+
+# ── SSL for Aiven MySQL ─────────────────────────────────────────
+ENV MYSQL_ATTR_SSL_CA=/etc/ssl/certs/ca-certificates.crt
 
 EXPOSE ${PORT:-8081}
 
-CMD ["sh", "-c", "cd backend/mindful-journey-back && php artisan config:cache && php artisan route:cache && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=${PORT:-8081}"]
+# Use shell form so $PORT is expanded at runtime
+CMD php artisan config:cache && php artisan route:cache && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=${PORT:-8081}
