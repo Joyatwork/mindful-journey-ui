@@ -1,12 +1,11 @@
-FROM php:8.2-fpm
+FROM php:8.2-cli
 
-# Installer les dépendances système
-RUN apt-get update && apt-get install -y \
+# Installer les dépendances système minimales
+RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     curl \
     zip \
     unzip \
-    mysql-client \
     && rm -rf /var/lib/apt/lists/*
 
 # Installer les extensions PHP nécessaires
@@ -22,7 +21,7 @@ RUN docker-php-ext-install \
     ctype
 
 # Installer Composer
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Définir le répertoire de travail
 WORKDIR /app
@@ -37,4 +36,4 @@ RUN cd backend/mindful-journey-back && composer install --no-dev --optimize-auto
 EXPOSE 8081
 
 # Commande de démarrage
-CMD cd backend/mindful-journey-back && php artisan config:cache && php artisan route:cache && php artisan serve --host=0.0.0.0 --port=8081
+CMD cd backend/mindful-journey-back && php artisan config:cache && php artisan route:cache && php -S 0.0.0.0:8081 public/index.php
