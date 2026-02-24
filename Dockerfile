@@ -57,7 +57,10 @@ WORKDIR /app/backend/mindful-journey-back
 # ── SSL for Aiven MySQL ─────────────────────────────────────────
 ENV MYSQL_ATTR_SSL_CA=/etc/ssl/certs/ca-certificates.crt
 
+# ── Entrypoint script ───────────────────────────────────────────
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
 EXPOSE ${PORT:-8081}
 
-# Use shell form so $PORT is expanded at runtime
-CMD php artisan config:cache && php artisan route:cache && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=${PORT:-8081}
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
