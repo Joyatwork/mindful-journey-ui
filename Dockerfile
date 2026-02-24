@@ -59,7 +59,7 @@ ENV MYSQL_ATTR_SSL_CA=/etc/ssl/certs/ca-certificates.crt
 
 # ── Entrypoint script ───────────────────────────────────────────
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+RUN sed -i 's/\r$//' /usr/local/bin/docker-entrypoint.sh && chmod +x /usr/local/bin/docker-entrypoint.sh
 
 EXPOSE ${PORT:-8081}
 
