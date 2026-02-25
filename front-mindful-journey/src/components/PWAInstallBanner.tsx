@@ -21,7 +21,7 @@ export const PWAInstallBanner = () => {
           </div>
           <div>
             <h3 className="font-semibold text-gray-900">Installer l'application</h3>
-            <p className="text-sm text-gray-600">Accédez rapidement à Mindful Journey</p>
+            <p className="text-sm text-gray-600">Accédez rapidement à JoyatWork</p>
           </div>
         </div>
         <div className="flex items-center space-x-2">
