@@ -15,6 +15,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        // CORS is handled in server.php — remove Laravel's HandleCors to avoid
+        // sending duplicate Access-Control-Allow-Origin headers.
+        $middleware->remove(\Illuminate\Http\Middleware\HandleCors::class);
+
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
 
         $middleware->web(append: [
