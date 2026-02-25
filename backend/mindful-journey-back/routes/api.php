@@ -55,6 +55,34 @@ Route::get('health', function () {
     return response()->json(['status' => 'API is working', 'timestamp' => now()]);
 });
 
+// DEBUG: test mail sending
+Route::get('debug/mail', function () {
+    try {
+        \Illuminate\Support\Facades\Mail::raw(
+            'Ceci est un test de Mindful Journey. Si vous recevez ce mail, SMTP fonctionne!',
+            function ($message) {
+                $message->to('alicamara291@gmail.com')
+                        ->subject('Test Mail Mindful Journey');
+            }
+        );
+        return response()->json([
+            'success' => true,
+            'message' => 'Mail envoyé à alicamara291@gmail.com',
+            'mailer' => config('mail.default'),
+            'host' => config('mail.mailers.smtp.host'),
+            'port' => config('mail.mailers.smtp.port'),
+        ]);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'success' => false,
+            'error' => $e->getMessage(),
+            'mailer' => config('mail.default'),
+            'host' => config('mail.mailers.smtp.host'),
+            'port' => config('mail.mailers.smtp.port'),
+        ], 500);
+    }
+});
+
 // DEBUG: test register logic in isolation
 Route::post('debug/register', function (Request $request) {
     try {
