@@ -57,6 +57,24 @@ Route::get('health', function () {
 
 // DEBUG: test mail sending
 Route::get('debug/mail', function () {
+    // Show both cached config AND raw env values 
+    $debugInfo = [
+        'cached_config' => [
+            'mail.default' => config('mail.default'),
+            'mail.mailers.smtp.host' => config('mail.mailers.smtp.host'),
+            'mail.mailers.smtp.port' => config('mail.mailers.smtp.port'),
+            'mail.mailers.smtp.username' => config('mail.mailers.smtp.username'),
+            'mail.mailers.smtp.encryption' => config('mail.mailers.smtp.encryption'),
+        ],
+        'raw_env' => [
+            'MAIL_MAILER' => env('MAIL_MAILER', 'NOT_SET'),
+            'MAIL_HOST' => env('MAIL_HOST', 'NOT_SET'),
+            'MAIL_PORT' => env('MAIL_PORT', 'NOT_SET'),
+            'MAIL_USERNAME' => env('MAIL_USERNAME', 'NOT_SET'),
+        ],
+        'env_file_exists' => file_exists(base_path('.env')),
+    ];
+    
     try {
         \Illuminate\Support\Facades\Mail::raw(
             'Ceci est un test de Mindful Journey. Si vous recevez ce mail, SMTP fonctionne!',
@@ -65,21 +83,16 @@ Route::get('debug/mail', function () {
                         ->subject('Test Mail Mindful Journey');
             }
         );
-        return response()->json([
+        return response()->json(array_merge($debugInfo, [
             'success' => true,
             'message' => 'Mail envoyé à alicamara291@gmail.com',
-            'mailer' => config('mail.default'),
-            'host' => config('mail.mailers.smtp.host'),
-            'port' => config('mail.mailers.smtp.port'),
-        ]);
+        ]));
     } catch (\Throwable $e) {
-        return response()->json([
+        return response()->json(array_merge($debugInfo, [
             'success' => false,
             'error' => $e->getMessage(),
-            'mailer' => config('mail.default'),
-            'host' => config('mail.mailers.smtp.host'),
-            'port' => config('mail.mailers.smtp.port'),
-        ], 500);
+            'trace' => substr($e->getTraceAsString(), 0, 500),
+        ]), 500);
     }
 });
 
