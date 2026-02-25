@@ -24,6 +24,7 @@ class AuthController extends Controller
      */
     public function register(Request $request): JsonResponse
     {
+      try {
         $rules = [
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
@@ -86,9 +87,23 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => 'Inscription réussie',
-            'user' => $user,
+            'user' => $user->only(['id', 'name', 'email', 'created_at']),
             'token' => $token,
         ], 201);
+
+      } catch (ValidationException $e) {
+          throw $e; // Let Laravel handle validation errors normally
+      } catch (\Throwable $e) {
+          Log::error('register: FATAL', [
+              'error' => $e->getMessage(),
+              'file' => $e->getFile(),
+              'line' => $e->getLine(),
+          ]);
+          return response()->json([
+              'message' => 'Erreur serveur lors de l\'inscription',
+              'error' => config('app.debug') ? $e->getMessage() : 'Internal Server Error',
+          ], 500);
+      }
     }
 
     /**
