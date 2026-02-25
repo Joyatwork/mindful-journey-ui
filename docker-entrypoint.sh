@@ -1,5 +1,9 @@
 #!/bin/sh
 # Do NOT use set -e: if migrate fails we still want to start the server
+# Build timestamp: 2026-02-25T03:00:00Z (force rebuild)
+
+echo "==> Clearing old config cache..."
+php artisan config:clear || echo "[WARN] config:clear failed"
 
 echo "==> Caching config..."
 php artisan config:cache || echo "[WARN] config:cache failed"
