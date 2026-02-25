@@ -55,6 +55,31 @@ Route::get('health', function () {
     return response()->json(['status' => 'API is working', 'timestamp' => now()]);
 });
 
+// Diagnostic DB (temporaire)
+Route::get('debug/db', function () {
+    try {
+        $pdo = \Illuminate\Support\Facades\DB::connection()->getPdo();
+        $tables = \Illuminate\Support\Facades\DB::select('SHOW TABLES');
+        return response()->json([
+            'connected' => true,
+            'driver' => config('database.default'),
+            'host' => config('database.connections.mysql.host'),
+            'database' => config('database.connections.mysql.database'),
+            'tables_count' => count($tables),
+            'tables' => array_map(fn($t) => array_values((array)$t)[0], $tables),
+        ]);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'connected' => false,
+            'error' => $e->getMessage(),
+            'driver' => config('database.default'),
+            'host' => config('database.connections.mysql.host'),
+            'port' => config('database.connections.mysql.port'),
+            'database' => config('database.connections.mysql.database'),
+        ], 500);
+    }
+});
+
 // Test d'authentification simple (public)
 Route::post('test/login', function (Request $request) {
     return response()->json([
