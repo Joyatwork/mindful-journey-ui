@@ -25,7 +25,7 @@ if (DEV_DISABLE) {
   // Ne pas intercepter fetch en dev pour laisser passer le HMR
 } else {
 
-const CACHE_NAME = 'mindful-journey-v2';
+const CACHE_NAME = 'mindful-journey-v3';
 const urlsToCache = [
   '/',
   '/manifest.json',
@@ -69,7 +69,11 @@ self.addEventListener('activate', (event) => {
 // Stratégie de cache : Network First avec fallback vers le cache
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
-  
+
+  // Ne PAS intercepter les requêtes cross-origin (API backend, etc.)
+  const url = new URL(event.request.url);
+  if (url.origin !== self.location.origin) return;
+
   event.respondWith(
     fetch(event.request)
       .then((response) => {
