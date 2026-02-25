@@ -72,8 +72,22 @@ Route::get('debug/mail', function () {
             'MAIL_PORT' => env('MAIL_PORT', 'NOT_SET'),
             'MAIL_USERNAME' => env('MAIL_USERNAME', 'NOT_SET'),
         ],
+        'getenv_values' => [
+            'MAIL_MAILER' => getenv('MAIL_MAILER') ?: 'NOT_SET',
+        ],
+        'server_env' => [
+            'MAIL_MAILER' => $_ENV['MAIL_MAILER'] ?? ($_SERVER['MAIL_MAILER'] ?? 'NOT_SET'),
+        ],
         'env_file_exists' => file_exists(base_path('.env')),
+        'env_file_mail_lines' => null,
     ];
+    
+    // Read .env file directly
+    if (file_exists(base_path('.env'))) {
+        $envContent = file_get_contents(base_path('.env'));
+        preg_match_all('/^MAIL_[A-Z_]+=.*/m', $envContent, $matches);
+        $debugInfo['env_file_mail_lines'] = $matches[0] ?? [];
+    }
     
     try {
         \Illuminate\Support\Facades\Mail::raw(
