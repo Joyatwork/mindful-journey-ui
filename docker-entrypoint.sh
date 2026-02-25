@@ -11,4 +11,4 @@ echo "==> Running migrations..."
 php artisan migrate --force 2>&1 || echo "[WARN] migrate failed, continuing..."
 
 echo "==> Starting server on port ${PORT:-8081}..."
-exec php -S 0.0.0.0:"${PORT:-8081}" -t public
+exec php -S 0.0.0.0:"${PORT:-8081}" server.php
