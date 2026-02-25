@@ -55,6 +55,48 @@ Route::get('health', function () {
     return response()->json(['status' => 'API is working', 'timestamp' => now()]);
 });
 
+// DEBUG: test register logic in isolation
+Route::post('debug/register', function (Request $request) {
+    try {
+        $rules = [
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|min:8|confirmed',
+        ];
+        if (\Illuminate\Support\Facades\Schema::hasTable('entreprises')) {
+            $rules['entreprise_id'] = 'required|integer|exists:entreprises,id';
+        }
+        $request->validate($rules);
+
+        $hashed = \Illuminate\Support\Facades\Hash::make($request->password);
+        $data = [
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => $hashed,
+        ];
+
+        if (\Illuminate\Support\Facades\Schema::hasColumn('users', 'entreprise_id') && $request->filled('entreprise_id')) {
+            $data['entreprise_id'] = (int)$request->entreprise_id;
+        }
+
+        $user = \App\Models\User::create($data);
+        $token = $user->createToken('auth-token')->plainTextToken;
+
+        return response()->json([
+            'message' => 'OK register debug',
+            'user_id' => $user->id,
+            'token' => substr($token, 0, 20) . '...',
+        ], 201);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'error' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+            'trace' => array_slice(explode("\n", $e->getTraceAsString()), 0, 10),
+        ], 500);
+    }
+});
+
 // Diagnostic DB (temporaire)
 Route::get('debug/db', function () {
     try {
