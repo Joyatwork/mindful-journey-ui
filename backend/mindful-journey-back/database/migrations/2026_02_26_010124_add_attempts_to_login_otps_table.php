@@ -11,11 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('login_otps', function (Blueprint $table) {
-            if (!Schema::hasColumn('login_otps', 'attempts')) {
+        if (!Schema::hasColumn('login_otps', 'attempts')) {
+            Schema::table('login_otps', function (Blueprint $table) {
                 $table->unsignedTinyInteger('attempts')->default(0)->after('consumed_at');
-            }
-        });
+            });
+        }
     }
 
     /**
@@ -23,10 +23,10 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('login_otps', function (Blueprint $table) {
-            if (Schema::hasColumn('login_otps', 'attempts')) {
+        if (Schema::hasColumn('login_otps', 'attempts')) {
+            Schema::table('login_otps', function (Blueprint $table) {
                 $table->dropColumn('attempts');
-            }
-        });
+            });
+        }
     }
 };
