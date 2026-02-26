@@ -378,9 +378,15 @@ class AuthController extends Controller
             
             $token = $user->createToken('auth-token')->plainTextToken;
 
+            // Sérialisation explicite pour éviter les erreurs avec les relations lazy-loaded
             return response()->json([
                 'message' => 'Connexion validée',
-                'user' => $user,
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'created_at' => $user->created_at,
+                ],
                 'token' => $token,
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
