@@ -254,6 +254,51 @@ Route::prefix('test')->group(function () {
 // Auth (publiques + protégées)
 // ---------------------------------------------------------------------
 
+// DEBUG: diagnostic verify-otp en production (temporaire)
+Route::post('debug/verify-otp-diag', function (Request $request) {
+    try {
+        // Vérifier si la table login_otps existe
+        $tableExists = \Illuminate\Support\Facades\Schema::hasTable('login_otps');
+        if (!$tableExists) {
+            return response()->json(['error' => 'Table login_otps n\'existe pas']);
+        }
+        
+        // Vérifier les colonnes de la table
+        $columns = \Illuminate\Support\Facades\Schema::getColumnListing('login_otps');
+        
+        // Tester la requête de base
+        $otpCount = LoginOtp::count();
+        
+        $data = $request->validate([
+            'otp_id' => 'required|integer',
+            'code' => 'required|string'
+        ]);
+        
+        $otp = LoginOtp::find($data['otp_id']);
+        
+        return response()->json([
+            'table_exists' => $tableExists,
+            'columns' => $columns,
+            'total_otps' => $otpCount,
+            'otp_found' => $otp ? true : false,
+            'otp_data' => $otp ? [
+                'id' => $otp->id,
+                'user_id' => $otp->user_id,
+                'expires_at' => $otp->expires_at,
+                'consumed_at' => $otp->consumed_at,
+            ] : null,
+            'user_exists' => $otp && $otp->user ? true : false,
+        ]);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'error' => $e->getMessage(),
+            'file' => basename($e->getFile()),
+            'line' => $e->getLine(),
+            'trace' => array_slice(explode("\n", $e->getTraceAsString()), 0, 5),
+        ], 500);
+    }
+});
+
 // Routes d'authentification
 Route::prefix('auth')->group(function () {
     Route::post('register', [AuthController::class, 'register']);
