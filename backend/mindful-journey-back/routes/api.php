@@ -55,6 +55,55 @@ Route::get('health', function () {
     return response()->json(['status' => 'API is working', 'timestamp' => now()]);
 });
 
+// DEBUG: diagnostic login en production
+Route::post('debug/login-diag', function (Request $request) {
+    try {
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required',
+        ]);
+        
+        $user = \App\Models\User::where('email', $request->email)->first();
+        if (!$user) {
+            return response()->json(['error' => 'Utilisateur non trouvé', 'email' => $request->email]);
+        }
+        
+        $passOk = \Illuminate\Support\Facades\Hash::check($request->password, $user->password);
+        if (!$passOk) {
+            return response()->json(['error' => 'Mot de passe incorrect']);
+        }
+        
+        $preferences = is_array($user->preferences) ? $user->preferences : (json_decode($user->preferences ?? '[]', true) ?: []);
+        $twoFactorEnabled = $preferences['two_factor_enabled'] ?? true;
+        
+        $tableExists = \Illuminate\Support\Facades\Schema::hasTable('login_otps');
+        
+        // Test envoi mail (sans envoyer pour de vrai)
+        $mailConfig = [
+            'mail.default' => config('mail.default'),
+            'mail.mailers' => array_keys(config('mail.mailers', [])),
+            'resend_key_set' => !empty(config('services.resend.key')),
+        ];
+        
+        return response()->json([
+            'user_found' => true,
+            'user_id' => $user->id,
+            'password_ok' => $passOk,
+            'two_factor_enabled' => $twoFactorEnabled,
+            'login_otps_table_exists' => $tableExists,
+            'mail_config' => $mailConfig,
+            'app_env' => config('app.env'),
+        ]);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'error' => $e->getMessage(),
+            'file' => basename($e->getFile()),
+            'line' => $e->getLine(),
+            'trace' => array_slice(explode("\n", $e->getTraceAsString()), 0, 8),
+        ], 500);
+    }
+});
+
 // DEBUG: test mail sending
 Route::get('debug/mail', function () {
     // Show both cached config AND raw env values 
