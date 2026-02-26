@@ -322,47 +322,80 @@ class AuthController extends Controller
      */
     public function verifyOtp(Request $request): JsonResponse
     {
-        $data = $request->validate([
-            'otp_id' => 'required|integer',
-            'code' => 'required|string|size:5'
-        ]);
+        try {
+            $data = $request->validate([
+                'otp_id' => 'required|integer',
+                'code' => 'required|string|size:5'
+            ]);
 
-        $otp = LoginOtp::find($data['otp_id']);
-        if (!$otp) {
-            return response()->json(['message' => 'Code introuvable'], 404);
-        }
+            $otp = LoginOtp::find($data['otp_id']);
+            if (!$otp) {
+                return response()->json(['message' => 'Code introuvable'], 404);
+            }
 
-        if ($otp->isConsumed()) {
-            return response()->json(['message' => 'Code déjà utilisé'], 400);
-        }
-        if ($otp->isExpired()) {
-            $otp->delete();
-            return response()->json(['message' => 'Code expiré'], 400);
-        }
-        if ($otp->attempts >= 5) {
-            $otp->delete();
-            return response()->json(['message' => 'Trop de tentatives, recommencez la connexion'], 429);
-        }
+            if ($otp->isConsumed()) {
+                return response()->json(['message' => 'Code déjà utilisé'], 400);
+            }
+            if ($otp->isExpired()) {
+                $otp->delete();
+                return response()->json(['message' => 'Code expiré'], 400);
+            }
+            
+            // Vérifier si la colonne attempts existe avant de l'utiliser
+            $attempts = 0;
+            try {
+                $attempts = $otp->attempts ?? 0;
+            } catch (\Throwable $e) {
+                // La colonne attempts n'existe peut-être pas
+                Log::warning('verifyOtp: colonne attempts inaccessible', ['error' => $e->getMessage()]);
+            }
+            
+            if ($attempts >= 5) {
+                $otp->delete();
+                return response()->json(['message' => 'Trop de tentatives, recommencez la connexion'], 429);
+            }
 
-        if (!hash_equals($otp->code, $data['code'])) {
-            $otp->increment('attempts');
+            if (!hash_equals($otp->code, $data['code'])) {
+                try {
+                    $otp->increment('attempts');
+                } catch (\Throwable $e) {
+                    Log::warning('verifyOtp: impossible d\'incrémenter attempts', ['error' => $e->getMessage()]);
+                }
+                return response()->json([
+                    'message' => 'Code incorrect',
+                    'remaining_attempts' => 5 - $attempts - 1
+                ], 400);
+            }
+
+            $otp->consumed_at = now();
+            $otp->save();
+
+            $user = $otp->user;
+            if (!$user) {
+                Log::error('verifyOtp: utilisateur introuvable pour OTP', ['otp_id' => $otp->id, 'user_id' => $otp->user_id]);
+                return response()->json(['message' => 'Utilisateur introuvable'], 404);
+            }
+            
+            $token = $user->createToken('auth-token')->plainTextToken;
+
             return response()->json([
-                'message' => 'Code incorrect',
-                'remaining_attempts' => 5 - $otp->attempts
-            ], 400);
+                'message' => 'Connexion validée',
+                'user' => $user,
+                'token' => $token,
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            Log::error('verifyOtp: ERREUR', [
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+            return response()->json([
+                'message' => 'Erreur serveur lors de la vérification',
+                'error' => config('app.debug') ? $e->getMessage() : 'Internal Server Error',
+            ], 500);
         }
-
-        $otp->consumed_at = now();
-        $otp->save();
-
-        $user = $otp->user;
-        $token = $user->createToken('auth-token')->plainTextToken;
-
-        return response()->json([
-            'message' => 'Connexion validée',
-            'user' => $user,
-            'token' => $token,
-        ]);
     }
 
     /**
