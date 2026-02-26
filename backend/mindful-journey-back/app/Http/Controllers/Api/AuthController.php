@@ -391,9 +391,12 @@ class AuthController extends Controller
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
             ]);
+            // Temporairement afficher l'erreur pour le diagnostic
             return response()->json([
                 'message' => 'Erreur serveur lors de la vérification',
-                'error' => config('app.debug') ? $e->getMessage() : 'Internal Server Error',
+                'debug_error' => $e->getMessage(),
+                'debug_file' => basename($e->getFile()),
+                'debug_line' => $e->getLine(),
             ], 500);
         }
     }
