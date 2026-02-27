@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 // Try resolving via direct path first; TS sometimes lags recognizing new files. Extension kept explicit for bundler mode.
 import MoodSelectorV2 from '@/components/MoodSelectorV2.tsx';
 import { Card } from '@/components/ui/card';
@@ -9,6 +10,7 @@ import MobilePageShell from '@/components/MobilePageShell';
 
 const MoodCheckPage: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [mood, setMood] = useState<number | undefined>();
   const [savedMood, setSavedMood] = useState<number | undefined>();
 
@@ -39,11 +41,11 @@ const MoodCheckPage: React.FC = () => {
           </Button>
           <h1 className="text-2xl font-bold tracking-tight text-emerald-800 flex items-center gap-2">
             <Sparkles className="h-6 w-6 text-emerald-500" />
-            Comment vous sentez-vous aujourd'hui ?
+            {t('mood.title')}
           </h1>
         </div>
         <p className="text-emerald-900/80 mb-6 text-sm">
-          Choisissez l'option qui reflète le mieux votre état actuel. Cela nous permet d'adapter instantanément vos recommandations et priorités bien-être.
+          {t('mood.subtitle')}
         </p>
         <MoodSelectorV2
           value={mood}
@@ -58,14 +60,14 @@ const MoodCheckPage: React.FC = () => {
               className="flex-1 bg-emerald-600 hover:bg-emerald-700"
               onClick={handleContinue}
             >
-              Étape suivante
+              {t('mood.nextStep')}
             </Button>
             <Button
               variant="outline"
               className="flex-1 border-emerald-300 text-emerald-700 hover:bg-emerald-50"
               onClick={() => navigate('/dashboard')}
             >
-              Passer pour l'instant
+              {t('mood.skipForNow')}
             </Button>
           </div>
         )}

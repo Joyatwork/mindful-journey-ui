@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -9,8 +10,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { Heart, Shield, User, Mail, Eye, EyeOff } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
+import LanguageSelector from '@/components/LanguageSelector';
 
 const LoginPage = () => {
+  const { t } = useTranslation();
   const { login, verifyOtp, twoFactorPending, register, forgotPassword, resetPassword, loginWithGoogle, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
   const location = useLocation();
@@ -231,7 +234,7 @@ const LoginPage = () => {
         <Card className="w-96">
           <CardContent className="p-6 text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Chargement...</p>
+            <p className="text-gray-600">{t('common.loading')}</p>
           </CardContent>
         </Card>
       </div>
@@ -240,6 +243,10 @@ const LoginPage = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+      {/* Language Selector */}
+      <div className="absolute top-4 right-4">
+        <LanguageSelector variant="outline" />
+      </div>
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
@@ -248,7 +255,7 @@ const LoginPage = () => {
             </div>
           </div>
           <CardTitle className="text-2xl font-bold text-gray-800">Joyatwork</CardTitle>
-          <p className="text-gray-600">Votre voyage vers le bien-être commence ici</p>
+          <p className="text-gray-600">{t('welcome.intro')}</p>
         </CardHeader>
         <CardContent>
           {message && (
@@ -263,18 +270,18 @@ const LoginPage = () => {
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="login" className="flex items-center gap-2">
                 <Shield className="h-4 w-4" />
-                Connexion
+                {t('auth.login')}
               </TabsTrigger>
               <TabsTrigger value="register" className="flex items-center gap-2">
                 <User className="h-4 w-4" />
-                Inscription
+                {t('auth.register')}
               </TabsTrigger>
             </TabsList>
             <TabsContent value="login" className="space-y-4">
               {!twoFactorPending && (
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="login-email">Email</Label>
+                    <Label htmlFor="login-email">{t('auth.email')}</Label>
                     <Input
                       id="login-email"
                       type="email"
@@ -286,7 +293,7 @@ const LoginPage = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="login-password">Mot de passe</Label>
+                    <Label htmlFor="login-password">{t('auth.password')}</Label>
                     <div className="relative">
                       <Input
                         id="login-password"
@@ -311,12 +318,12 @@ const LoginPage = () => {
                     </div>
                     <div className="text-right mt-1">
                       <button type="button" onClick={() => { setShowForgot(true); setForgotEmail(loginForm.email); }} className="text-xs text-indigo-600 hover:underline">
-                        Mot de passe oublié ?
+                        {t('auth.forgotPassword')}
                       </button>
                     </div>
                   </div>
                   <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? 'Connexion...' : 'Se connecter'}
+                    {loading ? t('common.loading') : t('auth.login')}
                   </Button>
                 </form>
               )}
@@ -360,7 +367,7 @@ const LoginPage = () => {
                       <span className="w-full border-t" />
                     </div>
                     <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-white px-2 text-muted-foreground">Ou continuer avec</span>
+                      <span className="bg-white px-2 text-muted-foreground">{t('common.or')}</span>
                     </div>
                   </div>
                   <Button
@@ -371,7 +378,7 @@ const LoginPage = () => {
                     disabled={loading}
                   >
                     <Mail className="h-4 w-4 mr-2" />
-                    Continuer avec Google
+                    {t('auth.loginWithGoogle')}
                   </Button>
                 </>
               )}
@@ -380,18 +387,18 @@ const LoginPage = () => {
             <TabsContent value="register" className="space-y-4">
               <form onSubmit={handleRegister} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="register-name">Nom</Label>
+                  <Label htmlFor="register-name">{t('auth.name')}</Label>
                   <Input
                     id="register-name"
                     type="text"
-                    placeholder="Votre nom"
+                    placeholder={t('auth.name')}
                     value={registerForm.name}
                     onChange={(e) => setRegisterForm({ ...registerForm, name: e.target.value })}
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="register-email">Email</Label>
+                  <Label htmlFor="register-email">{t('auth.email')}</Label>
                   <Input
                     id="register-email"
                     type="email"
@@ -403,7 +410,7 @@ const LoginPage = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="register-password">Mot de passe</Label>
+                  <Label htmlFor="register-password">{t('auth.password')}</Label>
                   <div className="relative">
                     <Input
                       id="register-password"

@@ -1,5 +1,6 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import testApiService from '@/lib/test-api';
 import apiService from '@/lib/api';
 import { Button } from '@/components/ui/button';
@@ -57,10 +58,12 @@ import {
 } from 'lucide-react';
 import AnnualBackground from '@/components/AnnualBackground';
 import AnnualOptionList from '@/components/AnnualOptionList';
+import LanguageSelector from '@/components/LanguageSelector';
 
 const Index = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { user, logout } = useAuth();
   const { appointments, isLoading: apptsLoading } = useAppointments();
   const [currentView, setCurrentView] = useState('dashboard');
@@ -887,11 +890,12 @@ const Index = () => {
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <h1 className="text-2xl font-bold mb-1">Bonjour {user?.name || 'Utilisateur'} ! 👋</h1>
-                  <p className="text-white/90">Prenons un instant pour votre bien-être aujourd'hui.</p>
+                  <h1 className="text-2xl font-bold mb-1">{t('dashboard.welcome', { name: user?.name || 'Utilisateur' })} 👋</h1>
+                  <p className="text-white/90">{t('welcome.intro')}</p>
                 </div>
               </div>
               <div className="flex space-x-2">
+                <LanguageSelector variant="ghost" size="icon" showLabel={false} className="text-white hover:bg-white/20" />
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon" className="text-white hover:bg-white/20 relative">
@@ -904,10 +908,10 @@ const Index = () => {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-80">
-                    <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+                    <DropdownMenuLabel>{t('notifications.title')}</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     {notifications.length === 0 ? (
-                      <div className="p-3 text-sm text-gray-500">Aucune notification</div>
+                      <div className="p-3 text-sm text-gray-500">{t('notifications.noNotifications')}</div>
                     ) : (
                       notifications.map((n) => (
                         <DropdownMenuItem key={n.id} className="flex flex-col items-start whitespace-normal h-auto py-2">
@@ -923,8 +927,8 @@ const Index = () => {
                     )}
                     <DropdownMenuSeparator />
                     <div className="flex justify-between px-2 py-1">
-                      <Button variant="ghost" size="sm" onClick={markAllAsRead}>Tout marquer comme lu</Button>
-                      <Button variant="ghost" size="sm" onClick={clearNotifications}>Vider</Button>
+                      <Button variant="ghost" size="sm" onClick={markAllAsRead}>{t('notifications.markAllRead')}</Button>
+                      <Button variant="ghost" size="sm" onClick={clearNotifications}>{t('common.delete')}</Button>
                     </div>
                   </DropdownMenuContent>
                 </DropdownMenu>
