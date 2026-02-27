@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 class ProfileController extends Controller
 {
@@ -62,39 +63,52 @@ class ProfileController extends Controller
             'avatar.max' => 'The avatar may not be greater than 5MB.',
         ]);
 
-        // Handle avatar upload if present
+        // Handle avatar upload to Cloudinary if present
         if ($request->hasFile('avatar')) {
             try {
                 $file = $request->file('avatar');
                 
-                // Ensure avatars directory exists
-                $avatarsPath = storage_path('app/public/avatars');
-                if (!is_dir($avatarsPath)) {
-                    mkdir($avatarsPath, 0775, true);
-                }
-                
-                // Delete old avatar if exists
-                if (!empty($user->avatar)) {
+                // Delete old avatar from Cloudinary if exists
+                if (!empty($user->avatar) && str_starts_with($user->avatar, 'mindful-journey/avatars/')) {
                     try {
-                        \Illuminate\Support\Facades\Storage::disk('public')->delete($user->avatar);
+                        $publicId = pathinfo($user->avatar, PATHINFO_FILENAME);
+                        Cloudinary::destroy('mindful-journey/avatars/' . $publicId);
+                        Log::info('ProfileController:update - deleted old Cloudinary avatar: ' . $user->avatar);
                     } catch (\Throwable $e) {
-                        // Ignore deletion errors
+                        Log::warning('ProfileController:update - failed to delete old avatar: ' . $e->getMessage());
                     }
                 }
                 
-                $path = $file->store('avatars', 'public');
-                if (!$path) {
-                    Log::error('ProfileController:update - avatar store returned false/null');
+                // Upload to Cloudinary
+                $uploadResult = Cloudinary::upload($file->getRealPath(), [
+                    'folder' => 'mindful-journey/avatars',
+                    'public_id' => 'user_' . $user->id . '_' . time(),
+                    'transformation' => [
+                        'width' => 400,
+                        'height' => 400,
+                        'crop' => 'fill',
+                        'gravity' => 'face',
+                        'quality' => 'auto',
+                        'fetch_format' => 'auto'
+                    ]
+                ]);
+                
+                $cloudinaryUrl = $uploadResult->getSecurePath();
+                
+                if (!$cloudinaryUrl) {
+                    Log::error('ProfileController:update - Cloudinary upload returned no URL');
                     return response()->json([
                         'success' => false,
-                        'message' => 'Erreur lors du stockage de l\'avatar.'
+                        'message' => 'Erreur lors du stockage de l\'avatar sur Cloudinary.'
                     ], 500);
                 }
-                // store relative path in DB
-                $validated['avatar'] = $path;
-                Log::info('ProfileController:update - avatar stored successfully: ' . $path);
+                
+                // Store the full Cloudinary URL directly
+                $validated['avatar'] = $cloudinaryUrl;
+                Log::info('ProfileController:update - avatar uploaded to Cloudinary: ' . $cloudinaryUrl);
+                
             } catch (\Throwable $e) {
-                Log::error('ProfileController:update - avatar upload exception: ' . $e->getMessage());
+                Log::error('ProfileController:update - Cloudinary upload exception: ' . $e->getMessage());
                 return response()->json([
                     'success' => false,
                     'message' => 'Erreur lors de l\'upload de l\'avatar: ' . $e->getMessage()

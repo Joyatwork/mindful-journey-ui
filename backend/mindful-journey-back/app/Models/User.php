@@ -104,9 +104,17 @@ class User extends Authenticatable
             return $explicit;
         }
 
-        // Fallback to local stored avatar path -> public URL through storage symlink
+        // Check if avatar is already a full URL (Cloudinary or other external)
         if (!empty($this->avatar)) {
-            return asset('storage/' . ltrim($this->avatar, '/'));
+            $avatar = $this->avatar;
+            
+            // If it's already a full URL, return as-is
+            if (str_starts_with($avatar, 'http://') || str_starts_with($avatar, 'https://')) {
+                return $avatar;
+            }
+            
+            // Fallback to local stored avatar path -> public URL through storage symlink
+            return asset('storage/' . ltrim($avatar, '/'));
         }
 
         return null;
