@@ -54,15 +54,52 @@ class ProfileController extends Controller
             'bio' => 'nullable|string|max:1000',
             'preferences' => 'nullable|array',
             'health_goals' => 'nullable|array',
-            'avatar' => 'nullable|file|image|mimes:jpg,jpeg,png,webp|max:5120' // max 5MB
+            'avatar' => 'nullable|file|image|mimes:jpg,jpeg,png,gif,webp|max:5120' // max 5MB
+        ], [
+            'avatar.file' => 'The avatar failed to upload.',
+            'avatar.image' => 'The avatar must be an image.',
+            'avatar.mimes' => 'The avatar must be a file of type: jpg, jpeg, png, gif, webp.',
+            'avatar.max' => 'The avatar may not be greater than 5MB.',
         ]);
 
         // Handle avatar upload if present
         if ($request->hasFile('avatar')) {
-            $file = $request->file('avatar');
-            $path = $file->store('avatars', 'public');
-            // store relative path in DB
-            $validated['avatar'] = $path;
+            try {
+                $file = $request->file('avatar');
+                
+                // Ensure avatars directory exists
+                $avatarsPath = storage_path('app/public/avatars');
+                if (!is_dir($avatarsPath)) {
+                    mkdir($avatarsPath, 0775, true);
+                }
+                
+                // Delete old avatar if exists
+                if (!empty($user->avatar)) {
+                    try {
+                        \Illuminate\Support\Facades\Storage::disk('public')->delete($user->avatar);
+                    } catch (\Throwable $e) {
+                        // Ignore deletion errors
+                    }
+                }
+                
+                $path = $file->store('avatars', 'public');
+                if (!$path) {
+                    Log::error('ProfileController:update - avatar store returned false/null');
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Erreur lors du stockage de l\'avatar.'
+                    ], 500);
+                }
+                // store relative path in DB
+                $validated['avatar'] = $path;
+                Log::info('ProfileController:update - avatar stored successfully: ' . $path);
+            } catch (\Throwable $e) {
+                Log::error('ProfileController:update - avatar upload exception: ' . $e->getMessage());
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Erreur lors de l\'upload de l\'avatar: ' . $e->getMessage()
+                ], 500);
+            }
         }
 
         // Filter validated payload to actual user table columns to avoid SQL errors

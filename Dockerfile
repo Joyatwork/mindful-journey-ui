@@ -45,7 +45,7 @@ RUN cd backend/mindful-journey-back && composer run-script post-autoload-dump --
 
 # ensure storage & cache directories exist and are writable
 RUN cd backend/mindful-journey-back \
- && mkdir -p storage/framework/{sessions,views,cache} storage/logs bootstrap/cache \
+ && mkdir -p storage/framework/{sessions,views,cache} storage/logs storage/app/public/avatars bootstrap/cache \
  && chmod -R 775 storage bootstrap/cache
 
 # ── SSL for Aiven MySQL ─────────────────────────────────────────

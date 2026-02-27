@@ -412,6 +412,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Profil utilisateur
     Route::get('profile', [ProfileController::class, 'show']);
     Route::put('profile', [ProfileController::class, 'update']);
+    // POST route for multipart form data (avatar uploads) - accepts _method=PUT spoofing
+    Route::post('profile', [ProfileController::class, 'update']);
 
     // Rendez-vous
     Route::apiResource('appointments', AppointmentController::class);
