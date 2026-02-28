@@ -54,6 +54,13 @@ class ProfileController extends Controller
      */
     public function update(Request $request): JsonResponse
     {
+        Log::info('ProfileController:update - START', [
+            'hasFile' => $request->hasFile('avatar'),
+            'cloudinary_cloud' => env('CLOUDINARY_CLOUD_NAME') ? 'set' : 'NOT SET',
+            'cloudinary_key' => env('CLOUDINARY_API_KEY') ? 'set' : 'NOT SET',
+            'cloudinary_secret' => env('CLOUDINARY_API_SECRET') ? 'set' : 'NOT SET',
+        ]);
+        
         $user = $request->user();
 
         if (!$user) {
@@ -62,6 +69,8 @@ class ProfileController extends Controller
                 'message' => 'Utilisateur non authentifié'
             ], 401);
         }
+
+        Log::info('ProfileController:update - user authenticated', ['userId' => $user->id]);
 
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
