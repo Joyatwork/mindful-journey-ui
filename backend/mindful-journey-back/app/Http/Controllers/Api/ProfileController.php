@@ -130,14 +130,6 @@ class ProfileController extends Controller
                 $uploadResult = $cloudinary->uploadApi()->upload($file->getRealPath(), [
                     'folder' => 'mindful-journey/avatars',
                     'public_id' => 'user_' . $user->id . '_' . time(),
-                    'transformation' => [
-                        'width' => 400,
-                        'height' => 400,
-                        'crop' => 'fill',
-                        'gravity' => 'face',
-                        'quality' => 'auto',
-                        'fetch_format' => 'auto'
-                    ]
                 ]);
                 
                 $cloudinaryUrl = $uploadResult['secure_url'] ?? null;
