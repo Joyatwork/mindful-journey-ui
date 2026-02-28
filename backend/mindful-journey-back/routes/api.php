@@ -99,6 +99,88 @@ Route::post('test-upload', function (Request $request) {
     return response()->json($info);
 });
 
+// DEBUG: Test Cloudinary upload
+Route::post('test-cloudinary', function (Request $request) {
+    try {
+        // Check env vars
+        $cloudName = env('CLOUDINARY_CLOUD_NAME');
+        $apiKey = env('CLOUDINARY_API_KEY');
+        $apiSecret = env('CLOUDINARY_API_SECRET');
+        
+        $envCheck = [
+            'CLOUDINARY_CLOUD_NAME' => $cloudName ? 'set (' . $cloudName . ')' : 'NOT SET',
+            'CLOUDINARY_API_KEY' => $apiKey ? 'set (' . substr($apiKey, 0, 5) . '...)' : 'NOT SET',
+            'CLOUDINARY_API_SECRET' => $apiSecret ? 'set (hidden)' : 'NOT SET',
+        ];
+        
+        if (!$cloudName || !$apiKey || !$apiSecret) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Cloudinary env vars missing',
+                'envCheck' => $envCheck,
+            ], 500);
+        }
+        
+        // Check if SDK class exists
+        if (!class_exists(\Cloudinary\Cloudinary::class)) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Cloudinary SDK class not found - composer package not installed',
+                'envCheck' => $envCheck,
+            ], 500);
+        }
+        
+        // Try to create Cloudinary instance
+        $cloudinary = new \Cloudinary\Cloudinary([
+            'cloud' => [
+                'cloud_name' => $cloudName,
+                'api_key' => $apiKey,
+                'api_secret' => $apiSecret,
+            ],
+            'url' => [
+                'secure' => true
+            ]
+        ]);
+        
+        // If file provided, try to upload it
+        if ($request->hasFile('avatar')) {
+            $file = $request->file('avatar');
+            if (!$file->isValid()) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'File is not valid: ' . $file->getErrorMessage(),
+                    'envCheck' => $envCheck,
+                ], 400);
+            }
+            
+            $uploadResult = $cloudinary->uploadApi()->upload($file->getRealPath(), [
+                'folder' => 'mindful-journey/test',
+                'public_id' => 'test_' . time(),
+            ]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Upload successful!',
+                'url' => $uploadResult['secure_url'] ?? null,
+                'envCheck' => $envCheck,
+            ]);
+        }
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Cloudinary SDK ready (no file uploaded)',
+            'envCheck' => $envCheck,
+        ]);
+        
+    } catch (\Throwable $e) {
+        return response()->json([
+            'success' => false,
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString(),
+        ], 500);
+    }
+});
+
 // DEBUG: diagnostic login en production
 Route::post('debug/login-diag', function (Request $request) {
     try {
