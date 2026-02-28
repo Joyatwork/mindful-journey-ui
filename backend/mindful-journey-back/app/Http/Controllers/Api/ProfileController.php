@@ -7,10 +7,27 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
-use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+use Cloudinary\Cloudinary;
 
 class ProfileController extends Controller
 {
+    /**
+     * Get configured Cloudinary instance
+     */
+    private function getCloudinary(): Cloudinary
+    {
+        return new Cloudinary([
+            'cloud' => [
+                'cloud_name' => env('CLOUDINARY_CLOUD_NAME'),
+                'api_key' => env('CLOUDINARY_API_KEY'),
+                'api_secret' => env('CLOUDINARY_API_SECRET'),
+            ],
+            'url' => [
+                'secure' => true
+            ]
+        ]);
+    }
+
     /**
      * Afficher le profil utilisateur
      */
@@ -67,20 +84,24 @@ class ProfileController extends Controller
         if ($request->hasFile('avatar')) {
             try {
                 $file = $request->file('avatar');
+                $cloudinary = $this->getCloudinary();
                 
                 // Delete old avatar from Cloudinary if exists
-                if (!empty($user->avatar) && str_starts_with($user->avatar, 'mindful-journey/avatars/')) {
+                if (!empty($user->avatar) && str_contains($user->avatar, 'cloudinary.com')) {
                     try {
-                        $publicId = pathinfo($user->avatar, PATHINFO_FILENAME);
-                        Cloudinary::destroy('mindful-journey/avatars/' . $publicId);
-                        Log::info('ProfileController:update - deleted old Cloudinary avatar: ' . $user->avatar);
+                        // Extract public_id from URL
+                        preg_match('/mindful-journey\/avatars\/([^\.\/]+)/', $user->avatar, $matches);
+                        if (!empty($matches[1])) {
+                            $cloudinary->uploadApi()->destroy('mindful-journey/avatars/' . $matches[1]);
+                            Log::info('ProfileController:update - deleted old Cloudinary avatar');
+                        }
                     } catch (\Throwable $e) {
                         Log::warning('ProfileController:update - failed to delete old avatar: ' . $e->getMessage());
                     }
                 }
                 
-                // Upload to Cloudinary
-                $uploadResult = Cloudinary::upload($file->getRealPath(), [
+                // Upload to Cloudinary using SDK directly
+                $uploadResult = $cloudinary->uploadApi()->upload($file->getRealPath(), [
                     'folder' => 'mindful-journey/avatars',
                     'public_id' => 'user_' . $user->id . '_' . time(),
                     'transformation' => [
@@ -93,7 +114,7 @@ class ProfileController extends Controller
                     ]
                 ]);
                 
-                $cloudinaryUrl = $uploadResult->getSecurePath();
+                $cloudinaryUrl = $uploadResult['secure_url'] ?? null;
                 
                 if (!$cloudinaryUrl) {
                     Log::error('ProfileController:update - Cloudinary upload returned no URL');

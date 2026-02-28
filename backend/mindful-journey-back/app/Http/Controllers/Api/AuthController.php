@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+use Cloudinary\Cloudinary;
 use App\Models\LoginOtp;
 use App\Mail\TwoFactorCodeMail;
 use Illuminate\Validation\ValidationException;
@@ -20,6 +20,23 @@ use App\Models\User;
 
 class AuthController extends Controller
 {
+    /**
+     * Get configured Cloudinary instance
+     */
+    private function getCloudinary(): Cloudinary
+    {
+        return new Cloudinary([
+            'cloud' => [
+                'cloud_name' => env('CLOUDINARY_CLOUD_NAME'),
+                'api_key' => env('CLOUDINARY_API_KEY'),
+                'api_secret' => env('CLOUDINARY_API_SECRET'),
+            ],
+            'url' => [
+                'secure' => true
+            ]
+        ]);
+    }
+
     /**
      * Inscription d'un nouvel utilisateur
      */
@@ -502,23 +519,27 @@ class AuthController extends Controller
         // Handle avatar upload if present (FormData upload) - Upload to Cloudinary
         if ($request->hasFile('avatar')) {
             try {
+                $cloudinary = $this->getCloudinary();
+                
                 // Delete old Cloudinary image if it exists
                 if (!empty($user->avatar) && str_contains($user->avatar, 'cloudinary.com')) {
                     try {
                         // Extract public_id from Cloudinary URL and destroy
-                        $publicId = 'mindful-journey/avatars/user-' . $user->id;
-                        Cloudinary::destroy($publicId);
+                        preg_match('/mindful-journey\/avatars\/([^\.\/]+)/', $user->avatar, $matches);
+                        if (!empty($matches[1])) {
+                            $cloudinary->uploadApi()->destroy('mindful-journey/avatars/' . $matches[1]);
+                        }
                     } catch (\Throwable $e) {
                         Log::warning('AuthController: Failed to delete old Cloudinary avatar: ' . $e->getMessage());
                     }
                 }
 
-                // Upload to Cloudinary with transformations
-                $uploadedFile = Cloudinary::upload(
+                // Upload to Cloudinary with transformations using SDK directly
+                $uploadResult = $cloudinary->uploadApi()->upload(
                     $request->file('avatar')->getRealPath(),
                     [
                         'folder' => 'mindful-journey/avatars',
-                        'public_id' => 'user-' . $user->id,
+                        'public_id' => 'user-' . $user->id . '-' . time(),
                         'overwrite' => true,
                         'transformation' => [
                             'width' => 400,
@@ -532,13 +553,13 @@ class AuthController extends Controller
                 );
 
                 // Store the full Cloudinary URL
-                $cloudinaryUrl = $uploadedFile->getSecurePath();
+                $cloudinaryUrl = $uploadResult['secure_url'] ?? null;
                 $validated['avatar'] = $cloudinaryUrl;
                 $validated['avatar_url'] = null;
                 Log::info('AuthController:updateProfile - stored avatar on Cloudinary: ' . $cloudinaryUrl);
             } catch (\Throwable $e) {
                 Log::error('AuthController:updateProfile - Cloudinary upload failed: ' . $e->getMessage());
-                return response()->json(['success' => false, 'message' => 'Erreur lors de l\'upload de l\'avatar.'], 500);
+                return response()->json(['success' => false, 'message' => 'Erreur lors de l\'upload de l\'avatar: ' . $e->getMessage()], 500);
             }
         }
 
