@@ -55,6 +55,50 @@ Route::get('health', function () {
     return response()->json(['status' => 'API is working', 'timestamp' => now()]);
 });
 
+// DEBUG: Test file upload
+Route::post('test-upload', function (Request $request) {
+    $info = [
+        'hasFile' => $request->hasFile('file') || $request->hasFile('avatar'),
+        'allFiles' => array_keys($request->allFiles()),
+        'contentType' => $request->header('Content-Type'),
+        'method' => $request->method(),
+        '_method' => $request->input('_method'),
+        'php_upload_max_filesize' => ini_get('upload_max_filesize'),
+        'php_post_max_size' => ini_get('post_max_size'),
+        'php_file_uploads' => ini_get('file_uploads'),
+        'php_upload_tmp_dir' => ini_get('upload_tmp_dir'),
+        'tmp_dir_exists' => is_dir(ini_get('upload_tmp_dir') ?: sys_get_temp_dir()),
+        'tmp_dir_writable' => is_writable(ini_get('upload_tmp_dir') ?: sys_get_temp_dir()),
+        '$_FILES' => $_FILES,
+    ];
+    
+    if ($request->hasFile('file')) {
+        $file = $request->file('file');
+        $info['file_info'] = [
+            'isValid' => $file->isValid(),
+            'error' => $file->getError(),
+            'errorMessage' => $file->getErrorMessage(),
+            'size' => $file->getSize(),
+            'mimeType' => $file->getMimeType(),
+            'clientOriginalName' => $file->getClientOriginalName(),
+        ];
+    }
+    
+    if ($request->hasFile('avatar')) {
+        $file = $request->file('avatar');
+        $info['avatar_info'] = [
+            'isValid' => $file->isValid(),
+            'error' => $file->getError(),
+            'errorMessage' => $file->getErrorMessage(),
+            'size' => $file->getSize(),
+            'mimeType' => $file->getMimeType(),
+            'clientOriginalName' => $file->getClientOriginalName(),
+        ];
+    }
+    
+    return response()->json($info);
+});
+
 // DEBUG: diagnostic login en production
 Route::post('debug/login-diag', function (Request $request) {
     try {
