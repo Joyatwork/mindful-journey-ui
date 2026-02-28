@@ -54,6 +54,7 @@ class ProfileController extends Controller
      */
     public function update(Request $request): JsonResponse
     {
+        try {
         // Debug file upload issues
         Log::info('ProfileController:update - START', [
             'hasFile' => $request->hasFile('avatar'),
@@ -182,12 +183,24 @@ class ProfileController extends Controller
             // Log and return a helpful error so the front-end can surface it
             Log::error('ProfileController:update - exception during update: ' . $e->getMessage(), [
                 'user_id' => $user->id ?? null,
-                'validated_keys' => array_keys($validated)
+                'validated_keys' => array_keys($validated ?? []),
+                'trace' => $e->getTraceAsString()
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Impossible de mettre à jour le profil. Voir les logs serveur pour plus de détails.'
+                'message' => 'Impossible de mettre à jour le profil.',
+                'debug_error' => $e->getMessage(),
+                'debug_file' => $e->getFile() . ':' . $e->getLine()
+            ], 500);
+        }
+        } catch (\Throwable $outerError) {
+            Log::error('ProfileController:update - OUTER ERROR: ' . $outerError->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur inattendue',
+                'debug_error' => $outerError->getMessage(),
+                'debug_file' => $outerError->getFile() . ':' . $outerError->getLine()
             ], 500);
         }
     }
