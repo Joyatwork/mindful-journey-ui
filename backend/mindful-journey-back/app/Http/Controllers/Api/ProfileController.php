@@ -54,8 +54,13 @@ class ProfileController extends Controller
      */
     public function update(Request $request): JsonResponse
     {
+        // Debug file upload issues
         Log::info('ProfileController:update - START', [
             'hasFile' => $request->hasFile('avatar'),
+            'allFiles' => array_keys($request->allFiles()),
+            'contentType' => $request->header('Content-Type'),
+            'method' => $request->method(),
+            '_method' => $request->input('_method'),
             'cloudinary_cloud' => env('CLOUDINARY_CLOUD_NAME') ? 'set' : 'NOT SET',
             'cloudinary_key' => env('CLOUDINARY_API_KEY') ? 'set' : 'NOT SET',
             'cloudinary_secret' => env('CLOUDINARY_API_SECRET') ? 'set' : 'NOT SET',
@@ -72,6 +77,19 @@ class ProfileController extends Controller
 
         Log::info('ProfileController:update - user authenticated', ['userId' => $user->id]);
 
+        // Check if avatar file is present but invalid
+        if ($request->hasFile('avatar')) {
+            $file = $request->file('avatar');
+            Log::info('ProfileController:update - avatar file info', [
+                'isValid' => $file->isValid(),
+                'error' => $file->getError(),
+                'errorMessage' => $file->getErrorMessage(),
+                'size' => $file->getSize(),
+                'mimeType' => $file->getMimeType(),
+                'clientOriginalName' => $file->getClientOriginalName(),
+            ]);
+        }
+
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
             'email' => 'sometimes|email|unique:users,email,' . $user->id,
@@ -81,9 +99,8 @@ class ProfileController extends Controller
             'bio' => 'nullable|string|max:1000',
             'preferences' => 'nullable|array',
             'health_goals' => 'nullable|array',
-            'avatar' => 'nullable|file|image|mimes:jpg,jpeg,png,gif,webp|max:5120' // max 5MB
+            'avatar' => 'nullable|image|mimes:jpg,jpeg,png,gif,webp|max:5120' // max 5MB - removed 'file' validation
         ], [
-            'avatar.file' => 'The avatar failed to upload.',
             'avatar.image' => 'The avatar must be an image.',
             'avatar.mimes' => 'The avatar must be a file of type: jpg, jpeg, png, gif, webp.',
             'avatar.max' => 'The avatar may not be greater than 5MB.',
