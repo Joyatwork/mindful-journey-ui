@@ -29,10 +29,4 @@ echo "==> Running migrations..."
 php artisan migrate --force 2>&1 || echo "[WARN] migrate failed, continuing..."
 
 echo "==> Starting server on port ${PORT:-8081}..."
-exec php \
-  -d upload_max_filesize=10M \
-  -d post_max_size=12M \
-  -d max_file_uploads=5 \
-  -d upload_tmp_dir=/tmp/php-uploads \
-  -d file_uploads=On \
-  -S 0.0.0.0:"${PORT:-8081}" server.php
+exec php -c /app/backend/mindful-journey-back/php.ini -S 0.0.0.0:"${PORT:-8081}" server.php
