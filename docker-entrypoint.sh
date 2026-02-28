@@ -1,6 +1,6 @@
 #!/bin/sh
 # Do NOT use set -e: if migrate fails we still want to start the server
-# Build timestamp: 2026-02-28T02:00:00Z (force rebuild)
+# Build timestamp: 2026-02-28T02:30:00Z (force rebuild)
 
 echo "==> Creating storage directories..."
 mkdir -p storage/app/public/avatars storage/framework/{sessions,views,cache} storage/logs bootstrap/cache
@@ -13,8 +13,11 @@ chmod 777 /tmp/php-uploads
 echo "==> Creating storage symlink..."
 php artisan storage:link --force 2>&1 || echo "[WARN] storage:link failed (may already exist)"
 
-echo "==> Clearing old config cache..."
+echo "==> Clearing ALL caches..."
 php artisan config:clear || echo "[WARN] config:clear failed"
+php artisan route:clear || echo "[WARN] route:clear failed"
+php artisan cache:clear || echo "[WARN] cache:clear failed"
+php artisan view:clear || echo "[WARN] view:clear failed"
 
 echo "==> Caching config..."
 php artisan config:cache || echo "[WARN] config:cache failed"

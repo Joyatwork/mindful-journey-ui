@@ -495,7 +495,7 @@ class AuthController extends Controller
             'company' => 'nullable|string|max:255',
             'bio' => 'nullable|string|max:1000',
             'goals' => 'nullable|string|max:1000',
-            'avatar' => 'nullable|file|image|mimes:jpg,jpeg,png,webp|max:5120',
+            'avatar' => 'nullable|image|mimes:jpg,jpeg,png,gif,webp|max:5120', // removed 'file' rule
             // Allow providing an external URL as an alternative to file upload
             'avatar_url' => 'nullable|string|url|max:2048'
         ], [], [
