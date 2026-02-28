@@ -1,6 +1,6 @@
 #!/bin/sh
 # Do NOT use set -e: if migrate fails we still want to start the server
-# Build timestamp: 2026-02-28T02:30:00Z (force rebuild)
+# Build timestamp: 2026-02-28T03:00:00Z (force rebuild)
 
 echo "==> Creating storage directories..."
 mkdir -p storage/app/public/avatars storage/framework/{sessions,views,cache} storage/logs bootstrap/cache
@@ -29,4 +29,5 @@ echo "==> Running migrations..."
 php artisan migrate --force 2>&1 || echo "[WARN] migrate failed, continuing..."
 
 echo "==> Starting server on port ${PORT:-8081}..."
-exec php -c /app/backend/mindful-journey-back/php.ini -S 0.0.0.0:"${PORT:-8081}" server.php
+# PHP config is set in Dockerfile via /usr/local/etc/php/conf.d/uploads.ini
+exec php -S 0.0.0.0:"${PORT:-8081}" server.php
