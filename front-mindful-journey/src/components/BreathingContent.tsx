@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -12,6 +13,7 @@ interface BreathingContentProps {
 }
 
 const BreathingContent = ({ onBack, onComplete }: BreathingContentProps) => {
+  const { t } = useTranslation();
   const [isActive, setIsActive] = useState(false);
   const [phase, setPhase] = useState<'inhale' | 'hold' | 'exhale' | 'rest'>('inhale');
   const [cycleCount, setCycleCount] = useState(0);
@@ -29,10 +31,10 @@ const BreathingContent = ({ onBack, onComplete }: BreathingContentProps) => {
   const progress = (cycleCount / totalCycles) * 100;
 
   const phaseTexts = {
-    inhale: "Inspirez lentement...",
-    hold: "Retenez votre souffle...",
-    exhale: "Expirez doucement...",
-    rest: "Préparez-vous..."
+    inhale: t('breathing.phaseTexts.inhale'),
+    hold: t('breathing.phaseTexts.hold'),
+    exhale: t('breathing.phaseTexts.exhale'),
+    rest: t('breathing.phaseTexts.rest')
   };
 
   const phaseColors = {
@@ -104,28 +106,28 @@ const BreathingContent = ({ onBack, onComplete }: BreathingContentProps) => {
     <div className="space-y-6 animate-fadeIn">
       <div className="flex items-center justify-between">
         <Button variant="ghost" onClick={onBack}>
-          ← Retour
+          {t('breathing.back')}
         </Button>
         <Badge className="bg-red-100 text-red-800">
           <Heart className="h-3 w-3 mr-1" />
-          Gestion du stress
+          {t('breathing.stressManagement')}
         </Badge>
       </div>
 
       <Card className="bg-gradient-to-br from-red-50 to-orange-50 border-0">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl text-red-800">
-            Exercices de respiration
+            {t('breathing.title')}
           </CardTitle>
           <p className="text-red-600">
-            Technique 4-7-8 pour gérer l'anxiété
+            {t('breathing.technique478')}
           </p>
         </CardHeader>
         
         <CardContent className="space-y-6">
           <div className="text-center">
             <div className="text-lg font-semibold mb-2">
-              Cycle {cycleCount + 1} / {totalCycles}
+              {t('breathing.cycle')} {cycleCount + 1} / {totalCycles}
             </div>
             <Progress value={progress} className="w-full mb-4" />
           </div>
@@ -143,10 +145,10 @@ const BreathingContent = ({ onBack, onComplete }: BreathingContentProps) => {
               </div>
               
               <div className="text-sm text-gray-600">
-                {phase === 'inhale' && "Inspirez par le nez pendant 4 secondes"}
-                {phase === 'hold' && "Retenez votre souffle pendant 7 secondes"}
-                {phase === 'exhale' && "Expirez par la bouche pendant 8 secondes"}
-                {phase === 'rest' && "Préparez-vous pour le prochain cycle"}
+                {phase === 'inhale' && t('breathing.instructions.inhale')}
+                {phase === 'hold' && t('breathing.instructions.hold')}
+                {phase === 'exhale' && t('breathing.instructions.exhale')}
+                {phase === 'rest' && t('breathing.instructions.rest')}
               </div>
             </div>
           )}
@@ -156,10 +158,10 @@ const BreathingContent = ({ onBack, onComplete }: BreathingContentProps) => {
               <CardContent className="p-4 text-center">
                 <CheckCircle className="h-12 w-12 text-green-600 mx-auto mb-2" />
                 <h3 className="font-semibold text-green-800 mb-1">
-                  Excellent travail !
+                  {t('breathing.excellentWork')}
                 </h3>
                 <p className="text-green-600">
-                  Vous avez terminé vos exercices de respiration
+                  {t('breathing.completedExercises')}
                 </p>
               </CardContent>
             </Card>
@@ -180,16 +182,16 @@ const BreathingContent = ({ onBack, onComplete }: BreathingContentProps) => {
               className="bg-red-600 hover:bg-red-700 text-white px-8 rounded-full"
             >
               {isCompleted ? (
-                "Terminé"
+                t('breathing.finished')
               ) : isActive ? (
                 <>
                   <Pause className="h-4 w-4 mr-2" />
-                  Pause
+                  {t('breathing.pause')}
                 </>
               ) : (
                 <>
                   <Play className="h-4 w-4 mr-2" />
-                  Commencer
+                  {t('breathing.start')}
                 </>
               )}
             </Button>

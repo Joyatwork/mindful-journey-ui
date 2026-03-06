@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -61,6 +62,7 @@ function safeGetBirthDate(user: any) {
 }
 
 const ProfilePage = () => {
+  const { t } = useTranslation();
   const { isDarkMode, toggleDarkMode } = useTheme();
   const { isInstallable, installPWA } = usePWAInstall();
   const { user, updateProfile } = useAuth();
@@ -73,13 +75,13 @@ const ProfilePage = () => {
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
 
   const [userInfo, setUserInfo] = useState({
-    name: user?.name || 'Utilisateur',
+    name: user?.name || t('common.loading'),
     email: user?.email || 'email@example.com',
     phone: user?.phone || '',
     location: user?.location || '',
     birthDate: safeGetBirthDate(user as any),
-    jobPosition: user?.job_position || 'Non spécifié',
-    company: user?.company || 'Non spécifiée',
+    jobPosition: user?.job_position || t('profile.notSpecified'),
+    company: user?.company || t('profile.notSpecified'),
     bio: user?.bio || '',
     goals: user?.goals || '',
     wellnessWeather: 'sunny' // sunny, cloudy, rainy
@@ -95,8 +97,8 @@ const ProfilePage = () => {
         phone: user.phone || '',
         location: user.location || '',
         birthDate: safeGetBirthDate(user as any),
-        jobPosition: user.job_position || 'Non spécifié',
-        company: user.company || 'Non spécifiée',
+        jobPosition: user.job_position || t('profile.notSpecified'),
+        company: user.company || t('profile.notSpecified'),
         bio: user.bio || '',
         goals: user.goals || ''
       }));
@@ -114,16 +116,16 @@ const ProfilePage = () => {
       const newVal = !DoubleAuth;
       setDoubleAuth(newVal);
       toast({
-        title: newVal ? '2FA activée' : '2FA désactivée',
+        title: newVal ? t('profile.fa2Enabled') : t('profile.fa2Disabled'),
         description: newVal
-          ? 'Un code sera demandé lors de vos prochaines connexions.'
-          : 'Le code ne sera plus demandé lors de la connexion.'
+          ? t('profile.fa2EnabledDesc')
+          : t('profile.fa2DisabledDesc')
       });
     } catch (error: any) {
       console.error('Erreur lors du changement de double AUTH', error);
       toast({
-        title: 'Erreur',
-        description: error?.message || 'Impossible de mettre à jour la 2FA',
+        title: t('common.error'),
+        description: error?.message || t('errors.generic'),
         variant: 'destructive',
       });
     }
@@ -176,15 +178,15 @@ const ProfilePage = () => {
       setIsEditing(false);
 
       toast({
-        title: 'Profil mis à jour',
-        description: 'Vos informations ont été sauvegardées avec succès.',
+        title: t('profile.profileUpdated'),
+        description: t('profile.profileSaved'),
         variant: 'default',
       });
     } catch (error: any) {
       console.error('Erreur lors de la mise à jour du profil:', error);
       toast({
-        title: 'Erreur',
-        description: error?.message || 'Une erreur est survenue lors de la sauvegarde. Veuillez réessayer.',
+        title: t('common.error'),
+        description: error?.message || t('errors.generic'),
         variant: 'destructive',
       });
     } finally {
@@ -198,13 +200,13 @@ const ProfilePage = () => {
       await testApiService.auth.toggleNotifications(endpoint);
       setNotificationsEnabled(next);
       toast({
-        title: next ? 'Notifications activées' : 'Notifications désactivées',
+        title: next ? t('profile.notificationsEnabled') : t('profile.notificationsDisabled'),
         description: next
-          ? 'Vous recevrez désormais des notifications.'
-          : 'Vous ne recevrez plus de notifications.'
+          ? t('profile.notificationsEnabledDesc')
+          : t('profile.notificationsDisabledDesc')
       });
     } catch (error: any) {
-      toast({ title: 'Erreur', description: error?.message || 'Mise à jour impossible', variant: 'destructive' });
+      toast({ title: t('common.error'), description: error?.message || t('errors.generic'), variant: 'destructive' });
     }
   };
 
@@ -224,13 +226,13 @@ const ProfilePage = () => {
   const getWeatherLabel = (weather: string) => {
     switch (weather) {
       case 'sunny':
-        return 'Excellente';
+        return t('profile.formExcellent');
       case 'cloudy':
-        return 'Moyenne';
+        return t('profile.formAverage');
       case 'rainy':
-        return 'Fatigue';
+        return t('profile.formFatigue');
       default:
-        return 'Excellente';
+        return t('profile.formExcellent');
     }
   };
 
@@ -244,7 +246,7 @@ const ProfilePage = () => {
               {/* First Row: Avatar and Basic Info */}
               <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
                 <Avatar className="w-16 h-16 border-2 border-white shadow-lg flex-shrink-0">
-                  <AvatarImage src={user?.avatar_url || '/placeholder.svg'} alt="Photo de profil" />
+                  <AvatarImage src={user?.avatar_url || '/placeholder.svg'} alt={t('profile.profilePhoto')} />
                   <AvatarFallback className="bg-wellness-gradient text-white text-sm font-semibold">
                     {user?.name ? user.name.split(' ').map(n => n[0]).slice(0, 2).join('') : 'U'}
                   </AvatarFallback>
@@ -275,7 +277,7 @@ const ProfilePage = () => {
                       className="text-xs"
                     >
                       <Download className="w-3 h-3 mr-1" />
-                      Installer
+                      {t('profile.install')}
                     </Button>
                   )}
                   <Button
@@ -285,7 +287,7 @@ const ProfilePage = () => {
                     className="text-xs"
                   >
                     <Edit className="w-3 h-3 mr-1" />
-                    {isEditing ? 'Annuler' : 'Modifier'}
+                    {isEditing ? t('common.cancel') : t('common.edit')}
                   </Button>
                 </div>
               </div>
@@ -296,7 +298,7 @@ const ProfilePage = () => {
                 <div className="flex items-center gap-2">
                   {getWeatherIcon(userInfo.wellnessWeather)}
                   <span className="text-sm text-gray-600 dark:text-gray-300">
-                    Forme: <span className="font-medium">{getWeatherLabel(userInfo.wellnessWeather)}</span>
+                    {t('profile.form')}: <span className="font-medium">{getWeatherLabel(userInfo.wellnessWeather)}</span>
                   </span>
                 </div>
 
@@ -304,15 +306,15 @@ const ProfilePage = () => {
                 <div className="flex flex-wrap gap-1.5 justify-center">
                   <Badge variant="secondary" className="bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 text-xs px-2 py-0.5">
                     <Heart className="w-3 h-3 mr-1" />
-                    Bien-être
+                    {t('profile.wellness')}
                   </Badge>
                   <Badge variant="secondary" className="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-xs px-2 py-0.5">
                     <Brain className="w-3 h-3 mr-1" />
-                    Méditation
+                    {t('profile.meditationBadge')}
                   </Badge>
                   <Badge variant="secondary" className="bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-300 text-xs px-2 py-0.5">
                     <Activity className="w-3 h-3 mr-1" />
-                    Actif
+                    {t('profile.activeBadge')}
                   </Badge>
                 </div>
               </div>
@@ -334,13 +336,13 @@ const ProfilePage = () => {
         <Card className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-purple-200 dark:border-purple-700">
           <CardHeader>
             <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white">
-              À propos
+              {t('profile.about')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
               <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">
-                Objectifs bien-être
+                {t('profile.wellnessGoals')}
               </h3>
               <p className="text-gray-700 dark:text-gray-300">
                 {userInfo.goals}
@@ -353,7 +355,7 @@ const ProfilePage = () => {
         <Card className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-purple-200 dark:border-purple-700">
           <CardHeader>
             <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white">
-              Informations de contact
+              {t('profile.contactInfo')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -377,7 +379,7 @@ const ProfilePage = () => {
             </div>
             <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
               <Calendar className="w-5 h-5" />
-              Date de naissance: {new Date(userInfo.birthDate).toLocaleDateString()}
+              {t('profile.birthDate')}: {new Date(userInfo.birthDate).toLocaleDateString()}
             </div>
           </CardContent>
         </Card>
@@ -390,7 +392,7 @@ const ProfilePage = () => {
           >
             <div className="text-center">
               <CalendarCheck className="h-6 w-6 mx-auto mb-1" />
-              <div className="text-sm font-medium">Mes rendez-vous</div>
+              <div className="text-sm font-medium">{t('profile.myAppointments')}</div>
             </div>
           </Button>
         </div>
@@ -403,17 +405,17 @@ const ProfilePage = () => {
         <Card className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-purple-200 dark:border-purple-700">
           <CardHeader>
             <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white">
-              Préférences
+              {t('profile.preferences')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-gray-700 dark:text-gray-300">Mode sombre</span>
+              <span className="text-gray-700 dark:text-gray-300">{t('profile.darkMode')}</span>
               <Switch checked={isDarkMode} onCheckedChange={toggleDarkMode} id="dark-mode" />
             </div>
             <Separator className="bg-gray-200 dark:bg-gray-700" />
             <div className="flex items-center justify-between">
-              <span className="text-gray-700 dark:text-gray-300">Notifications</span>
+              <span className="text-gray-700 dark:text-gray-300">{t('profile.notifications')}</span>
               <Switch id="notifications" checked={notificationsEnabled} onCheckedChange={toggleNotifications} />
             </div>
           </CardContent>
@@ -422,26 +424,26 @@ const ProfilePage = () => {
         <Card className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-purple-200 dark:border-purple-700">
           <CardHeader>
             <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white">
-              Réalisations
+              {t('profile.achievements')}
             </CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div className="flex items-center gap-2">
               <Trophy className="w-6 h-6 text-yellow-500" />
               <span className="text-gray-700 dark:text-gray-300">
-                5 défis complétés
+                {t('profile.challengesCompleted', { count: 5 })}
               </span>
             </div>
             <div className="flex items-center gap-2">
               <Target className="w-6 h-6 text-green-500" />
               <span className="text-gray-700 dark:text-gray-300">
-                10 objectifs atteints
+                {t('profile.goalsAchieved', { count: 10 })}
               </span>
             </div>
             <div className="flex items-center gap-2">
               <Zap className="w-6 h-6 text-blue-500" />
               <span className="text-gray-700 dark:text-gray-300">
-                7 jours d'activité
+                {t('profile.activityDays', { count: 7 })}
               </span>
             </div>
           </CardContent>
@@ -450,27 +452,27 @@ const ProfilePage = () => {
         <Card className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-purple-200 dark:border-purple-700">
           <CardHeader>
             <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white">
-              Sécurité
+              {t('profile.security')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-gray-700 dark:text-gray-300">
-                Authentification à deux facteurs
+                {t('profile.twoFactorAuth')}
               </span>
               <Button onClick={toggle2FA}
                 variant="outline" size="sm"
                 className="border-purple-200 dark:border-purple-700 text-purple-700 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-800">
-                {DoubleAuth ? 'Désactiver' : 'Activer'}
+                {DoubleAuth ? t('profile.disable') : t('profile.enable')}
               </Button>
             </div>
             <Separator className="bg-gray-200 dark:bg-gray-700" />
             <div className="flex items-center justify-between">
               <span className="text-gray-700 dark:text-gray-300">
-                Changer le mot de passe
+                {t('profile.changePassword')}
               </span>
               <Button variant="outline" size="sm" className="border-purple-200 dark:border-purple-700 text-purple-700 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-800">
-                Modifier
+                {t('common.edit')}
               </Button>
             </div>
           </CardContent>

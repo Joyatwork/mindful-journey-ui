@@ -234,12 +234,12 @@ const Index = () => {
           setSavedDiagnostic(data);
         }
       } catch { }
-      toast({ title: 'Auto‑diagnostic annuel sauvegardé', description: 'Merci pour ces informations détaillées.' });
+      toast({ title: t('dashboard.annualDiagSaved'), description: t('dashboard.thanksForInfo') });
       setCurrentView('dashboard');
       setAnnualStarted(false);
     } catch (e) {
       console.warn('Échec sauvegarde diagnostic annuel (final)', e);
-      toast({ title: 'Erreur', description: 'Impossible de sauvegarder le diagnostic annuel.', variant: 'destructive' });
+      toast({ title: t('common.error'), description: t('dashboard.cannotSaveAnnual'), variant: 'destructive' });
     } finally {
       setAnnualSaving(false);
     }
@@ -421,7 +421,7 @@ const Index = () => {
   const handleLogout = async () => {
     try {
       await logout();
-      toast({ title: "Déconnexion réussie" });
+      toast({ title: t('dashboard.logoutSuccess') });
     } catch (error) {
       console.error('Erreur lors de la déconnexion:', error);
     }
@@ -488,8 +488,8 @@ const Index = () => {
 
   const wellnessCards = [
     {
-      title: "Méditation guidée",
-      description: "Séance de relaxation pour réduire le stress et améliorer la concentration",
+      title: t('dashboard.guidedMeditation'),
+      description: t('dashboard.guidedMeditationDesc'),
       duration: "10 min",
       difficulty: "Facile" as const,
       category: "Mindfulness",
@@ -498,8 +498,8 @@ const Index = () => {
       contentType: "meditation"
     },
     {
-      title: "Exercices de respiration",
-      description: "Techniques de respiration pour gérer l'anxiété au quotidien",
+      title: t('dashboard.breathingExercises'),
+      description: t('dashboard.breathingExercisesDesc'),
       duration: "5 min",
       difficulty: "Facile" as const,
       category: "Gestion du stress",
@@ -508,8 +508,8 @@ const Index = () => {
       contentType: "breathing"
     },
     {
-      title: "Routine sommeil",
-      description: "Améliorez la qualité de votre sommeil avec ces conseils personnalisés",
+      title: t('dashboard.sleepRoutine'),
+      description: t('dashboard.sleepRoutineDesc'),
       duration: "15 min",
       difficulty: "Moyen" as const,
       category: "Sommeil",
@@ -528,17 +528,17 @@ const Index = () => {
     // Navigation vers contenus dédiés
     if (rawType.includes('breath') || titleLc.includes('respir')) {
       setCurrentView('breathing');
-      toast({ title: 'Exercice de respiration démarré' });
+      toast({ title: t('dashboard.breathingStarted') });
       return;
     }
     if (rawType.includes('medit') || titleLc.includes('méditation') || titleLc.includes('meditation') || rawType.includes('mindfulness')) {
       setCurrentView('meditation');
-      toast({ title: 'Méditation démarrée' });
+      toast({ title: t('dashboard.meditationStarted') });
       return;
     }
     if (rawType.includes('sleep') || titleLc.includes('sommeil')) {
       setCurrentView('sleep-routine');
-      toast({ title: 'Routine sommeil ouverte' });
+      toast({ title: t('dashboard.sleepRoutineOpened') });
       return;
     }
 
@@ -554,16 +554,16 @@ const Index = () => {
           completion_rate: 100,
           notes: `Action immédiate: ${title}`,
         });
-        toast({ title: 'Activité enregistrée', description: title || 'Micro‑mouvement' });
-        window.dispatchEvent(new CustomEvent('bellNotification', { detail: { title: 'Activité complétée', description: title || 'Micro‑mouvement' } }));
+        toast({ title: t('dashboard.activityRecorded'), description: title || t('dashboard.microMovement') });
+        window.dispatchEvent(new CustomEvent('bellNotification', { detail: { title: t('dashboard.activityCompleted'), description: title || t('dashboard.microMovement') } }));
       } catch (_) {
-        toast({ title: 'Action lancée', description: title || 'Micro‑mouvement' });
+        toast({ title: t('dashboard.actionStarted'), description: title || t('dashboard.microMovement') });
       }
       return;
     }
 
     // Par défaut: simple confirmation
-    toast({ title: 'Action lancée', description: title || 'Suggestion' });
+    toast({ title: t('dashboard.actionStarted'), description: title || t('dashboard.suggestion') });
   };
 
   // Consommer une suggestion passée via navigation state (depuis MoodEncouragementPage)
@@ -636,7 +636,7 @@ const Index = () => {
 
   useEffect(() => {
     if (user) {
-      toast({ title: `Bienvenue ${user.name} !`, description: "Comment vas-tu aujourd'hui ?" });
+      toast({ title: t('dashboard.welcomeToast', { name: user.name }), description: t('dashboard.howAreYou') });
     }
   }, [user]);
 
@@ -721,12 +721,12 @@ const Index = () => {
       } else {
         id = items.length > 0 ? items[0].id : null;
       }
-      if (!id) throw new Error('Aucun défi disponible');
+      if (!id) throw new Error(t('dashboard.noChallenge'));
       setCurrentChallengeId(id);
       return id;
     } catch (e) {
       console.error('Impossible de récupérer un défi:', e);
-      toast({ title: "Aucun défi disponible", variant: "destructive" });
+      toast({ title: t('dashboard.noChallenge'), variant: "destructive" });
       return null;
     }
   };
@@ -739,7 +739,7 @@ const Index = () => {
           if (!id) return;
           try {
             const r = await testApiService.challenges.start(id);
-            toast({ title: 'Défi démarré' });
+            toast({ title: t('dashboard.challengeStarted') });
             await loadChallenges();
           } catch (e: any) {
             // si déjà démarré, continuer silencieusement
@@ -755,7 +755,7 @@ const Index = () => {
           if (!id) return;
           try {
             const r = await testApiService.challenges.start(id);
-            toast({ title: 'Défi démarré' });
+            toast({ title: t('dashboard.challengeStarted') });
             await loadChallenges();
           } catch (e: any) {
             console.log('Start défi:', e?.message || e);
@@ -770,7 +770,7 @@ const Index = () => {
           if (!id) return;
           try {
             const r = await testApiService.challenges.start(id);
-            toast({ title: 'Défi démarré' });
+            toast({ title: t('dashboard.challengeStarted') });
             await loadChallenges();
           } catch (e: any) {
             console.log('Start défi:', e?.message || e);
@@ -790,7 +790,7 @@ const Index = () => {
     if (!challengeId) return;
     try {
       await testApiService.challenges.finish(challengeId);
-      toast({ title: 'Défi enregistré dans la base' });
+      toast({ title: t('dashboard.challengeRecorded') });
       // Recharger la liste des défis pour mettre à jour les statuts
       try {
         await loadChallenges();

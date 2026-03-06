@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -11,6 +12,7 @@ interface MeditationContentProps {
 }
 
 const MeditationContent = ({ onBack, onComplete }: MeditationContentProps) => {
+  const { t } = useTranslation();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
@@ -29,11 +31,11 @@ const MeditationContent = ({ onBack, onComplete }: MeditationContentProps) => {
   const [selectedPresetKey, setSelectedPresetKey] = useState<string>('track-4'); // Default preset
 
   const steps = [
-    { title: 'Préparation', instruction: 'Installez-vous confortablement, fermez les yeux et détendez vos épaules.', duration: 60 },
-    { title: 'Respiration consciente', instruction: 'Concentrez-vous sur votre respiration naturelle.', duration: 180 },
-    { title: 'Scan corporel', instruction: 'Portez attention à chaque partie du corps.', duration: 240 },
-    { title: 'Pensées et émotions', instruction: 'Observez vos pensées sans jugement.', duration: 180 },
-    { title: 'Retour en douceur', instruction: 'Bougez doucement vos doigts et ouvrez les yeux.', duration: 60 },
+    { title: t('meditation.content.steps.preparation.title'), instruction: t('meditation.content.steps.preparation.instruction'), duration: 60 },
+    { title: t('meditation.content.steps.consciousBreathing.title'), instruction: t('meditation.content.steps.consciousBreathing.instruction'), duration: 180 },
+    { title: t('meditation.content.steps.bodyScan.title'), instruction: t('meditation.content.steps.bodyScan.instruction'), duration: 240 },
+    { title: t('meditation.content.steps.thoughtsEmotions.title'), instruction: t('meditation.content.steps.thoughtsEmotions.instruction'), duration: 180 },
+    { title: t('meditation.content.steps.gentleReturn.title'), instruction: t('meditation.content.steps.gentleReturn.instruction'), duration: 60 },
   ];
 
   const totalDuration = useMemo(() => steps.reduce((s, it) => s + it.duration, 0), []);
@@ -81,7 +83,7 @@ const MeditationContent = ({ onBack, onComplete }: MeditationContentProps) => {
     };
     const onError = () => {
       const failing = el.currentSrc || mp3Src;
-      setAudioError(`Erreur de chargement audio: ${failing}. Essayez un préréglage.`);
+      setAudioError(`${t('meditation.content.audioLoadError')}: ${failing}. ${t('meditation.content.tryPreset')}`);
     };
 
     el.addEventListener('loadedmetadata', onLoaded);
@@ -116,7 +118,7 @@ const MeditationContent = ({ onBack, onComplete }: MeditationContentProps) => {
         } catch (err) {
           const once = () => {
             el.removeEventListener('canplay', once);
-            el.play().then(() => setIsPlaying(true)).catch(() => setAudioError("Impossible de démarrer la lecture."));
+            el.play().then(() => setIsPlaying(true)).catch(() => setAudioError(t('meditation.content.cannotStartPlayback')));
           };
           el.addEventListener('canplay', once, { once: true } as any);
           try { el.load(); } catch { }
@@ -124,7 +126,7 @@ const MeditationContent = ({ onBack, onComplete }: MeditationContentProps) => {
       }
     } catch (e: any) {
       console.error('Audio play error:', e);
-      setAudioError("Impossible de lire l'audio.");
+      setAudioError(t('meditation.content.cannotPlayAudio'));
     }
   };
 
@@ -150,7 +152,7 @@ const MeditationContent = ({ onBack, onComplete }: MeditationContentProps) => {
     setCurrentTime(0);
     setCurrentStep(0);
     setAudioError(null);
-    try { await el.play(); setIsPlaying(true); } catch (e) { setAudioError("Lecture impossible au redémarrage."); setIsPlaying(false); }
+    try { await el.play(); setIsPlaying(true); } catch (e) { setAudioError(t('meditation.content.restartPlaybackFailed')); setIsPlaying(false); }
   };
 
   const handleComplete = () => {
@@ -174,14 +176,14 @@ const MeditationContent = ({ onBack, onComplete }: MeditationContentProps) => {
   return (
     <div className="space-y-6 animate-fadeIn">
       <div className="flex items-center justify-between">
-        <Button variant="ghost" onClick={onBack}>← Retour</Button>
+        <Button variant="ghost" onClick={onBack}>{t('meditation.content.backButton')}</Button>
         <Badge className="bg-purple-100 text-purple-800"><Brain className="h-3 w-3 mr-1" />Mindfulness</Badge>
       </div>
 
       <Card className="bg-gradient-to-br from-purple-50 to-blue-50 border-0">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl text-purple-800">Méditation guidée</CardTitle>
-          <p className="text-purple-600">Une séance de relaxation pour réduire le stress</p>
+          <CardTitle className="text-2xl text-purple-800">{t('meditation.content.guidedTitle')}</CardTitle>
+          <p className="text-purple-600">{t('meditation.content.relaxationSubtitle')}</p>
         </CardHeader>
 
         <CardContent className="space-y-6">
@@ -192,7 +194,7 @@ const MeditationContent = ({ onBack, onComplete }: MeditationContentProps) => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div className="md:col-span-3">
-              <label className="block text-sm text-gray-600 mb-1">Liste des audios</label>
+              <label className="block text-sm text-gray-600 mb-1">{t('meditation.content.audioList')}</label>
               <select className="w-full border rounded-md px-3 py-2 bg-white" onChange={(e) => onPresetChange(e.target.value)} value={selectedPresetKey}>
                 {mp3Presets.map((p) => <option key={p.key} value={p.key}>{p.label}</option>)}
               </select>
@@ -220,8 +222,8 @@ const MeditationContent = ({ onBack, onComplete }: MeditationContentProps) => {
             <Card className="bg-green-50 border-green-200">
               <CardContent className="p-4 text-center">
                 <CheckCircle className="h-12 w-12 text-green-600 mx-auto mb-2" />
-                <h3 className="font-semibold text-green-800 mb-1">Félicitations !</h3>
-                <p className="text-green-600">Vous avez terminé votre séance de méditation</p>
+                <h3 className="font-semibold text-green-800 mb-1">{t('meditation.content.congratulations')}</h3>
+                <p className="text-green-600">{t('meditation.content.completedMessage')}</p>
               </CardContent>
             </Card>
           )}
@@ -231,16 +233,16 @@ const MeditationContent = ({ onBack, onComplete }: MeditationContentProps) => {
 
             {isCompleted ? (
               <>
-                <Button onClick={handleReplay} className="bg-purple-600 hover:bg-purple-700 text-white px-8 rounded-full">Rejouer</Button>
-                <Button onClick={onBack} className="px-8 rounded-full" variant="outline">Terminé</Button>
+                <Button onClick={handleReplay} className="bg-purple-600 hover:bg-purple-700 text-white px-8 rounded-full">{t('meditation.content.replay')}</Button>
+                <Button onClick={onBack} className="px-8 rounded-full" variant="outline">{t('meditation.content.finished')}</Button>
               </>
             ) : (
               <Button onClick={handlePlayPause} className="bg-purple-600 hover:bg-purple-700 text-white px-8 rounded-full">
-                {isPlaying ? (<><Pause className="h-4 w-4 mr-2" />Pause</>) : (<><Play className="h-4 w-4 mr-2" />Commencer</>)}
+                {isPlaying ? (<><Pause className="h-4 w-4 mr-2" />{t('meditation.pause')}</>) : (<><Play className="h-4 w-4 mr-2" />{t('meditation.start')}</>)}
               </Button>
             )}
 
-            {!isCompleted && (<Button variant="ghost" onClick={handleComplete} className="text-gray-600">Terminer</Button>)}
+            {!isCompleted && (<Button variant="ghost" onClick={handleComplete} className="text-gray-600">{t('meditation.content.finish')}</Button>)}
           </div>
         </CardContent>
       </Card>

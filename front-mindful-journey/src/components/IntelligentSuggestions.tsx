@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import DynamicAudioBackdrop from './DynamicAudioBackdrop';
 import { getBackdropImages } from '@/lib/audioBackdrops';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -92,6 +93,7 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
   onPractitionerOpen,
   onPractitionerBook
 }) => {
+  const { t } = useTranslation();
   const [suggestions, setSuggestions] = useState<SuggestionGroup | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -827,7 +829,7 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
         <CardHeader className="pb-3">
           <CardTitle className="text-lg flex items-center gap-2 text-red-700">
             <Zap className="h-5 w-5" />
-            Actions immédiates
+            {t('suggestions.immediateActions')}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -878,7 +880,7 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                       <p className="text-sm text-gray-600 mb-3 line-clamp-2 break-anywhere">{action.description}</p>
                       {action.action_steps && (
                         <div className="space-y-1 mb-2">
-                          <p className="text-xs font-medium text-gray-700">Étapes :</p>
+                          <p className="text-xs font-medium text-gray-700">{t('suggestions.steps')}:</p>
                           <ol className="text-xs text-gray-600 space-y-1">
                             {action.action_steps.map((step, stepIndex) => (
                               <li key={stepIndex} className="flex items-start gap-2 break-anywhere">
@@ -899,7 +901,7 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                           if (!audioRef.current) return;
                           try { audioRef.current.muted = false; } catch { }
                           audioRef.current.play().then(() => setAudioError(null)).catch(() => { });
-                        }}>Débloquer</Button>
+                        }}>{t('suggestions.unblock')}</Button>
                       )}
                     </div>
                   )}
@@ -908,7 +910,7 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                       <div className="flex gap-2 flex-wrap">
                         {audioLangs.length > 0 && (
                           <div className="flex items-center gap-1 text-xs">
-                            <label htmlFor={`imm-lang-${index}`} className="text-gray-600">Langue:</label>
+                            <label htmlFor={`imm-lang-${index}`} className="text-gray-600">{t('suggestions.language')}:</label>
                             <select
                               id={`imm-lang-${index}`}
                               className="border rounded px-1 py-0.5 text-xs"
@@ -923,13 +925,13 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                             </select>
                           </div>
                         )}
-                        <Button size="sm" className="flex-1 bg-red-600 hover:bg-red-700" onClick={() => startImmediateAudio(index, action)}>Commencer avec audio</Button>
+                        <Button size="sm" className="flex-1 bg-red-600 hover:bg-red-700" onClick={() => startImmediateAudio(index, action)}>{t('suggestions.startWithAudio')}</Button>
                         <Button size="sm" variant={openImmediateTexts[index] ? 'default' : 'outline'} onClick={() => toggleImmediateText(index)}>
-                          {openImmediateTexts[index] ? 'Masquer texte' : 'Texte'}
+                          {openImmediateTexts[index] ? t('suggestions.hideText') : t('suggestions.showText')}
                         </Button>
                         {appTracks.length > 0 && (
                           <div className="flex items-center gap-1 text-xs">
-                            <label htmlFor={`imm-app-audio-${index}`} className="text-gray-600">Audio intégré:</label>
+                            <label htmlFor={`imm-app-audio-${index}`} className="text-gray-600">{t('suggestions.builtInAudio')}:</label>
                             <select
                               id={`imm-app-audio-${index}`}
                               className="border rounded px-1 py-0.5 text-xs"
@@ -940,7 +942,7 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                                 if (tr) handleSelectImmediateAppAudio(index, tr);
                               }}
                             >
-                              <option value="">Choisir…</option>
+                              <option value="">{t('suggestions.choose')}</option>
                               {appTracks.map(t => (
                                 <option key={t.id} value={t.id}>{t.title}</option>
                               ))}
@@ -949,14 +951,14 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                         )}
                         <div className="relative">
                           <input id={`file-imm-audio-${index}`} type="file" accept="audio/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) handleSelectImmediateAudio(index, f); }} />
-                          <Button type="button" size="sm" variant="outline" onClick={() => document.getElementById(`file-imm-audio-${index}`)?.click()}>Choisir audio</Button>
+                          <Button type="button" size="sm" variant="outline" onClick={() => document.getElementById(`file-imm-audio-${index}`)?.click()}>{t('suggestions.chooseAudio')}</Button>
                         </div>
                       </div>
                     )}
                     {isPlaying && <div className="hidden" />}
                   </div>
                   {!isPlaying && customImmediateAudioUrls[index] && (
-                    <div className="mt-1 text-xs text-gray-500 truncate">{(customImmediateUrlOriginalNames.current[index] || '').startsWith('App:') ? 'Audio intégré: ' : 'Audio local: '}{customImmediateUrlOriginalNames.current[index]}</div>
+                    <div className="mt-1 text-xs text-gray-500 truncate">{(customImmediateUrlOriginalNames.current[index] || '').startsWith('App:') ? t('suggestions.builtInAudio') + ': ' : t('suggestions.localAudio') + ': '}{customImmediateUrlOriginalNames.current[index]}</div>
                   )}
                   {openImmediateTexts[index] && (
                     <div className="mt-2 p-3 rounded border bg-red-50 text-sm max-h-56 overflow-auto space-y-2">
@@ -968,13 +970,13 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                         </div>
                       ) : (
                         (() => {
-                          const text = action.transcription || action.description || (customImmediateAudioUrls[index] ? "Transcription non disponible pour l'audio local." : 'Aucune transcription.');
+                          const text = action.transcription || action.description || (customImmediateAudioUrls[index] ? t('suggestions.noTranscriptionLocal') : t('suggestions.noTranscription'));
                           return <div className="whitespace-pre-wrap break-anywhere">{text}</div>;
                         })()
                       )}
                       {(!action.transcription && action.action_steps?.length) && (
                         <div>
-                          <p className="font-medium text-xs text-gray-600 mb-1">Étapes :</p>
+                          <p className="font-medium text-xs text-gray-600 mb-1">{t('suggestions.steps')}:</p>
                           <ol className="text-xs space-y-1 list-decimal list-inside">
                             {action.action_steps.map((s, i) => (<li key={i} className="break-anywhere">{s}</li>))}
                           </ol>
@@ -983,7 +985,7 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                     </div>
                   )}
                   {isPlaying && remainingSeconds === 0 && (
-                    <div className="mt-2 text-xs text-green-600 font-medium">Action complétée ✅</div>
+                    <div className="mt-2 text-xs text-green-600 font-medium">{t('suggestions.actionCompleted')}</div>
                   )}
                   {/* controls moved outside inner wrapper */}
                 </div>
@@ -1024,7 +1026,7 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Target className="h-5 w-5 text-orange-500" />
-            Défis recommandés
+            {t('suggestions.recommendedChallenges')}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -1079,7 +1081,7 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                       <p className="text-sm text-gray-600 line-clamp-2 break-anywhere">{challenge.description}</p>
                       {challenge.action_steps && (
                         <div className="mt-2 space-y-1">
-                          <p className="text-xs font-medium text-gray-700">Étapes :</p>
+                          <p className="text-xs font-medium text-gray-700">{t('suggestions.steps')}:</p>
                           <ol className="text-xs text-gray-600 space-y-1">
                             {challenge.action_steps.map((step, i) => (
                               <li key={i} className="flex items-start gap-2 break-anywhere">
@@ -1100,7 +1102,7 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                           if (!audioRef.current) return;
                           try { audioRef.current.muted = false; } catch { }
                           audioRef.current.play().then(() => setAudioError(null)).catch(() => { });
-                        }}>Débloquer</Button>
+                        }}>{t('suggestions.unblock')}</Button>
                       )}
                     </div>
                   )}
@@ -1109,7 +1111,7 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                       <div className="flex gap-2 flex-wrap">
                         {audioLangs.length > 0 && (
                           <div className="flex items-center gap-1 text-xs">
-                            <label htmlFor={`ch-lang-${index}`} className="text-gray-600">Langue:</label>
+                            <label htmlFor={`ch-lang-${index}`} className="text-gray-600">{t('suggestions.language')}:</label>
                             <select
                               id={`ch-lang-${index}`}
                               className="border rounded px-1 py-0.5 text-xs"
@@ -1119,18 +1121,18 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                                 if (isPlaying) startChallengeAudio(index, challenge, undefined, true);
                               }}
                             >
-                              <option value="">Auto</option>
+                              <option value="">{t('suggestions.auto')}</option>
                               {audioLangs.map(lang => <option key={lang} value={lang}>{lang}</option>)}
                             </select>
                           </div>
                         )}
-                        <Button size="sm" className="flex-1" variant="outline" onClick={() => startChallengeAudio(index, challenge)}>Commencer avec audio</Button>
+                        <Button size="sm" className="flex-1" variant="outline" onClick={() => startChallengeAudio(index, challenge)}>{t('suggestions.startWithAudio')}</Button>
                         <Button size="sm" variant={openChallengeTexts[index] ? 'default' : 'outline'} onClick={() => toggleChallengeText(index)}>
-                          {openChallengeTexts[index] ? 'Masquer texte' : 'Texte'}
+                          {openChallengeTexts[index] ? t('suggestions.hideText') : t('suggestions.showText')}
                         </Button>
                         {appTracks.length > 0 && (
                           <div className="flex items-center gap-1 text-xs">
-                            <label htmlFor={`ch-app-audio-${index}`} className="text-gray-600">Audio intégré:</label>
+                            <label htmlFor={`ch-app-audio-${index}`} className="text-gray-600">{t('suggestions.builtInAudio')}:</label>
                             <select
                               id={`ch-app-audio-${index}`}
                               className="border rounded px-1 py-0.5 text-xs"
@@ -1141,7 +1143,7 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                                 if (tr) handleSelectAppAudio(index, tr);
                               }}
                             >
-                              <option value="">Choisir…</option>
+                              <option value="">{t('suggestions.choose')}</option>
                               {appTracks.map(t => (
                                 <option key={t.id} value={t.id}>{t.title}</option>
                               ))}
@@ -1150,13 +1152,13 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                         )}
                         <div className="relative">
                           <input id={`file-audio-${index}`} type="file" accept="audio/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) handleSelectAudio(index, f); }} />
-                          <Button type="button" size="sm" variant="outline" onClick={() => document.getElementById(`file-audio-${index}`)?.click()}>Choisir audio</Button>
+                          <Button type="button" size="sm" variant="outline" onClick={() => document.getElementById(`file-audio-${index}`)?.click()}>{t('suggestions.chooseAudio')}</Button>
                         </div>
                       </div>
                     )}
                     {isPlaying && <div className="hidden" />}
                     {!isPlaying && customAudioUrls[index] && (
-                      <div className="text-xs text-gray-500 truncate">{(customUrlOriginalNames.current[index] || '').startsWith('App:') ? 'Audio intégré: ' : 'Audio local: '}{customUrlOriginalNames.current[index]}</div>
+                      <div className="text-xs text-gray-500 truncate">{(customUrlOriginalNames.current[index] || '').startsWith('App:') ? t('suggestions.builtInAudio') + ': ' : t('suggestions.localAudio') + ': '}{customUrlOriginalNames.current[index]}</div>
                     )}
                     {openChallengeTexts[index] && (
                       <div className="mt-2 p-3 rounded border bg-orange-50 text-sm max-h-60 overflow-auto space-y-2">
@@ -1168,13 +1170,13 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                           </div>
                         ) : (
                           (() => {
-                            const text = challenge.transcription || challenge.description || (customAudioUrls[index] ? "Transcription non disponible pour l'audio local." : 'Aucune transcription.');
+                            const text = challenge.transcription || challenge.description || (customAudioUrls[index] ? t('suggestions.noTranscriptionLocal') : t('suggestions.noTranscription'));
                             return <div className="whitespace-pre-wrap break-anywhere">{text}</div>;
                           })()
                         )}
                         {(!challenge.transcription && challenge.action_steps?.length) && (
                           <div>
-                            <p className="font-medium text-xs text-gray-600 mb-1">Étapes :</p>
+                            <p className="font-medium text-xs text-gray-600 mb-1">{t('suggestions.steps')}:</p>
                             <ol className="text-xs space-y-1 list-decimal list-inside">
                               {challenge.action_steps.map((s, i) => (<li key={i} className="break-anywhere">{s}</li>))}
                             </ol>
@@ -1243,7 +1245,7 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <UserCheck className="h-5 w-5 text-blue-500" />
-            Praticiens recommandés
+            {t('suggestions.recommendedPractitioners')}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -1269,10 +1271,10 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                 </div>
                 <div className="flex gap-2">
                   <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); openProfile(practitioner); }}>
-                    Consulter
+                    {t('suggestions.consult')}
                   </Button>
                   <Button size="sm" className="bg-wellness-gradient text-white" onClick={(e) => { e.stopPropagation(); bookPractitioner(practitioner); }}>
-                    Prendre RDV
+                    {t('suggestions.bookAppointment')}
                   </Button>
                 </div>
               </div>
@@ -1291,7 +1293,7 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Brain className="h-5 w-5 text-purple-500" />
-            Contenus suggérés
+            {t('suggestions.suggestedContent')}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -1338,8 +1340,8 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
                       </div>
                     )}
                     <div className="mt-3 flex gap-2">
-                      <Button size="sm" className="flex-1" variant="outline" onClick={() => startContentAudio(index, content)}>Commencer avec audio</Button>
-                      <Button size="sm" variant="secondary" className="flex-1" onClick={() => onSuggestionSelect?.(content)}>Ouvrir</Button>
+                      <Button size="sm" className="flex-1" variant="outline" onClick={() => startContentAudio(index, content)}>{t('suggestions.startWithAudio')}</Button>
+                      <Button size="sm" variant="secondary" className="flex-1" onClick={() => onSuggestionSelect?.(content)}>{t('suggestions.open')}</Button>
                     </div>
                   </div>
                   {/* controls moved outside inner wrapper */}
@@ -1403,11 +1405,11 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
         <div>
           <h2 className="text-xl font-semibold flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-yellow-500" />
-            Suggestions personnalisées
+            {t('suggestions.title')}
           </h2>
           {lastUpdate && (
             <p className="text-sm text-gray-500 mt-1">
-              Dernière mise à jour : {lastUpdate.toLocaleTimeString()}
+              {t('suggestions.lastUpdate')}: {lastUpdate.toLocaleTimeString()}
             </p>
           )}
         </div>
@@ -1418,7 +1420,7 @@ const IntelligentSuggestions: React.FC<IntelligentSuggestionsProps> = ({
           disabled={loading}
         >
           <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-          Actualiser
+          {t('suggestions.refresh')}
         </Button>
       </div>
 
