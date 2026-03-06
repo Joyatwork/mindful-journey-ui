@@ -10,6 +10,7 @@ interface Challenge {
     title: string;
     description?: string;
     duration?: string;
+    duration_minutes?: number;
     points?: number;
     icon?: string;
     color?: string;
@@ -47,13 +48,18 @@ export const ChallengeDetailsModal: React.FC<ChallengeDetailsModalProps> = ({
     const lastChallengeIdRef = useRef<number | null>(null);
 
     // Convertir la durée en secondes
-    const parseDuration = (duration?: string): number => {
-        if (!duration) return 0;
+    const parseDuration = (duration?: string, durationMinutes?: number): number => {
+        // Priorité à duration_minutes si disponible (vient de la base de données)
+        if (durationMinutes && durationMinutes > 0) {
+            return durationMinutes * 60;
+        }
+        // Sinon, parser la chaîne duration
+        if (!duration) return 5 * 60; // Défaut: 5 minutes si aucune durée spécifiée
         const match = duration.match(/(\d+)/);
         if (match) {
             return parseInt(match[1]) * 60;
         }
-        return 0;
+        return 5 * 60; // Défaut: 5 minutes
     };
 
     // Formater le temps pour affichage
@@ -78,7 +84,7 @@ export const ChallengeDetailsModal: React.FC<ChallengeDetailsModalProps> = ({
             lastChallengeIdRef.current = challenge.id;
             setLocalStatus('not_started');
 
-            const duration = parseDuration(challenge.duration);
+            const duration = parseDuration(challenge.duration, challenge.duration_minutes);
             setTotalDuration(duration);
             setTimeLeft(duration);
             setIsRunning(false);
@@ -139,7 +145,8 @@ export const ChallengeDetailsModal: React.FC<ChallengeDetailsModalProps> = ({
             await onStart(challenge.id);
 
             // Initialiser le chrono localement SEULEMENT
-            const durationInSeconds = parseDuration(challenge.duration);
+            const durationInSeconds = parseDuration(challenge.duration, challenge.duration_minutes);
+            const displayDuration = challenge.duration || `${challenge.duration_minutes || 5} min`;
             setTotalDuration(durationInSeconds);
             setTimeLeft(durationInSeconds);
             setLocalStatus('in_progress');
@@ -148,7 +155,7 @@ export const ChallengeDetailsModal: React.FC<ChallengeDetailsModalProps> = ({
 
             toast({
                 title: '🎯 Défi démarré!',
-                description: `${challenge.title} a commencé. Durée: ${challenge.duration}`,
+                description: `${challenge.title} a commencé. Durée: ${displayDuration}`,
             });
         } catch (error) {
             toast({
