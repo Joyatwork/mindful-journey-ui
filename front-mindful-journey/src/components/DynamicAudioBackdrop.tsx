@@ -1,5 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 
+// Polyfill requestIdleCallback pour Safari/iOS
+const requestIdleCallbackPolyfill = 
+  typeof window !== 'undefined' && 'requestIdleCallback' in window 
+    ? window.requestIdleCallback 
+    : (cb: () => void) => setTimeout(cb, 1);
+
 interface DynamicAudioBackdropProps {
   playing: boolean;            // audio en cours (avance le diaporama)
   paused?: boolean;            // audio en pause (on fige l'image courante)
@@ -37,18 +43,18 @@ const DynamicAudioBackdrop: React.FC<DynamicAudioBackdropProps> = ({
       const src = queue.shift();
       if (!src) return;
       if (preloadedRef.current.has(src)) {
-        requestIdleCallback(loadNext);
+        requestIdleCallbackPolyfill(loadNext);
         return;
       }
       const img = new Image();
       img.onload = () => {
         preloadedRef.current.add(src);
-        requestIdleCallback(loadNext);
+        requestIdleCallbackPolyfill(loadNext);
       };
-      img.onerror = () => requestIdleCallback(loadNext);
+      img.onerror = () => requestIdleCallbackPolyfill(loadNext);
       img.src = src;
     };
-    requestIdleCallback(loadNext);
+    requestIdleCallbackPolyfill(loadNext);
     return () => { cancelled = true; };
   }, [playing, defaultImages]);
 
