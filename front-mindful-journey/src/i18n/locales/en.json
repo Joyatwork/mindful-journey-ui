@@ -504,5 +504,26 @@
     "unableToLoadAudio": "Unable to load audio",
     "audioPlaybackBlocked": "Audio playback blocked (interaction required)",
     "unableToResume": "Unable to resume"
+  },
+  "legal": {
+    "cookiePolicy": "Cookie Policy",
+    "privacyPolicy": "Privacy Policy",
+    "termsOfUse": "Terms of Use",
+    "legalNotices": "Legal Notices",
+    "cookiesTitle": "Cookie Policy",
+    "cguTitle": "Terms of Service",
+    "privacyTitle": "Privacy Policy and GDPR",
+    "legalNoticesTitle": "Legal Notices",
+    "downloadFull": "Download full document:",
+    "downloadPDF": "Download PDF",
+    "lastUpdate": "Last update"
+  },
+  "cookies": {
+    "title": "Cookie Management",
+    "description": "We use cookies to enhance your experience on our site. You can choose to accept all cookies or only essential cookies.",
+    "acceptAll": "Accept All",
+    "essentialOnly": "Essential Only",
+    "decline": "Decline",
+    "learnMore": "Learn More"
   }
 }

@@ -504,5 +504,26 @@
     "unableToLoadAudio": "No se puede cargar el audio",
     "audioPlaybackBlocked": "Reproducción de audio bloqueada (se requiere interacción)",
     "unableToResume": "No se puede reanudar"
+  },
+  "legal": {
+    "cookiePolicy": "Política de cookies",
+    "privacyPolicy": "Política de privacidad",
+    "termsOfUse": "Condiciones de uso",
+    "legalNotices": "Aviso legal",
+    "cookiesTitle": "Política de Cookies",
+    "cguTitle": "Términos y Condiciones",
+    "privacyTitle": "Política de Privacidad y RGPD",
+    "legalNoticesTitle": "Aviso Legal",
+    "downloadFull": "Descargar documento completo:",
+    "downloadPDF": "Descargar PDF",
+    "lastUpdate": "Última actualización"
+  },
+  "cookies": {
+    "title": "Gestión de cookies",
+    "description": "Utilizamos cookies para mejorar su experiencia en nuestro sitio. Puede elegir aceptar todas las cookies o solo las cookies esenciales.",
+    "acceptAll": "Aceptar todo",
+    "essentialOnly": "Solo esenciales",
+    "decline": "Rechazar",
+    "learnMore": "Más información"
   }
 }

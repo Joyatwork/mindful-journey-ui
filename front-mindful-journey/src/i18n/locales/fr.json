@@ -504,5 +504,26 @@
     "unableToLoadAudio": "Impossible de charger l'audio",
     "audioPlaybackBlocked": "Lecture audio bloquée (interaction requise)",
     "unableToResume": "Impossible de reprendre"
+  },
+  "legal": {
+    "cookiePolicy": "Politique de cookies",
+    "privacyPolicy": "Politique de confidentialité",
+    "termsOfUse": "Conditions d'utilisation",
+    "legalNotices": "Mentions légales",
+    "cookiesTitle": "Politique de Cookies",
+    "cguTitle": "Conditions Générales d'Utilisation",
+    "privacyTitle": "Politique de Confidentialité et RGPD",
+    "legalNoticesTitle": "Mentions Légales",
+    "downloadFull": "Télécharger le document complet :",
+    "downloadPDF": "Télécharger le PDF",
+    "lastUpdate": "Dernière mise à jour"
+  },
+  "cookies": {
+    "title": "Gestion des cookies",
+    "description": "Nous utilisons des cookies pour améliorer votre expérience sur notre site. Vous pouvez choisir d'accepter tous les cookies ou uniquement les cookies essentiels.",
+    "acceptAll": "Accepter tout",
+    "essentialOnly": "Essentiels seulement",
+    "decline": "Refuser",
+    "learnMore": "En savoir plus"
   }
 }

@@ -34,6 +34,11 @@ import NegativeMoodFactorsPage from "@/pages/NegativeMoodFactorsPage";
 import NegativeMoodDetailsPage from "@/pages/NegativeMoodDetailsPage";
 import NegativeMoodSupportMessagesPage from "@/pages/NegativeMoodSupportMessagesPage";
 import NegativeMoodInspirationPromptPage from "@/pages/NegativeMoodInspirationPromptPage";
+import CookiesPage from "@/pages/CookiesPage";
+import ConfidentialitePage from "@/pages/ConfidentialitePage";
+import CGUPage from "@/pages/CGUPage";
+import MentionsLegalesPage from "@/pages/MentionsLegalesPage";
+import CookieConsent from "@/components/CookieConsent";
 
 const queryClient = new QueryClient();
 
@@ -158,9 +163,15 @@ const App = () => (
               } />
               {/* Unprotected demo route for quick testing */}
               <Route path="/meditation-demo" element={<MeditationDemo />} />
+              {/* Legal pages - public access */}
+              <Route path="/cookies" element={<CookiesPage />} />
+              <Route path="/confidentialite" element={<ConfidentialitePage />} />
+              <Route path="/cgu" element={<CGUPage />} />
+              <Route path="/mentions-legales" element={<MentionsLegalesPage />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
+            <CookieConsent />
           </BrowserRouter>
         </TooltipProvider>
       </AuthProvider>
