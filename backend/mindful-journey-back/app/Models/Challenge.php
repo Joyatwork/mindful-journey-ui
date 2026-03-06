@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Challenge extends Model
 {
-    protected $fillable = ['title', 'description', 'type'];
+    protected $fillable = ['title', 'description', 'type', 'duration_minutes', 'difficulty', 'category'];
 
     public function users(): BelongsToMany {
         return $this->belongsToMany(\App\Models\User::class, 'challenge_user')

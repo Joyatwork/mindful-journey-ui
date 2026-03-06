@@ -31,6 +31,9 @@ class ChallengeController extends Controller
                     'id' => $c->id,
                     'title' => $c->title,
                     'description' => $c->description,
+                    'duration_minutes' => $c->duration_minutes ?? 10,
+                    'difficulty' => $c->difficulty ?? 'easy',
+                    'category' => $c->category ?? 'Bien-être',
                     'status' => $status,
                     'completed_at' => $pivot?->completed_at,
                 ];
