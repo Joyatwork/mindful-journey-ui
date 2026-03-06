@@ -54,7 +54,12 @@ import {
   LogOut,
   ArrowLeft,
   Sparkles,
-  Check
+  Check,
+  Clock,
+  Wind,
+  Droplets,
+  Users,
+  Dumbbell
 } from 'lucide-react';
 import AnnualBackground from '@/components/AnnualBackground';
 import AnnualOptionList from '@/components/AnnualOptionList';
@@ -690,7 +695,7 @@ const Index = () => {
   };
 
   const [currentChallengeId, setCurrentChallengeId] = useState<number | null>(null);
-  const [challengeList, setChallengeList] = useState<Array<{ id: number; title: string; description?: string; status: string; completed_at?: string | null }>>([]);
+  const [challengeList, setChallengeList] = useState<Array<{ id: number; title: string; description?: string; status: string; completed_at?: string | null; category?: string; duration_minutes?: number; difficulty?: string }>>([]);
 
   const loadChallenges = async () => {
     try {
@@ -3623,46 +3628,170 @@ const Index = () => {
             actionLabel="Je le fais !"
           />
         ))}
-        {/* Liste des défis avec statut */}
-        <div className="border rounded-lg p-4 bg-white/70">
-          <h2 className="font-semibold mb-1">Mes défis (depuis la base)</h2>
-          <div className="text-xs text-gray-500 mb-2">
-            Total: {challengeList.length}
-            {' '}·{' '}Terminés: {challengeList.filter(c => c.status === 'finished' || !!c.completed_at).length}
-            {' '}·{' '}En cours: {challengeList.filter(c => c.status === 'in_progress').length}
-            {' '}·{' '}Non démarrés: {challengeList.filter(c => c.status === 'not_started').length}
-          </div>
-          <div className="space-y-2">
-            {challengeList.map((c) => (
-              <div
-                key={c.id}
-                onClick={() => {
-                  setSelectedChallenge(c);
-                  setIsChallengeModalOpen(true);
-                }}
-                className="flex items-start justify-between p-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-100 cursor-pointer hover:shadow-md transition-shadow"
-              >
-                <div className="flex-1">
-                  <p className="font-medium text-sm">{c.title}</p>
-                  {c.description && <p className="text-xs text-gray-600 mt-0.5">{c.description}</p>}
-                </div>
-                <div className="flex items-center gap-2 ml-2 flex-shrink-0">
-                  <span className={`text-xs px-2 py-1 rounded-full font-semibold whitespace-nowrap ${c.status === 'finished' ? 'bg-green-100 text-green-800' :
-                    c.status === 'in_progress' ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`}>
-                    {c.status === 'finished' ? '✓ Terminé' :
-                      c.status === 'in_progress' ? '⏳ En cours' :
-                        'Non démarré'}
-                  </span>
-                </div>
+        {/* Liste des défis depuis la base avec le même design */}
+        {challengeList.length > 0 && (
+          <div className="mt-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-semibold text-lg">Mes défis personnalisés</h2>
+              <div className="text-xs text-gray-500">
+                {challengeList.filter(c => c.status === 'finished' || !!c.completed_at).length}/{challengeList.length} terminés
               </div>
-            ))}
-            {challengeList.length === 0 && (
-              <div className="text-gray-500 text-sm">Aucun défi pour l'instant</div>
-            )}
+            </div>
+            <div className="grid gap-4">
+              {challengeList.map((c) => {
+                // Déterminer la catégorie, l'icône et le gradient basés sur le titre
+                const titleLower = c.title?.toLowerCase() || '';
+                const categoryLower = c.category?.toLowerCase() || '';
+                let category = c.category || 'Bien-être';
+                let icon = <Target className="h-5 w-5 text-emerald-500" />;
+                let gradient = 'bg-gradient-to-r from-emerald-400 to-teal-400';
+                
+                if (titleLower.includes('yoga') || categoryLower.includes('yoga')) {
+                  category = 'Yoga';
+                  icon = <Heart className="h-5 w-5 text-pink-500" />;
+                  gradient = 'bg-gradient-to-r from-pink-400 to-rose-400';
+                } else if (titleLower.includes('méditation') || titleLower.includes('meditation') || categoryLower.includes('meditation')) {
+                  category = 'Mindfulness';
+                  icon = <Brain className="h-5 w-5 text-purple-500" />;
+                  gradient = 'bg-gradient-to-r from-purple-400 to-pink-400';
+                } else if (titleLower.includes('respir') || titleLower.includes('breath')) {
+                  category = 'Respiration';
+                  icon = <Wind className="h-5 w-5 text-cyan-500" />;
+                  gradient = 'bg-wellness-gradient';
+                } else if (titleLower.includes('sommeil') || titleLower.includes('sleep')) {
+                  category = 'Sommeil';
+                  icon = <Moon className="h-5 w-5 text-indigo-500" />;
+                  gradient = 'bg-gradient-to-r from-indigo-500 to-purple-500';
+                } else if (titleLower.includes('stretch') || titleLower.includes('étirement')) {
+                  category = 'Stretching';
+                  icon = <Sparkles className="h-5 w-5 text-orange-500" />;
+                  gradient = 'bg-gradient-to-r from-orange-400 to-amber-400';
+                } else if (titleLower.includes('focus') || titleLower.includes('concentration')) {
+                  category = 'Focus';
+                  icon = <Zap className="h-5 w-5 text-yellow-500" />;
+                  gradient = 'bg-gradient-to-r from-yellow-400 to-orange-400';
+                } else if (titleLower.includes('hydrat') || titleLower.includes('eau') || titleLower.includes('water')) {
+                  category = 'Hydratation';
+                  icon = <Droplets className="h-5 w-5 text-blue-500" />;
+                  gradient = 'bg-gradient-to-r from-blue-400 to-cyan-400';
+                } else if (titleLower.includes('pause') || titleLower.includes('équipe') || titleLower.includes('team')) {
+                  category = 'Équipe';
+                  icon = <Users className="h-5 w-5 text-green-500" />;
+                  gradient = 'bg-gradient-to-r from-green-400 to-emerald-400';
+                } else if (titleLower.includes('bench') || titleLower.includes('press') || titleLower.includes('pulldown') || titleLower.includes('fitness')) {
+                  category = 'Fitness';
+                  icon = <Dumbbell className="h-5 w-5 text-red-500" />;
+                  gradient = 'bg-gradient-to-r from-red-400 to-orange-400';
+                }
+                
+                // Déterminer la difficulté
+                const difficultyMap: Record<string, 'Facile' | 'Moyen' | 'Avancé'> = {
+                  'easy': 'Facile',
+                  'facile': 'Facile',
+                  'medium': 'Moyen',
+                  'moyen': 'Moyen',
+                  'hard': 'Avancé',
+                  'avancé': 'Avancé',
+                  'difficile': 'Avancé'
+                };
+                const difficulty: 'Facile' | 'Moyen' | 'Avancé' = difficultyMap[c.difficulty?.toLowerCase() || ''] || 'Facile';
+                
+                // Durée
+                const duration = c.duration_minutes ? `${c.duration_minutes} min` : '10 min';
+                
+                // Couleurs selon le statut
+                const statusBadge = c.status === 'finished' || c.completed_at
+                  ? { text: '✓ Terminé', color: 'bg-green-100 text-green-800' }
+                  : c.status === 'in_progress'
+                    ? { text: '⏳ En cours', color: 'bg-yellow-100 text-yellow-800' }
+                    : { text: 'Non démarré', color: 'bg-gray-100 text-gray-800' };
+                
+                // Action label selon le statut
+                const actionLabel = c.status === 'finished' || c.completed_at
+                  ? '✓ Terminé'
+                  : c.status === 'in_progress'
+                    ? 'Continuer'
+                    : 'Je le fais !';
+                
+                return (
+                  <Card 
+                    key={c.id}
+                    className="overflow-hidden hover:shadow-lg transition-all duration-300 hover:scale-[1.02] border-0 bg-white/90 backdrop-blur-sm cursor-pointer"
+                    onClick={() => {
+                      setSelectedChallenge(c);
+                      setIsChallengeModalOpen(true);
+                    }}
+                  >
+                    <div className={`h-2 ${gradient}`} />
+                    <div className="p-6">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center space-x-3">
+                          <div className={`p-2 rounded-full ${gradient} bg-opacity-10`}>
+                            {icon}
+                          </div>
+                          <Badge variant="outline" className="text-xs">
+                            {category}
+                          </Badge>
+                        </div>
+                        <Badge className={`text-xs ${statusBadge.color}`}>
+                          {statusBadge.text}
+                        </Badge>
+                      </div>
+                      
+                      <h3 className="font-semibold text-lg mb-2 line-clamp-2">
+                        {c.title}
+                      </h3>
+                      
+                      {c.description && (
+                        <p className="text-muted-foreground text-sm mb-4 line-clamp-2">
+                          {c.description}
+                        </p>
+                      )}
+                      
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center space-x-4 text-xs text-muted-foreground">
+                          <div className="flex items-center space-x-1">
+                            <Clock className="h-3 w-3" />
+                            <span>{duration}</span>
+                          </div>
+                          <Badge 
+                            variant="secondary" 
+                            className={`text-xs ${
+                              difficulty === 'Facile' ? 'bg-green-100 text-green-800' :
+                              difficulty === 'Moyen' ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-red-100 text-red-800'
+                            }`}
+                          >
+                            {difficulty}
+                          </Badge>
+                        </div>
+                      </div>
+                      
+                      <Button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedChallenge(c);
+                          setIsChallengeModalOpen(true);
+                        }}
+                        className={`w-full ${
+                          c.status === 'finished' || c.completed_at
+                            ? 'bg-green-500 hover:bg-green-600'
+                            : 'bg-wellness-gradient hover:opacity-90'
+                        } transition-opacity`}
+                        disabled={c.status === 'finished' || !!c.completed_at}
+                      >
+                        {actionLabel}
+                      </Button>
+                    </div>
+                  </Card>
+                );
+              })}
+            </div>
           </div>
-        </div>
+        )}
+        {challengeList.length === 0 && (
+          <div className="text-gray-500 text-sm text-center py-8">Aucun défi personnalisé pour l'instant</div>
+        )}
       </div>
 
       {/* Modal pour les détails du défi */}
