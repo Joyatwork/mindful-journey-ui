@@ -15,8 +15,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        // CORS middleware is now properly handled by Laravel's HandleCors
-        // which uses config/cors.php settings
+        // Enable CORS middleware with config/cors.php settings
+        $middleware->statefulApi();
 
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
 
@@ -33,27 +33,35 @@ return Application::configure(basePath: dirname(__DIR__))
             if (!$request->is('api/*')) {
                 return null;
             }
-            
-            // Get the origin
+
             $origin = $request->header('Origin');
-            $allowedOrigins = [
-                'https://mindful-journey-ui.vercel.app',
-                'http://localhost:3000',
-                'http://localhost:5173',
-                'http://127.0.0.1:5173',
-            ];
-            
-            $isAllowed = in_array($origin, $allowedOrigins) 
-                || ($origin && preg_match('/^https:\/\/.*\.vercel\.app$/', $origin));
-            
-            if (!$isAllowed) {
-                return null; // Let Laravel handle it normally
+            if (!$origin) {
+                return null;
             }
-            
+
+            // Check if origin is allowed using config/cors.php
+            $corsConfig = config('cors');
+            $allowedOrigins = $corsConfig['allowed_origins'] ?? [];
+            $allowedPatterns = $corsConfig['allowed_origins_patterns'] ?? [];
+
+            $isAllowed = in_array($origin, $allowedOrigins);
+            if (!$isAllowed) {
+                foreach ($allowedPatterns as $pattern) {
+                    if (preg_match($pattern, $origin)) {
+                        $isAllowed = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!$isAllowed) {
+                return null;
+            }
+
             // Build response with CORS headers
             $status = 500;
             $message = 'Server Error';
-            
+
             if ($e instanceof \Illuminate\Auth\AuthenticationException) {
                 $status = 401;
                 $message = 'Unauthenticated';
@@ -64,7 +72,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 $status = $e->getStatusCode();
                 $message = $e->getMessage() ?: 'Error';
             }
-            
+
             return response()->json([
                 'message' => $message,
                 'error' => config('app.debug') ? $e->getMessage() : null,
