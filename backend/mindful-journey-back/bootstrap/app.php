@@ -16,11 +16,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
-
-        $middleware->api(append: [
+        // Apply CORS globally to all requests
+        $middleware->use([
             CorsMiddleware::class,
         ]);
+
+        $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
 
         $middleware->web(append: [
             HandleAppearance::class,
