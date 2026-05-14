@@ -15,10 +15,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        // Enable CORS middleware with config/cors.php settings
-        $middleware->statefulApi();
-
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
+
+        $middleware->api(append: [
+            \Illuminate\Http\Middleware\HandleCors::class,
+        ]);
 
         $middleware->web(append: [
             HandleAppearance::class,
