@@ -11,16 +11,24 @@ class CorsMiddleware
     {
         $origin = $request->header('Origin');
 
-        if ($this->isOriginAllowed($origin)) {
-            return $next($request)
-                ->header('Access-Control-Allow-Origin', $origin)
-                ->header('Access-Control-Allow-Credentials', 'true')
-                ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS')
-                ->header('Access-Control-Allow-Headers', 'Content-Type, Accept, Authorization, X-Requested-With, X-XSRF-TOKEN')
-                ->header('Access-Control-Max-Age', '3600');
+        if (!$this->isOriginAllowed($origin)) {
+            return $next($request);
         }
 
-        return $next($request);
+        $headers = [
+            'Access-Control-Allow-Origin' => $origin,
+            'Access-Control-Allow-Credentials' => 'true',
+            'Access-Control-Allow-Methods' => 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
+            'Access-Control-Allow-Headers' => 'Content-Type, Accept, Authorization, X-Requested-With, X-XSRF-TOKEN',
+            'Access-Control-Max-Age' => '3600',
+        ];
+
+        // Handle preflight requests
+        if ($request->isMethod('OPTIONS')) {
+            return response('', 204)->withHeaders($headers);
+        }
+
+        return $next($request)->withHeaders($headers);
     }
 
     private function isOriginAllowed($origin): bool
