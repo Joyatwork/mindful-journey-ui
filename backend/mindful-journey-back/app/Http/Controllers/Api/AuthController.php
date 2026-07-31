@@ -12,9 +12,14 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Crypt;
+use PragmaRX\Google2FA\Google2FA;
+use Endroid\QrCode\Builder\Builder;
+use Endroid\QrCode\Writer\PngWriter;
 use Cloudinary\Cloudinary;
 use App\Models\LoginOtp;
 use App\Mail\TwoFactorCodeMail;
+use App\Models\Role;
 use Illuminate\Validation\ValidationException;
 use App\Models\User;
 
@@ -89,7 +94,50 @@ class AuthController extends Controller
         } catch (\Throwable $e) { /* ignore */
         }
 
+        // Assigner un rôle d'employé pour les nouveaux utilisateurs
+        try {
+            $employeeRole = null;
+            if (Schema::hasTable('roles')) {
+                $employeeRole = Role::firstOrCreate(['name' => 'employee']);
+            }
+
+            if ($employeeRole && Schema::hasColumn('users', 'role_id')) {
+                $data['role_id'] = $employeeRole->id;
+            }
+
+            if (Schema::hasColumn('users', 'role')) {
+                $legacyRole = $this->getLegacyUserRoleValue('employee');
+                if ($legacyRole !== null) {
+                    $data['role'] = $legacyRole;
+                }
+            }
+        } catch (\Throwable $e) {
+            // Ne pas échouer l'inscription si la table/colonne de rôle n'existe pas.
+            Log::warning('register: role assignment skipped', ['error' => $e->getMessage()]);
+        }
+
+        $google2fa = new Google2FA();
+        $secret = $google2fa->generateSecretKey();
+
+        $data['totp_secret'] = Crypt::encryptString($secret);
+
         $user = User::create($data);
+        $this->syncEmployeeProfileForUser($user, $entrepriseId);
+
+        $qrCodeUrl = $google2fa->getQRCodeUrl(
+            'JoyAtWork',
+            $user->email,
+            $secret
+        );
+
+        $result = Builder::create()
+            ->writer(new PngWriter())
+            ->data($qrCodeUrl)
+            ->size(300)
+            ->margin(10)
+            ->build();
+
+        $qrCode = base64_encode($result->getString());
 
         // Créer automatiquement le profil employé lié à l'entreprise choisie
         try {
@@ -105,10 +153,27 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => 'Inscription réussie',
-            'user' => $user->only(['id', 'name', 'email', 'created_at']),
-            'token' => $token,
-        ], 201);
 
+            'user' => $user->only([
+                'id',
+                'name',
+                'email',
+                'created_at'
+            ]),
+
+            'token' => $token,
+
+            // Affichage de la configuration 2FA au frontend
+            'requires_2fa_setup' => true,
+
+            // QR Code à afficher directement
+            'qr_code' => 'data:image/png;base64,' . $qrCode,
+
+            // Secret uniquement pour la première configuration.
+            // Nous le retirerons plus tard en production.
+            'secret' => $secret,
+
+        ], 201);
       } catch (ValidationException $e) {
           throw $e; // Let Laravel handle validation errors normally
       } catch (\Throwable $e) {
@@ -125,116 +190,215 @@ class AuthController extends Controller
     }
 
     /**
+     * Synchronise automatiquement le profil employé si l'utilisateur possède le rôle employee.
+     */
+    private function syncEmployeeProfileForUser(User $user, ?int $entrepriseId = null): void
+    {
+        try {
+            if (!Schema::hasTable('employees')) {
+                return;
+            }
+
+            if (DB::table('employees')->where('user_id', $user->id)->exists()) {
+                return;
+            }
+
+            $roleName = $user->getNormalizedRoleName();
+            if ($roleName !== 'employee') {
+                return;
+            }
+
+            $resolvedEntrepriseId = $entrepriseId ?? $user->entreprise_id ?? null;
+            $this->createEmployeeForUser($user->id, $resolvedEntrepriseId !== null ? (int) $resolvedEntrepriseId : null);
+        } catch (\Throwable $e) {
+            Log::warning('syncEmployeeProfileForUser: impossible de synchroniser l\'employé', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
      * Crée une entrée employees pour l'utilisateur avec l'entreprise donnée, en remplissant les champs requis.
      */
-    private function createEmployeeForUser(int $userId, int $entrepriseId): void
-    {
-        if (!Schema::hasTable('employees')) return;
+private function createEmployeeForUser(int $userId, ?int $entrepriseId = null): void
+{
+    if (!Schema::hasTable('employees')) return;
 
-        // Ne pas dupliquer si déjà mappé
-        $exists = DB::table('employees')->where('user_id', $userId)->exists();
-        if ($exists) return;
+    // Ne pas dupliquer si déjà mappé
+    $exists = DB::table('employees')->where('user_id', $userId)->exists();
+    if ($exists) return;
 
-        $empColumns = Schema::getColumnListing('employees');
-        $data = ['user_id' => $userId];
-        if (in_array('entreprise_id', $empColumns, true)) {
-            $data['entreprise_id'] = $entrepriseId;
-        }
+    $empColumns = Schema::getColumnListing('employees');
 
-        // Lire nullabilité pour remplir défauts sûrs
-        $nullable = [];
-        try {
-            $dbName = DB::selectOne('SELECT DATABASE() AS db')->db ?? null;
-            if ($dbName) {
-                $rows = DB::select('SELECT COLUMN_NAME, IS_NULLABLE, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?', [$dbName, 'employees']);
-                foreach ($rows as $r) {
-                    $nullable[$r->COLUMN_NAME] = [
-                        'nullable' => ($r->IS_NULLABLE === 'YES'),
-                        'type' => $r->DATA_TYPE,
-                    ];
-                }
-            }
-        } catch (\Throwable $e) { /* ignore */
-        }
+    // Relecture directe en base (évite tout accessor/mutator Eloquent qui pourrait fausser name/email)
+    $userRow = DB::table('users')->where('id', $userId)->first();
+    if (!$userRow) {
+        Log::warning('createEmployeeForUser: utilisateur introuvable', ['user_id' => $userId]);
+        return;
+    }
 
-        foreach (['first_name', 'last_name', 'name'] as $col) {
-            if (in_array($col, $empColumns, true) && (isset($nullable[$col]) && !$nullable[$col]['nullable'])) {
-                $data[$col] = '';
-            }
-        }
-        foreach (['salary', 'age'] as $col) {
-            if (in_array($col, $empColumns, true) && (isset($nullable[$col]) && !$nullable[$col]['nullable'])) {
-                $data[$col] = 0;
-            }
-        }
+    $name = trim((string) ($userRow->name ?? ''));
+    $email = trim((string) ($userRow->email ?? ''));
 
-        // Champs RH usuels
-        if (in_array('employee_number', $empColumns, true)) {
-            $data['employee_number'] = 'E-' . $userId . '-' . substr((string) time(), -5);
-        }
-        if (in_array('department', $empColumns, true)) {
-            $data['department'] = $data['department'] ?? '';
-        }
-        if (in_array('position_title', $empColumns, true)) {
-            $data['position_title'] = $data['position_title'] ?? '';
-        }
-        if (in_array('employment_status', $empColumns, true)) {
-            $data['employment_status'] = $data['employment_status'] ?? 'active';
-        }
-        if (in_array('current_risk_level', $empColumns, true)) {
-            $data['current_risk_level'] = $data['current_risk_level'] ?? 'stable';
-        }
-        if (in_array('current_risk_score', $empColumns, true)) {
-            $data['current_risk_score'] = $data['current_risk_score'] ?? 0;
-        }
-        if (in_array('date_hired', $empColumns, true)) {
-            $data['date_hired'] = $data['date_hired'] ?? now()->toDateString();
-        }
-        if (in_array('last_activity_at', $empColumns, true)) {
-            $data['last_activity_at'] = $data['last_activity_at'] ?? now();
-        }
+    if ($name === '') {
+        $name = $email !== '' ? explode('@', $email)[0] : ('Employé #' . $userId);
+    }
 
-        // Tenter de satisfaire d'éventuelles FKs NOT NULL courantes (department_id)
-        if (in_array('department_id', $empColumns, true) && (isset($nullable['department_id']) && !$nullable['department_id']['nullable'])) {
-            $depId = null;
-            foreach (['departments', 'departements', 'teams'] as $tbl) {
-                if (Schema::hasTable($tbl)) {
-                    $depId = DB::table($tbl)->value('id');
-                    if ($depId) break;
-                }
-            }
-            $data['department_id'] = $depId ?? 1; // dernier recours 1
-        }
-        // FKs possibles
-        if (in_array('site_id', $empColumns, true)) {
-            // Essayer de récupérer un site existant (table sites), sinon 1 en dernier recours si NOT NULL
-            $siteId = null;
-            if (Schema::hasTable('sites')) {
-                $siteId = DB::table('sites')->value('id');
-            }
-            if ($siteId) {
-                $data['site_id'] = $siteId;
-            } elseif (isset($nullable['site_id']) && !$nullable['site_id']['nullable']) {
-                $data['site_id'] = 1;
+    if ($email === '') {
+        // email est NOT NULL + UNIQUE dans employees : impossible d'insérer sans valeur valide
+        Log::error('createEmployeeForUser: email utilisateur manquant, création employee annulée', ['user_id' => $userId]);
+        return;
+    }
+
+    // La colonne email est UNIQUE : si un autre employé a déjà cet email, on lie plutôt que de dupliquer
+    $emailTaken = DB::table('employees')->where('email', $email)->exists();
+    if ($emailTaken) {
+        Log::warning('createEmployeeForUser: email déjà présent dans employees, liaison au lieu de la création', [
+            'user_id' => $userId,
+            'email' => $email,
+        ]);
+        DB::table('employees')->where('email', $email)->update([
+            'user_id' => $userId,
+            'updated_at' => now(),
+        ]);
+        return;
+    }
+
+    $data = ['user_id' => $userId, 'name' => $name, 'email' => $email];
+    if ($entrepriseId !== null && in_array('entreprise_id', $empColumns, true)) {
+        $data['entreprise_id'] = $entrepriseId;
+    }
+
+    // Lire nullabilité pour remplir défauts sûrs
+    $nullable = [];
+    try {
+        $dbName = DB::selectOne('SELECT DATABASE() AS db')->db ?? null;
+        if ($dbName) {
+            $rows = DB::select('SELECT COLUMN_NAME, IS_NULLABLE, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?', [$dbName, 'employees']);
+            foreach ($rows as $r) {
+                $nullable[$r->COLUMN_NAME] = [
+                    'nullable' => ($r->IS_NULLABLE === 'YES'),
+                    'type' => $r->DATA_TYPE,
+                ];
             }
         }
-        if (in_array('manager_id', $empColumns, true)) {
-            // Essayer un manager existant (employees.id), sinon null/1 selon nullabilité
-            $mgr = null;
-            if (Schema::hasTable('employees')) {
-                $mgr = DB::table('employees')->value('id');
-            }
-            if ($mgr) {
-                $data['manager_id'] = $mgr;
-            } elseif (isset($nullable['manager_id']) && !$nullable['manager_id']['nullable']) {
-                $data['manager_id'] = 1;
+    } catch (\Throwable $e) { /* ignore */ }
+
+    foreach (['first_name', 'last_name'] as $col) {
+        if (in_array($col, $empColumns, true) && isset($nullable[$col]) && !$nullable[$col]['nullable']) {
+            $data[$col] = '';
+        }
+    }
+    foreach (['salary', 'age'] as $col) {
+        if (in_array($col, $empColumns, true) && isset($nullable[$col]) && !$nullable[$col]['nullable']) {
+            $data[$col] = 0;
+        }
+    }
+
+    if (in_array('employee_number', $empColumns, true)) {
+        $data['employee_number'] = 'E-' . $userId . '-' . substr((string) time(), -5);
+    }
+    if (in_array('department', $empColumns, true)) {
+        $data['department'] = $data['department'] ?? '';
+    }
+    if (in_array('position_title', $empColumns, true)) {
+        $data['position_title'] = $data['position_title'] ?? '';
+    }
+    if (in_array('employment_status', $empColumns, true)) {
+        $data['employment_status'] = $data['employment_status'] ?? 'active';
+    }
+    if (in_array('current_risk_level', $empColumns, true)) {
+        $data['current_risk_level'] = $data['current_risk_level'] ?? 'low';
+    }
+    if (in_array('current_risk_score', $empColumns, true)) {
+        $data['current_risk_score'] = $data['current_risk_score'] ?? 0;
+    }
+    if (in_array('date_hired', $empColumns, true)) {
+        $data['date_hired'] = $data['date_hired'] ?? now()->toDateString();
+    }
+    if (in_array('last_activity_at', $empColumns, true)) {
+        $data['last_activity_at'] = $data['last_activity_at'] ?? now();
+    }
+
+    if (in_array('department_id', $empColumns, true) && isset($nullable['department_id']) && !$nullable['department_id']['nullable']) {
+        $depId = null;
+        foreach (['departments', 'departements', 'teams'] as $tbl) {
+            if (Schema::hasTable($tbl)) {
+                $depId = DB::table($tbl)->value('id');
+                if ($depId) break;
             }
         }
+        $data['department_id'] = $depId ?? 1;
+    }
 
-        if (in_array('created_at', $empColumns, true)) $data['created_at'] = now();
-        if (in_array('updated_at', $empColumns, true)) $data['updated_at'] = now();
+    if (in_array('site_id', $empColumns, true)) {
+        $siteId = null;
+        if (Schema::hasTable('sites')) {
+            $siteId = DB::table('sites')->value('id');
+        }
+        if ($siteId) {
+            $data['site_id'] = $siteId;
+        } elseif (isset($nullable['site_id']) && !$nullable['site_id']['nullable']) {
+            $data['site_id'] = 1;
+        }
+    }
 
+    if (in_array('manager_id', $empColumns, true)) {
+        $mgr = DB::table('employees')->value('id');
+        if ($mgr) {
+            $data['manager_id'] = $mgr;
+        } elseif (isset($nullable['manager_id']) && !$nullable['manager_id']['nullable']) {
+            $data['manager_id'] = null; // pas de manager par défaut, évite une auto-référence bidon
+        }
+    }
+
+    if (in_array('created_at', $empColumns, true)) $data['created_at'] = now();
+    if (in_array('updated_at', $empColumns, true)) $data['updated_at'] = now();
+
+    // Sécurité finale : ne garder que les colonnes qui existent réellement dans la table
+    $data = array_intersect_key($data, array_flip($empColumns));
+
+    try {
+        Log::info('EMPLOYEE DATA', $data);
         DB::table('employees')->insert($data);
+        Log::info('EMPLOYEE CREATED', ['user_id' => $userId]);
+    } catch (\Throwable $e) {
+        Log::error('EMPLOYEE INSERT FAILED', [
+            'user_id' => $userId,
+            'entreprise_id' => $entrepriseId,
+            'message' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+            'data' => $data,
+        ]);
+        throw $e;
+    }
+}
+
+    private function getLegacyUserRoleValue(string $requestedRole): ?string
+    {
+        if (!Schema::hasColumn('users', 'role')) {
+            return null;
+        }
+
+        try {
+            $row = DB::selectOne(
+                "SELECT COLUMN_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users' AND COLUMN_NAME = 'role'"
+            );
+            if (!$row || !isset($row->COLUMN_TYPE)) {
+                return null;
+            }
+
+            if (!preg_match("/^enum\\((.*)\\)$/", $row->COLUMN_TYPE, $matches)) {
+                return $requestedRole;
+            }
+
+            $options = array_map(fn ($value) => trim($value, "'"), explode(',', $matches[1]));
+            return in_array($requestedRole, $options, true) ? $requestedRole : null;
+        } catch (\Throwable $e) {
+            return null;
+        }
     }
 
     /**
@@ -245,6 +409,7 @@ class AuthController extends Controller
         $request->validate([
             'email' => 'required|email',
             'password' => 'required',
+            'code' => 'required|digits:6',
         ]);
 
         $user = User::where('email', $request->email)->first();
@@ -254,6 +419,8 @@ class AuthController extends Controller
                 'email' => ["Les informations d'identification fournies sont incorrectes."],
             ]);
         }
+
+        $this->syncEmployeeProfileForUser($user);
 
         // Vérifier la préférence 2FA de l'utilisateur (stockée dans preferences)
         $preferences = is_array($user->preferences) ? $user->preferences : (json_decode($user->preferences ?? '[]', true) ?: []);
@@ -270,6 +437,36 @@ class AuthController extends Controller
             ]);
         }
 
+        // Vérification du code Google Authenticator
+
+        try {
+            $secret = Crypt::decryptString($user->totp_secret);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Le secret 2FA est invalide.'
+            ], 500);
+        }
+
+        $google2fa = new Google2FA();
+
+        if (!$google2fa->verifyKey($secret, $request->code)) {
+            return response()->json([
+                'message' => 'Code Google Authenticator invalide.'
+            ], 401);
+        }
+
+        // Code valide → connexion
+
+        $token = $user->createToken('auth-token')->plainTextToken;
+
+        return response()->json([
+            'message' => 'Connexion réussie',
+            'user' => $user,
+            'token' => $token,
+            'two_factor' => false,
+        ]);
+
+        /*
         // Vérifier que la table login_otps existe (migration appliquée)
         if (!Schema::hasTable('login_otps')) {
             Log::warning('2FA désactivé temporairement: table login_otps absente. Retour au login direct.');
@@ -333,8 +530,68 @@ class AuthController extends Controller
             $payload['dev_code'] = $code;
         }
         return response()->json($payload);
+        */
     }
 
+            //génération du code qr 2FA pour l'utilisateur
+
+        public function twoFactorSetup(Request $request): JsonResponse
+    {
+        $user = User::where('email', 'Marie@TechCorp.com')->first();
+/*
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Utilisateur non authentifié.'
+            ], 401);
+        }
+*/
+        if (empty($user->totp_secret)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Aucun secret TOTP trouvé.'
+            ], 400);
+        }
+
+        try {
+
+            $secret = Crypt::decryptString($user->totp_secret);
+
+            $google2fa = new Google2FA();
+
+            $qrCodeUrl = $google2fa->getQRCodeUrl(
+                'JoyAtWork',
+                $user->email,
+                $secret
+            );
+
+            $result = Builder::create()
+                ->writer(new PngWriter())
+                ->data($qrCodeUrl)
+                ->size(300)
+                ->margin(10)
+                ->build();
+
+            return response()->json([
+                'success' => true,
+                'secret' => $secret,
+                'qr_code' => 'data:image/png;base64,' . base64_encode($result->getString())
+            ]);
+
+        } catch (\Throwable $e) {
+
+            Log::error('2FA setup', [
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Impossible de générer le QR Code.'
+            ], 500);
+        }
+    }
+    //fin génération du code qr 2FA pour l'utilisateur
+    
     /**
      * Vérifie le code OTP et retourne le token final si valide
      */
@@ -424,7 +681,7 @@ class AuthController extends Controller
             ], 500);
         }
     }
-
+    
     /**
      * Déconnexion utilisateur
      */
@@ -444,6 +701,7 @@ class AuthController extends Controller
     public function user(Request $request): JsonResponse
     {
         $user = $request->user();
+        $this->syncEmployeeProfileForUser($user);
         $preferences = is_array($user->preferences) ? $user->preferences : (json_decode($user->preferences ?? '[]', true) ?: []);
 
         return response()->json([

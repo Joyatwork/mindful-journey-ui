@@ -151,7 +151,7 @@ class ApiError extends Error {
 export const apiService = {
   // Authentification
   auth: {
-    login: (credentials: { email: string; password: string }) =>
+    login: (credentials: { email: string; password: string; code: string }) =>
       apiRequest('/auth/login', {
         method: 'POST',
         body: JSON.stringify(credentials),

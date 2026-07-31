@@ -14,6 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class CommunicationController extends Controller
 {
@@ -485,7 +486,15 @@ class CommunicationController extends Controller
     {
         // Trouver les utilisateurs RH de l'entreprise (role = 'rh' ou 'admin')
         $hrUsers = User::where('entreprise_id', $communication->entreprise_id)
-            ->whereIn('role', ['rh', 'admin', 'hr'])
+            ->where(function ($query) {
+                $query->whereIn('role', ['rh', 'admin', 'hr']);
+
+                if (Schema::hasTable('roles') && Schema::hasColumn('users', 'role_id')) {
+                    $query->orWhereHas('role', function ($query) {
+                        $query->whereIn('name', ['rh', 'admin', 'hr']);
+                    });
+                }
+            })
             ->where('id', '!=', $reader->id) // Ne pas notifier si c'est le RH lui-même
             ->get();
 
@@ -516,7 +525,7 @@ class CommunicationController extends Controller
             }
 
             // Vérifier que l'utilisateur est RH ou admin
-            if (!in_array($user->role, ['rh', 'admin', 'hr'])) {
+            if (!$user->hasAnyRole(['rh', 'admin', 'hr'])) {
                 return response()->json(['error' => 'Accès non autorisé'], 403);
             }
 

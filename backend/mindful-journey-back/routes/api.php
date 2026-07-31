@@ -486,6 +486,10 @@ Route::prefix('auth')->group(function () {
     Route::post('disable-2fa', [AuthController::class, 'disableTwoFactor'])->middleware('auth:sanctum');
     Route::post('enable-notifications', [AuthController::class, 'enableNotifications'])->middleware('auth:sanctum');
     Route::post('disable-notifications', [AuthController::class, 'disableNotifications'])->middleware('auth:sanctum');
+    
+    Route::get('2fa/setup', [AuthController::class, 'twoFactorSetup']);
+    Route::post('2fa/confirm', [AuthController::class, 'confirmTwoFactor'])
+    ->middleware('auth:sanctum');
 
     // Routes Google OAuth
     Route::get('google', [GoogleAuthController::class, 'redirectToGoogle']);

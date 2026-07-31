@@ -61,7 +61,7 @@ class DiagnosticController extends Controller
             'scope' => 'nullable|string|in:quick,annual',
             'stress_level' => 'required|integer|between:1,10',
             'energy_level' => 'required|integer|between:1,10',
-            'work_pressure' => 'required|string',
+            'work_pressure' => 'required|integer|between:1,5',
             'answers' => 'nullable|array'
         ]);
         $user = $request->user();

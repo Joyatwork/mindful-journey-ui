@@ -24,6 +24,13 @@ interface TwoFactorPending {
   email: string;
   devCode?: string; // optionnel: code OTP renvoyé par le backend en local
 }
+interface RegisterResponse {
+  user: User;
+  token: string;
+  qr_code: string;
+  secret: string;
+  requires_2fa_setup: boolean;
+}
 
 interface AuthContextType {
   user: User | null;
@@ -31,9 +38,9 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   twoFactorPending: TwoFactorPending | null;
-  login: (email: string, password: string) => Promise<{ twoFactor?: true }>;
+  login: (email: string, password: string, code: string) => Promise<{ twoFactor?: true }>;
   verifyOtp: (code: string) => Promise<void>;
-  register: (name: string, email: string, password: string, password_confirmation: string, entreprise_id?: number) => Promise<void>;
+  register: (name: string, email: string, password: string, password_confirmation: string, entreprise_id?: number) => Promise<RegisterResponse>;
   forgotPassword: (email: string) => Promise<void>;
   resetPassword: (data: { email: string; token: string; password: string; password_confirmation: string }) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
@@ -114,12 +121,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     loadUserData();
   }, []);
 
-  const login = async (email: string, password: string): Promise<{ twoFactor?: true }> => {
+  const login = async (email: string, password: string, code: string): Promise<{ twoFactor?: true }> => {
     try {
       console.log('🔄 Début de la connexion...');
-      const response = await testApiService.auth.login({ email, password });
+      const response = await testApiService.auth.login({ email, password, code});
       console.log('✅ Réponse login:', response);
-      setLastCredentials({ email, password });
+      setLastCredentials({ email, password});
 
       if (response.two_factor) {
         // Étape 2FA : ne pas définir user/token maintenant
@@ -174,14 +181,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         password_confirmation,
         ...(entreprise_id ? { entreprise_id } : {})
       });
-      setUser(response.user);
-      setToken(response.token || null);
+      
+    // IMPORTANT : ne pas connecter automatiquement après l'inscription.
+    // L'utilisateur doit d'abord configurer Google Authenticator.
+
+      //setUser(response.user);
+      //setToken(response.token || null);
 
       // Sauvegarder dans localStorage
-      if (response.token) {
-        localStorage.setItem('auth_token', response.token);
-        localStorage.setItem('auth_user', JSON.stringify(response.user));
-      }
+      //if (response.token) {
+      //  localStorage.setItem('auth_token', response.token);
+      //  localStorage.setItem('auth_user', JSON.stringify(response.user));
+      //}
+      return response;
+      
     } catch (error: any) {
       throw new Error(error.message || 'Erreur d\'inscription');
     }

@@ -39,6 +39,7 @@ import ConfidentialitePage from "@/pages/ConfidentialitePage";
 import CGUPage from "@/pages/CGUPage";
 import MentionsLegalesPage from "@/pages/MentionsLegalesPage";
 import CookieConsent from "@/components/CookieConsent";
+import TwoFactorSetupPage from "@/pages/TwoFactorSetupPage";
 
 const queryClient = new QueryClient();
 
@@ -146,6 +147,15 @@ const App = () => (
                   <DatabaseViewer />
                 </ProtectedRoute>
               } />
+              <Route
+                path="/2fa-setup"
+                element={
+                    <ProtectedRoute>
+                        <TwoFactorSetupPage />
+                    </ProtectedRoute>
+                }
+            />
+
               <Route path="/challenges-info" element={
                 <ProtectedRoute>
                   <ChallengesInfoPage />

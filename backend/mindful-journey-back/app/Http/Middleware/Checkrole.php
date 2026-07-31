@@ -4,6 +4,8 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Response as ResponseFacade;
 use Symfony\Component\HttpFoundation\Response;
 
 class Checkrole
@@ -11,23 +13,26 @@ class Checkrole
     /**
      * Handle an incoming request.
      *
-     * @return mixed
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
-    public function handle(Request $request, Closure $next): Response
+    public function handle(Request $request, Closure $next, ...$roles): Response
     {
-        return $next($request);
-
         $user = Auth::user();
-        // Mets la variable user = user Authentification.
 
-        //  if User n'est pas connecté, redirige vers -> login;
-        if(!user) {
-            return redirect()->route('login'); 
+        if (!$user) {
+            if ($request->expectsJson()) {
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
+
+            return redirect()->route('login');
         }
 
-        if(!in_array($user->role->name, $roles)) {
-            abort(403, `Tu n'est pas autorisé `);
+        if (empty($roles)) {
+            return $next($request);
+        }
+
+        if (!method_exists($user, 'hasAnyRole') || !$user->hasAnyRole($roles)) {
+            abort(403, 'Tu n\'es pas autorisé');
         }
 
         return $next($request);

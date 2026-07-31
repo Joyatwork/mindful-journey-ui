@@ -3496,7 +3496,7 @@ const Index = () => {
           await apiService.diagnostic.saveQuick({
             stress_level: Number(diagnosticAnswers.stress_level) || 5,
             energy_level: Number(diagnosticAnswers.energy_level) || 5,
-            work_pressure: String(diagnosticAnswers.work_pressure || 'Non précisé'),
+            work_pressure: Number(diagnosticAnswers.work_pressure) || 0,
             answers: diagnosticAnswers,
           });
           // Recharger le diagnostic sauvegardé

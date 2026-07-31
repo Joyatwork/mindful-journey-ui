@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-=======
 # Node / JS
 node_modules/
 **/node_modules/
@@ -51,4 +49,3 @@ public/build/
 
 # Bun
 .bun/
->>>>>>> 69e89066 (Merge origin/main into ali2: resolve path renames (backend/front split) and keep challenges backend additions)

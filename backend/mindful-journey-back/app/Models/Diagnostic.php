@@ -11,7 +11,7 @@ class Diagnostic extends Model
 
     protected $fillable = [
         'user_id',
-    'scope',
+        'scope',
         'stress_level',
         'energy_level',
         'work_pressure',

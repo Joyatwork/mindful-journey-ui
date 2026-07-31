@@ -11,7 +11,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Heart, Shield, User, Mail, Eye, EyeOff } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import LanguageSelector from '@/components/LanguageSelector';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,} from "@/components/ui/dialog";
 
+console.log("LOGIN PAGE");
 const LoginPage = () => {
   const { t } = useTranslation();
   const { login, verifyOtp, twoFactorPending, register, forgotPassword, resetPassword, loginWithGoogle, isAuthenticated, isLoading } = useAuth();
@@ -26,6 +28,10 @@ const LoginPage = () => {
   const [otpCode, setOtpCode] = useState('');
   const [otpError, setOtpError] = useState<string | null>(null);
   const [otpSuccess, setOtpSuccess] = useState(false);
+  const [showQrDialog, setShowQrDialog] = useState(false);
+  const [qrCode, setQrCode] = useState("");
+  const [secret, setSecret] = useState("");
+  const [loginCode, setLoginCode] = useState("");
 
   const [registerForm, setRegisterForm] = useState({
     name: '',
@@ -82,7 +88,7 @@ const LoginPage = () => {
 
     setLoading(true);
     try {
-      const result = await login(loginForm.email, loginForm.password);
+      const result = await login(loginForm.email, loginForm.password, loginCode);
       if (result.twoFactor) {
         showMessage('success', 'Code envoyé par email');
         return;
@@ -197,7 +203,15 @@ const LoginPage = () => {
         showMessage('error', 'Veuillez choisir votre entreprise');
         return;
       }
-      await register(registerForm.name, registerForm.email, registerForm.password, registerForm.password_confirmation, entId);
+      const response = await register(registerForm.name, registerForm.email, registerForm.password, registerForm.password_confirmation, entId);
+        setQrCode(response.qr_code);
+        setSecret(response.secret);
+        console.log("OUVERTURE POPUP");
+        setShowQrDialog(true);
+        console.log("RESPONSE REGISTER :", response);
+        console.log("QR :", response.qr_code);
+        console.log("SECRET :", response.secret);
+        console.log("2FA :", response.requires_2fa_setup);
       showMessage('success', 'Inscription réussie !');
     } catch (error: any) {
       // Détecter un email déjà utilisé (souvent 409 ou 422 avec message spécifique)
@@ -243,6 +257,45 @@ const LoginPage = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+
+      {/* Affichage du QR Code pour la configuration 2FA après l'inscription */}
+      <Dialog open={showQrDialog} onOpenChange={setShowQrDialog}>
+        <DialogContent className="max-w-md">
+
+          <DialogHeader>
+            <DialogTitle>
+              Activez votre double authentification
+            </DialogTitle>
+
+            <DialogDescription>
+              Scannez ce QR Code avec Google Authenticator.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex justify-center my-4">
+            {qrCode && (
+              <img
+                src={qrCode}
+                alt="QR Code"
+                className="w-64 h-64"
+              />
+            )}
+          </div>
+
+          <div className="bg-slate-100 rounded-lg p-4">
+            <p className="text-sm mb-2">
+              Si vous ne pouvez pas scanner le QR Code :
+            </p>
+
+            <p className="font-mono break-all text-center">
+              {secret}
+            </p>
+          </div>
+
+        </DialogContent>
+      </Dialog>
+
+      
       {/* Language Selector */}
       <div className="absolute top-4 right-4">
         <LanguageSelector variant="outline" />
@@ -321,6 +374,20 @@ const LoginPage = () => {
                         {t('auth.forgotPassword')}
                       </button>
                     </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="totp">
+                        Code Google Authenticator
+                      </Label>
+
+                      <Input
+                        id="totp"
+                        type="text"
+                        placeholder="123456"
+                        maxLength={6}
+                        value={loginCode}
+                        onChange={(e) => setLoginCode(e.target.value)}
+                      />
+                    </div>
                   </div>
                   <Button type="submit" className="w-full" disabled={loading}>
                     {loading ? t('common.loading') : t('auth.login')}
@@ -328,6 +395,7 @@ const LoginPage = () => {
                 </form>
               )}
 
+              
               {twoFactorPending && !otpSuccess && (
                 <form onSubmit={handleVerifyOtp} className="space-y-4">
                   <div className="space-y-2">
